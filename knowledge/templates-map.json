@@ -1,0 +1,16 @@
+[
+  {
+    "id": "rvp-brak",
+    "title": "Заявление на РВП по браку (бланк)",
+    "file_path": "/templates/rvp-brak-blank.docx",
+    "sample_path": "/templates/rvp-brak-sample.pdf",
+    "keywords": "РВП, брак, супруг, жена, муж, заявление, бланк, получить РВП"
+  },
+  {
+    "id": "vnzh-pensioner",
+    "title": "Заявление на ВНЖ для пенсионеров (бланк)",
+    "file_path": "/templates/vnzh-pensioner-blank.docx",
+    "sample_path": "/templates/vnzh-pensioner-sample.pdf",
+    "keywords": "ВНЖ, пенсионер, родитель, дети, пенсионный, бланк, заявление ВНЖ"
+  }
+]
