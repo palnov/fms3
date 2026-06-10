@@ -135,6 +135,86 @@ export default function HomeClient() {
         </div>
       </section>
 
+      {/* 2.5 LEGISLATIVE CHANGES 2026 */}
+      <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 mb-24 md:mb-32 animate-hero-item">
+        <div className="glass rounded-3xl p-8 md:p-10 border border-amber-500/20 bg-amber-500/5 dark:bg-amber-950/10">
+          <h3 className="text-xl md:text-2xl font-bold mb-6 flex items-center gap-3 text-amber-600 dark:text-amber-400">
+            <span className="relative flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+            </span>
+            Главные изменения в миграционном праве на 2026 год
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm md:text-base leading-relaxed text-slate-600 dark:text-slate-400">
+            <div className="space-y-2">
+              <strong className="block text-slate-900 dark:text-white font-extrabold text-base">Режим высылки</strong>
+              <p className="text-xs md:text-sm font-medium">Введен специальный правовой режим для лиц, не имеющих законных оснований находиться в РФ. Усилен контроль за фактическим пребыванием.</p>
+            </div>
+            <div className="space-y-2">
+              <strong className="block text-slate-900 dark:text-white font-extrabold text-base">Единый реестр работодателей</strong>
+              <p className="text-xs md:text-sm font-medium">Привлечение иностранных сотрудников теперь осуществляется строго через верифицированные Минтрудом организации.</p>
+            </div>
+            <div className="space-y-2">
+              <strong className="block text-slate-900 dark:text-white font-extrabold text-base">Ограничение «90 дней в год»</strong>
+              <p className="text-xs md:text-sm font-medium">Для граждан безвизовых стран совокупный срок пребывания без РВП, ВНЖ или патента сокращен до 90 дней в течение календарного года.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.6 USER SEGMENTATION */}
+      <section className="w-full max-w-7xl mx-auto px-6 lg:px-8 mb-24 md:mb-32 animate-hero-item">
+        <div className="text-center md:text-left mb-12">
+          <h2 className="text-3xl md:text-4xl font-extrabold mb-4 tracking-tight">С чего начать именно вам?</h2>
+          <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl font-medium">
+            Выберите вашу ситуацию, чтобы получить персональную пошаговую инструкцию и список документов.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            { 
+              title: "Родственники в РФ", 
+              desc: "ВНЖ напрямую по родителям, детям или супругам-гражданам РФ.", 
+              link: "/pathways/vnzh#relatives", 
+              tag: "Самый частый путь" 
+            },
+            { 
+              title: "Студенты и выпускники", 
+              desc: "Получение РВПО во время учебы или ВНЖ по красному диплому.", 
+              link: "/pathways/rvp#students", 
+              tag: "Для учащихся" 
+            },
+            { 
+              title: "Ценные специалисты", 
+              desc: "ВНЖ в РФ для IT-кадров и востребованных профессий из перечня Минтруда.", 
+              link: "/pathways/vnzh#specialists", 
+              tag: "Для профессионалов" 
+            },
+            { 
+              title: "Начать с нуля", 
+              desc: "Оформление патента, квоты на РВП или участие в программе Соотечественников.", 
+              link: "/pathways/repatriation", 
+              tag: "Без оснований" 
+            }
+          ].map((item, idx) => (
+            <Link 
+              href={item.link} 
+              key={idx} 
+              className="group p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-primary-500/50 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] transition-all duration-300 flex flex-col justify-between"
+            >
+              <div>
+                <span className="text-[10px] font-bold tracking-wider text-primary-500 uppercase block mb-3 opacity-80">{item.tag}</span>
+                <h4 className="font-extrabold text-lg mb-2 text-slate-900 dark:text-white group-hover:text-primary-500 transition-colors">{item.title}</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{item.desc}</p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/60 text-xs font-bold text-primary-500 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                Перейти к шагам <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* 3. CORE PATHWAYS (BENTO GRID STYLE) */}
       <section ref={cardsRef} className="w-full max-w-7xl mx-auto px-6 lg:px-8 mb-32">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">

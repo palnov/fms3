@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import Database from "better-sqlite3";
 import crypto from "crypto";
+import { getEmbedding } from "@/lib/knowledge-indexer";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const SECRET_KEY = process.env.JWT_SECRET || "fms3-secret-key-129837192837"; // fallback for signing cookies
@@ -12,6 +13,8 @@ interface ChunkRow {
   content: string;
   source_file: string;
   embedding: string; // JSON string of number[]
+  source_url?: string | null;
+  local_download_url?: string | null;
 }
 
 interface TemplateRow {
@@ -37,65 +40,57 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-// Get embeddings from Gemini API
-async function getQueryEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-multilingual-embedding-002:embedContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: {
-        parts: [{ text }],
-      },
-    }),
-  });
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini Embedding API error: ${response.status} - ${errText}`);
-  }
-
-  const data = await response.json();
-  if (!data.embedding?.values) {
-    throw new Error("Invalid embedding response");
-  }
-  return data.embedding.values;
-}
 
 // Generate text with OpenRouter API
 async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
-  const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": "https://fms3.ru", // Optional, for OpenRouter rankings
-      "X-Title": "FMS3 Migration Assistant" // Optional
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 1500,
-    }),
-  });
+  const models = [
+    process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
+    "meta-llama/llama-3.3-70b-instruct",
+    "openai/gpt-4o-mini"
+  ];
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`OpenRouter Generation API error: ${response.status} - ${errText}`);
+  let lastError = null;
+  for (const model of models) {
+    try {
+      console.log(`Calling OpenRouter model: ${model}...`);
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://fms3.ru",
+          "X-Title": "FMS3 Migration Assistant"
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 1500,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content;
+        if (text) {
+          console.log(`Successfully generated answer using OpenRouter model: ${model}`);
+          return text;
+        }
+      } else {
+        const errText = await response.text();
+        console.warn(`OpenRouter model ${model} failed: ${response.status} - ${errText}`);
+        lastError = new Error(`OpenRouter error for ${model}: ${response.status} - ${errText}`);
+      }
+    } catch (err: any) {
+      console.warn(`OpenRouter exception for ${model}:`, err.message);
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) {
-    throw new Error("Invalid OpenRouter generation response");
-  }
-  return text;
+  throw lastError || new Error("Failed to generate answer from OpenRouter models");
 }
 
 // Simple prompt injection detection
@@ -116,9 +111,26 @@ function isUnsafeQuery(query: string): boolean {
 // Basic topic validation
 function isMigrationRelated(query: string): boolean {
   const keywords = [
+    // Russian
     "рвп", "внж", "гражданств", "патент", "миграци", "закон", "виз", "паспорт",
     "квот", "супруг", "брак", "переезд", "рф", "росси", "документ", "бланк",
-    "заявлен", "образец", "экзамен", "пошлин", "пребыван", "мвд", "гувм"
+    "заявлен", "образец", "экзамен", "пошлин", "пребыван", "мвд", "гувм",
+    // English
+    "trp", "residence", "citizenship", "patent", "migration", "law", "visa", "passport",
+    "quota", "spouse", "marriage", "relocation", "russia", "document", "form", "application",
+    "sample", "exam", "fee", "stay", "mvd", "guvm",
+    // Tajik
+    "шаҳрвандӣ", "муҳоҷират", "қонун", "раводид", "шиноснома", "ҳамсар", "издивоҷ",
+    "кӯчидан", "ҳуҷҷат", "варақа", "ариза", "намуна", "имтиҳон", "боҷ", "иқомат", "вкд",
+    // Uzbek
+    "fuqarolik", "migratsiya", "qonun", "pasport", "nikoh", "ko'chish",
+    "hujjat", "ariza", "namuna", "imtihon", "boj", "istiqomat",
+    // Moldovan/Romanian
+    "sedere", "cetatenie", "brevet", "migratie", "lege", "pasaport", "casatorie",
+    "relocare", "formular", "cerere", "mostra", "examen", "taxa",
+    // Kazakh
+    "азаматтық", "көші-қон", "заң", "жұбайы", "неке", "көшу", "құжат", "өтініш",
+    "үлгі", "емтихан", "алым", "тұру", "іім"
   ];
   const queryLower = query.toLowerCase();
   return keywords.some((kw) => queryLower.includes(kw));
@@ -149,7 +161,7 @@ function verifyToken(token: string): { count: number; resetTime: number } | null
 
 export async function POST(request: Request) {
   try {
-    const { question } = await request.json();
+    const { question, language = "ru" } = await request.json();
 
     if (!question || !question.trim()) {
       return NextResponse.json({ error: "Вопрос не может быть пустым." }, { status: 400 });
@@ -158,6 +170,17 @@ export async function POST(request: Request) {
     if (question.length > 500) {
       return NextResponse.json({ error: "Вопрос слишком длинный. Максимум 500 символов." }, { status: 400 });
     }
+
+    // Map language codes to names for the LLM
+    const languageNames: Record<string, string> = {
+      ru: "русский",
+      en: "английский (English)",
+      tg: "таджикский (Тоҷикӣ)",
+      uz: "узбекский (O'zbekcha)",
+      ro: "молдавский/румынский (Română)",
+      kk: "казахский (Қазақша)",
+    };
+    const targetLang = languageNames[language] || "русский";
 
     // 1. Rate Limiting check
     const cookiesHeader = request.headers.get("cookie") || "";
@@ -181,7 +204,7 @@ export async function POST(request: Request) {
         {
           error: "Вы превысили лимит бесплатных вопросов на сегодня (максимум 20).",
           isLimitReached: true,
-          text: "К сожалению, вы исчерпали дневной лимит в 20 бесплатных вопросов. Для детального решения вашего вопроса мы рекомендуем связаться с нашим дежурным юристом.",
+          text: "К сожалению, вы исчерпали дневной лимит в 20 бесплатных вопросов. Для детального решения вашего вопроса мы рекомендуем связаться с нашим юристом.",
           showLeadForm: true
         },
         { status: 429 }
@@ -217,11 +240,6 @@ export async function POST(request: Request) {
 
     const openrouterApiKey = process.env.OPENROUTER_API_KEY;
 
-    if (!GEMINI_API_KEY) {
-      console.error("Missing GEMINI_API_KEY env variable");
-      return NextResponse.json({ error: "ИИ-ассистент временно недоступен (не настроен API ключ для эмбеддингов)." }, { status: 500 });
-    }
-
     if (!openrouterApiKey) {
       console.error("Missing OPENROUTER_API_KEY env variable");
       return NextResponse.json({ error: "ИИ-ассистент временно недоступен (не настроен API ключ OpenRouter)." }, { status: 500 });
@@ -237,10 +255,10 @@ export async function POST(request: Request) {
     const db = new Database(dbPath, { readonly: true });
 
     // 4. Retrieve context using Embeddings (RAG)
-    const queryVector = await getQueryEmbedding(question, GEMINI_API_KEY);
+    const queryVector = await getEmbedding(question, openrouterApiKey);
 
     // Fetch all chunks to compute similarity
-    const allChunks = db.prepare("SELECT id, content, source_file, embedding FROM chunks").all() as ChunkRow[];
+    const allChunks = db.prepare("SELECT id, content, source_file, embedding, source_url, local_download_url FROM chunks").all() as ChunkRow[];
 
     const scoredChunks = allChunks.map((chunk) => {
       const embedding = JSON.parse(chunk.embedding) as number[];
@@ -250,7 +268,7 @@ export async function POST(request: Request) {
 
     // Sort and pick top 4
     scoredChunks.sort((a, b) => b.similarity - a.similarity);
-    const topChunks = scoredChunks.slice(0, 4).filter(c => c.similarity > 0.65); // only keep relevant chunks
+    const topChunks = scoredChunks.slice(0, 4).filter(c => c.similarity > 0.40); // only keep relevant chunks
 
     // 5. Keyword search for downloadable templates
     const allTemplates = db.prepare("SELECT id, title, file_path, sample_path, keywords FROM templates").all() as TemplateRow[];
@@ -275,13 +293,17 @@ export async function POST(request: Request) {
 Твоя задача — давать четкие, структурированные и юридически точные ответы на основе предоставленного контекста.
 
 ПРАВИЛА ОТВЕТА:
-1. Используй ТОЛЬКО информацию из "БАЗЫ ЗНАНИЙ" ниже. Не выдумывай факты. Если информации нет в контексте, вежливо скажи, что не обладаешь точными данными и порекомендуй проконсультироваться у юриста.
-2. Отвечай на русском языке. Будь вежлив, используй форматирование markdown (списки, жирный шрифт) для улучшения читаемости.
+1. Используй ТОЛЬКО информацию из "БАЗЫ ЗНАНИЙ" ниже. Не выдумывай юридические факты. Если в вопросе пользователя упоминается конкретная страна, а в БАЗЕ ЗНАНИЙ нет прямого упоминания этой страны или её визового статуса, ты должен:
+   - Ответить в общих терминах на основе имеющихся в базе знаний законов (например, объяснить правила для граждан, «прибывших в порядке, не требующем получения визы»).
+   - Явно и вежливо указать, что точной информации по конкретной стране (в данном случае [Название Страны]) в твоей базе знаний нет.
+   - Порекомендовать обратиться к юристу для уточнения статуса этой страны.
+2. ОБЯЗАТЕЛЬНО отвечай на языке: ${targetLang}. Весь твой ответ, включая рекомендации, списки и объяснения, должен быть написан на этом языке. При этом основывайся на законах РФ из БАЗЫ ЗНАНИЙ (переводи термины и положения законов на язык ответа корректно). Будь вежлив, используй форматирование markdown (списки, жирный шрифт) для улучшения читаемости.
 3. Если пользователю нужен бланк, шаблон или образец документа, и он есть в разделе "ДОСТУПНЫЕ ШАБЛОНЫ", обязательно выведи ссылки на него в таком формате:
    "Вы можете скачать нужные бланки:
    - [Скачать бланк заявления на РВП по браку](/templates/rvp-brak-blank.docx)
    - [Скачать образец заполнения](/templates/rvp-brak-sample.pdf)"
-4. В самом конце ответа ОБЯЗАТЕЛЬНО ненавязчиво предложи бесплатную помощь юриста, так как законы сложны, а инспекторы часто придираются к деталям.
+   (Формат ссылок и путей оставь без изменений, но текст вокруг них переведи на язык ответа).
+4. В самом конце ответа ОБЯЗАТЕЛЬНО ненавязчиво предложи бесплатную помощь юриста на языке: ${targetLang}, так как законы сложны, а инспекторы часто придираются к деталям.
 5. Закончи свой ответ строго специальным служебным тегом: [CTA_LAWYER_FORM] на новой строке. Этот тег укажет интерфейсу отрендерить форму обратной связи.
 
 БАЗА ЗНАНИЙ:
@@ -296,11 +318,24 @@ ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templates
 
     const answer = await generateAnswer(systemPrompt, openrouterApiKey);
 
+    // Dedup by source_file and build the array of source info
+    const uniqueSourcesMap = new Map<string, { name: string; parent_url?: string | null; download_url?: string | null }>();
+    for (const chunk of topChunks) {
+      if (!uniqueSourcesMap.has(chunk.source_file)) {
+        uniqueSourcesMap.set(chunk.source_file, {
+          name: chunk.source_file,
+          parent_url: chunk.source_url,
+          download_url: chunk.local_download_url,
+        });
+      }
+    }
+    const sources = Array.from(uniqueSourcesMap.values());
+
     // 7. Send Response with cookie headers
     const response = NextResponse.json({
-      text: answer.replace("[CTA_LAWYER_FORM]", "").trim(),
-      sources: Array.from(new Set(topChunks.map(c => c.source_file))),
-      showLeadForm: answer.includes("[CTA_LAWYER_FORM]") || limitData.count >= 15, // show lead form if template matching occurred or if limit is getting close
+      text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
+      sources: sources,
+      showLeadForm: answer.toLowerCase().includes("[cta_lawyer_form]") || limitData.count >= 15, // show lead form if template matching occurred or if limit is getting close
       remainingRequests: 20 - limitData.count
     });
 

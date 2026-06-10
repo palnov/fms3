@@ -1,102 +1,22 @@
 import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
-// @ts-ignore
-import pdf from "pdf-parse";
-import mammoth from "mammoth";
+import { indexFileContent, extractText } from "../src/lib/knowledge-indexer";
 
-// We support custom env variable or local env loading
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-if (!GEMINI_API_KEY) {
-  console.error("Warning: GEMINI_API_KEY env variable is not set. Embedding calls will fail unless provided.");
+if (!OPENROUTER_API_KEY) {
+  console.error("Warning: OPENROUTER_API_KEY env variable is not set. Embedding calls will fail unless provided.");
 }
 
 const DB_PATH = path.join(process.cwd(), "knowledge.db");
 const ARTICLES_DIR = path.join(process.cwd(), "knowledge/articles");
 const TEMPLATES_MAP_PATH = path.join(process.cwd(), "knowledge/templates-map.json");
 
-// Helper to chunk text
-function chunkText(text: string, chunkSize = 1200, overlap = 200): string[] {
-  const words = text.split(/\s+/);
-  const chunks: string[] = [];
-  let currentChunkWords: string[] = [];
-  let currentLength = 0;
-
-  for (const word of words) {
-    currentChunkWords.push(word);
-    currentLength += word.length + 1; // plus space
-
-    if (currentLength >= chunkSize) {
-      chunks.push(currentChunkWords.join(" "));
-      // overlap: keep last N words
-      const overlapWordsCount = Math.floor(words.length * (overlap / chunkSize)) || 5;
-      currentChunkWords = currentChunkWords.slice(-Math.min(currentChunkWords.length, overlapWordsCount));
-      currentLength = currentChunkWords.join(" ").length;
-    }
-  }
-
-  if (currentChunkWords.length > 0) {
-    chunks.push(currentChunkWords.join(" "));
-  }
-
-  return chunks.filter(c => c.trim().length > 20); // ignore tiny chunks
-}
-
-// Fetch embeddings from Gemini API
-async function getEmbedding(text: string, apiKey: string): Promise<number[]> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-multilingual-embedding-002:embedContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      content: {
-        parts: [{ text }],
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Gemini Embedding API error: ${response.status} - ${errText}`);
-  }
-
-  const data = await response.json();
-  if (!data.embedding?.values) {
-    throw new Error(`Invalid response structure from Gemini API: ${JSON.stringify(data)}`);
-  }
-
-  return data.embedding.values;
-}
-
-// Main parser
-async function extractText(filePath: string): Promise<string> {
-  const ext = path.extname(filePath).toLowerCase();
-  const fileBuffer = fs.readFileSync(filePath);
-
-  if (ext === ".txt") {
-    return fileBuffer.toString("utf-8");
-  } else if (ext === ".pdf") {
-    const data = await pdf(fileBuffer);
-    return data.text;
-  } else if (ext === ".docx") {
-    const result = await mammoth.extractRawText({ buffer: fileBuffer });
-    return result.value;
-  } else if (ext === ".html" || ext === ".htm") {
-    // Basic HTML tag stripping
-    const html = fileBuffer.toString("utf-8");
-    return html.replace(/<[^>]*>/g, " ");
-  }
-
-  throw new Error(`Unsupported file type: ${ext}`);
-}
-
 async function main() {
-  const apiKey = GEMINI_API_KEY || "";
+  const apiKey = OPENROUTER_API_KEY || "";
   if (!apiKey) {
-    console.error("Error: GEMINI_API_KEY is required to run the indexer.");
+    console.error("Error: OPENROUTER_API_KEY is required to run the indexer.");
     process.exit(1);
   }
 
@@ -123,6 +43,18 @@ async function main() {
     );
   `);
 
+  // Dynamically add columns if they don't exist
+  try {
+    db.exec("ALTER TABLE chunks ADD COLUMN source_url TEXT");
+  } catch (e) {
+    // Ignore error if column already exists
+  }
+  try {
+    db.exec("ALTER TABLE chunks ADD COLUMN local_download_url TEXT");
+  } catch (e) {
+    // Ignore error if column already exists
+  }
+
   console.log("Database initialized.");
 
   // Clear existing entries
@@ -144,52 +76,89 @@ async function main() {
     console.log(`Inserted ${templatesList.length} templates.`);
   }
 
-  // 2. Process articles
-  if (!fs.existsSync(ARTICLES_DIR)) {
-    fs.mkdirSync(ARTICLES_DIR, { recursive: true });
+  // 2. Process articles and downloads
+  const DOWNLOADS_DIR = path.join(process.cwd(), "public/downloads");
+  const MANIFEST_PATH = path.join(process.cwd(), "knowledge/downloads-manifest.json");
+
+  let manifest: Record<string, { original_url: string; parent_page_url: string; download_path: string; title: string; status?: "downloaded" | "indexed" }> = {};
+  if (fs.existsSync(MANIFEST_PATH)) {
+    try {
+      manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, "utf-8"));
+    } catch {
+      manifest = {};
+    }
   }
 
-  const files = fs.readdirSync(ARTICLES_DIR).filter(file => {
-    const ext = path.extname(file).toLowerCase();
+  const articleFiles = fs.existsSync(ARTICLES_DIR) 
+    ? fs.readdirSync(ARTICLES_DIR).map(f => ({ name: f, dir: ARTICLES_DIR })) 
+    : [];
+  const downloadFiles = fs.existsSync(DOWNLOADS_DIR) 
+    ? fs.readdirSync(DOWNLOADS_DIR).map(f => ({ name: f, dir: DOWNLOADS_DIR })) 
+    : [];
+
+  const files = [...articleFiles, ...downloadFiles].filter(file => {
+    const ext = path.extname(file.name).toLowerCase();
     return [".txt", ".pdf", ".docx", ".html"].includes(ext);
   });
 
   if (files.length === 0) {
-    console.log("No articles found in knowledge/articles. Put files there first.");
+    console.log("No articles or downloaded files found to index.");
     return;
   }
 
   console.log(`Found ${files.length} files to index. Processing...`);
 
-  const insertChunk = db.prepare(`
-    INSERT INTO chunks (content, source_file, embedding)
-    VALUES (?, ?, ?)
-  `);
-
   let totalChunks = 0;
 
   for (const file of files) {
-    const filePath = path.join(ARTICLES_DIR, file);
-    console.log(`Parsing ${file}...`);
+    const filePath = path.join(file.dir, file.name);
+    console.log(`Parsing ${file.name} from ${path.basename(file.dir)}...`);
     try {
       const fullText = await extractText(filePath);
-      const chunks = chunkText(fullText);
-      console.log(`Splitted into ${chunks.length} chunks. Indexing...`);
+      
+      const fileMeta = manifest[file.name];
+      const sourceUrl = fileMeta ? fileMeta.parent_page_url : null;
+      const localDownloadUrl = fileMeta ? fileMeta.download_path : null;
 
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        process.stdout.write(`  Processing chunk ${i+1}/${chunks.length}...\r`);
-        try {
-          const embedding = await getEmbedding(chunk, apiKey);
-          insertChunk.run(chunk, file, JSON.stringify(embedding));
-          totalChunks++;
-        } catch (err) {
-          console.error(`\nFailed to generate embedding for chunk ${i+1} of file ${file}:`, err);
+      const chunksIndexed = await indexFileContent(
+        file.name,
+        fullText,
+        db,
+        apiKey,
+        sourceUrl,
+        localDownloadUrl,
+        (msg) => console.log(msg)
+      );
+
+      if (fileMeta) {
+        manifest[file.name].status = "indexed";
+      }
+
+      totalChunks += chunksIndexed;
+      console.log(`Finished ${file.name}.`);
+    } catch (err) {
+      console.error(`Error processing file ${file.name}:`, err);
+    }
+  }
+
+  // Save manifest
+  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+
+  // Update parent page statuses in crawled-sources.json
+  const sourcesPath = path.join(process.cwd(), "knowledge/crawled-sources.json");
+  if (fs.existsSync(sourcesPath)) {
+    try {
+      const sources = JSON.parse(fs.readFileSync(sourcesPath, "utf-8"));
+      for (const [parentUrl, src] of Object.entries(sources) as [string, any][]) {
+        const pageFiles = Object.values(manifest).filter(m => m.parent_page_url === parentUrl);
+        const hasPendingFiles = pageFiles.some(m => m.status === "downloaded");
+        if (!hasPendingFiles && pageFiles.length > 0) {
+          sources[parentUrl].status = "indexed";
         }
       }
-      console.log(`\nFinished ${file}.`);
-    } catch (err) {
-      console.error(`Error processing file ${file}:`, err);
+      fs.writeFileSync(sourcesPath, JSON.stringify(sources, null, 2));
+    } catch (e: any) {
+      console.error("Failed to update crawled sources status:", e.message);
     }
   }
 

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next dev --webpack",
+    "build": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next build",
+    "start": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next start",
     "lint": "eslint",
-    "index-kb": "tsx scripts/index-knowledge.ts"
+    "index-kb": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem tsx scripts/index-knowledge.ts"
   },
   "dependencies": {
     "@google/genai": "^2.8.0",
@@ -16,6 +16,7 @@
     "@next/mdx": "^16.2.4",
     "@types/mdx": "^2.0.13",
     "better-sqlite3": "^12.10.0",
+    "cheerio": "^1.2.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.8.0",
     "mammoth": "^1.12.0",
