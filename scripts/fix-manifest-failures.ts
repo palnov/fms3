@@ -10,7 +10,7 @@ function runFix() {
     return;
   }
 
-  let manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
   let updated = false;
 
   console.log("=== ЗАПУСК СКРИПТА ИСПРАВЛЕНИЯ ОШИБОК ===");

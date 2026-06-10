@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FMS3
 
-## Getting Started
+Информационный портал о миграции в Россию: SEO-материалы в MDX, интерактивные инструменты, лид-формы и RAG-консультант на базе официальных документов.
 
-First, run the development server:
+## Стек
+
+- Next.js 16 App Router, React 19, TypeScript
+- Tailwind CSS 4 и MDX
+- SQLite (`better-sqlite3`) для локальной базы знаний
+- OpenRouter/Gemini для embeddings, генерации ответов и OCR
+
+## Локальный запуск
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Откройте [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Для работы ИИ-консультанта нужны `JWT_SECRET`, `OPENROUTER_API_KEY` и подготовленный `knowledge.db`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Команды
 
-## Learn More
+```bash
+npm run dev       # локальная разработка
+npm run lint      # ESLint
+npm run build     # production build
+npm run start     # запуск production build
+npm run index-kb  # индексация базы знаний
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Основные разделы
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `src/app/pathways` — SEO-руководства и миграционные сценарии.
+- `src/app/tools` — консультант, калькуляторы, проверка документов и внутренний парсер.
+- `src/app/api/consultant` — RAG API консультанта.
+- `src/app/api/parser` — загрузка, извлечение и векторизация источников.
+- `knowledge` и `public/downloads` — манифесты и локальные документы базы знаний.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Парсер и векторизатор пока входят в приложение. Перед публичным размещением их необходимо защитить авторизацией либо вынести во внутренний сервис.

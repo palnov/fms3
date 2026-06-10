@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Bot, User, Phone, Sparkles } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
+import SafeMessageText from "@/components/chat/SafeMessageText";
 
 interface Message {
   id: string;
@@ -102,6 +103,7 @@ export default function FloatingLawyerWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const messageIdRef = useRef(0);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -115,18 +117,25 @@ export default function FloatingLawyerWidget() {
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
-  useEffect(() => {
-    // Dynamic welcome message translation if it is the only one in the history
-    setMessages(prev => {
+  const createMessageId = () => {
+    messageIdRef.current += 1;
+    return `widget-message-${messageIdRef.current}`;
+  };
+
+  const selectLanguage = (nextLanguage: string) => {
+    setLanguage(nextLanguage);
+    const nextTranslation = TRANSLATIONS[nextLanguage] || TRANSLATIONS.ru;
+    setMessages((prev) => {
       if (prev.length === 1 && prev[0].id === "welcome") {
         return [{
           ...prev[0],
-          text: t.welcome
+          text: nextTranslation.welcome
         }];
       }
       return prev;
     });
-  }, [language, t.welcome]);
+    setShowLangMenu(false);
+  };
 
   const handleSend = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -136,7 +145,7 @@ export default function FloatingLawyerWidget() {
     setInputVal("");
 
     const userMsg: Message = {
-      id: Math.random().toString(),
+      id: createMessageId(),
       sender: "user",
       text
     };
@@ -154,7 +163,7 @@ export default function FloatingLawyerWidget() {
 
       if (response.ok) {
         const fullText = data.text;
-        const msgId = Math.random().toString();
+        const msgId = createMessageId();
         
         setMessages(prev => [
           ...prev,
@@ -189,7 +198,7 @@ export default function FloatingLawyerWidget() {
         setMessages(prev => [
           ...prev,
           {
-            id: Math.random().toString(),
+            id: createMessageId(),
             sender: "ai",
             text: errorText,
             showLeadForm: data.showLeadForm || response.status === 429
@@ -201,7 +210,7 @@ export default function FloatingLawyerWidget() {
       setMessages(prev => [
         ...prev,
         {
-          id: Math.random().toString(),
+          id: createMessageId(),
           sender: "ai",
           text: "Ошибка сети. Пожалуйста, проверьте интернет-соединение."
         }
@@ -209,22 +218,6 @@ export default function FloatingLawyerWidget() {
     } finally {
       setIsTyping(false);
     }
-  };
-
-  const formatMessageText = (text: string) => {
-    const lines = text.split("\n");
-    return lines.map((line, idx) => {
-      let formatted = line;
-      formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-      formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-400 hover:underline font-semibold" target="_blank" rel="noopener noreferrer">$1</a>');
-      return (
-        <p
-          key={idx}
-          className="min-h-[1.1rem] mb-1"
-          dangerouslySetInnerHTML={{ __html: formatted }}
-        />
-      );
-    });
   };
 
   return (
@@ -284,8 +277,7 @@ export default function FloatingLawyerWidget() {
                             key={lang.code}
                             type="button"
                             onClick={() => {
-                              setLanguage(lang.code);
-                              setShowLangMenu(false);
+                              selectLanguage(lang.code);
                             }}
                             className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                               language === lang.code
@@ -341,7 +333,14 @@ export default function FloatingLawyerWidget() {
                         ? "bg-blue-600 text-white rounded-tr-none" 
                         : "bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none"
                     }`}>
-                      {msg.sender === "user" ? msg.text : formatMessageText(msg.text)}
+                      {msg.sender === "user" ? (
+                        msg.text
+                      ) : (
+                        <SafeMessageText
+                          text={msg.text}
+                          linkClassName="font-semibold text-blue-400 hover:underline"
+                        />
+                      )}
                     </div>
                   </div>
 

@@ -73,7 +73,7 @@ function runReview() {
       scanned: 0,
       queued: 0
     };
-    for (const [_, src] of srcEntries) {
+    for (const [, src] of srcEntries) {
       if (src.status === "indexed") srcStats.indexed++;
       else if (src.status === "downloaded") srcStats.downloaded++;
       else if (src.status === "scanned") srcStats.scanned++;

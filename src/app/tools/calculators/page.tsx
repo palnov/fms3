@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calculator, Calendar, Landmark, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calculator, Calendar, Landmark } from "lucide-react";
 
 type CalcType = "stay" | "patent";
 

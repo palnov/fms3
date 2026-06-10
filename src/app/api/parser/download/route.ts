@@ -95,8 +95,6 @@ export async function POST(request: Request) {
         }
       }
 
-      const localFilePath = path.join(downloadDir, filename);
-
       try {
         const response = await fetch(file.url, {
           headers: {
@@ -205,7 +203,7 @@ export async function POST(request: Request) {
         } else {
           filename = sanitizeFilename(filename);
         }
-        let ext = file.type === "document" ? ".pdf" : ".txt";
+        const ext = file.type === "document" ? ".pdf" : ".txt";
         if (!filename.endsWith(ext)) {
           filename += ext;
         }

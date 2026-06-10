@@ -5,9 +5,6 @@ import Database from "better-sqlite3";
 import crypto from "crypto";
 import { getEmbedding } from "@/lib/knowledge-indexer";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const SECRET_KEY = process.env.JWT_SECRET || "fms3-secret-key-129837192837"; // fallback for signing cookies
-
 interface ChunkRow {
   id: number;
   content: string;
@@ -84,9 +81,10 @@ async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
         console.warn(`OpenRouter model ${model} failed: ${response.status} - ${errText}`);
         lastError = new Error(`OpenRouter error for ${model}: ${response.status} - ${errText}`);
       }
-    } catch (err: any) {
-      console.warn(`OpenRouter exception for ${model}:`, err.message);
-      lastError = err;
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.warn(`OpenRouter exception for ${model}:`, error.message);
+      lastError = error;
     }
   }
 
@@ -137,17 +135,34 @@ function isMigrationRelated(query: string): boolean {
 }
 
 // Cookie limits helpers
-function signToken(count: number, resetTime: number): string {
+function getSecretKey(): string {
+  const secretKey = process.env.JWT_SECRET;
+  if (!secretKey) {
+    throw new Error("JWT_SECRET is not configured.");
+  }
+  return secretKey;
+}
+
+function signToken(count: number, resetTime: number, secretKey: string): string {
   const data = `${count}:${resetTime}`;
-  const signature = crypto.createHmac("sha256", SECRET_KEY).update(data).digest("hex");
+  const signature = crypto.createHmac("sha256", secretKey).update(data).digest("hex");
   return `${data}.${signature}`;
 }
 
-function verifyToken(token: string): { count: number; resetTime: number } | null {
+function verifyToken(token: string, secretKey: string): { count: number; resetTime: number } | null {
   try {
     const [data, signature] = token.split(".");
-    const expectedSignature = crypto.createHmac("sha256", SECRET_KEY).update(data).digest("hex");
-    if (signature !== expectedSignature) return null;
+    if (!data || !signature) return null;
+
+    const expectedSignature = crypto.createHmac("sha256", secretKey).update(data).digest("hex");
+    const signatureBuffer = Buffer.from(signature, "hex");
+    const expectedBuffer = Buffer.from(expectedSignature, "hex");
+    if (
+      signatureBuffer.length !== expectedBuffer.length ||
+      !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)
+    ) {
+      return null;
+    }
 
     const [countStr, resetTimeStr] = data.split(":");
     return {
@@ -159,8 +174,14 @@ function verifyToken(token: string): { count: number; resetTime: number } | null
   }
 }
 
+function createLimitCookie(name: string, value: string): string {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}; SameSite=Lax${secure}`;
+}
+
 export async function POST(request: Request) {
   try {
+    const secretKey = getSecretKey();
     const { question, language = "ru" } = await request.json();
 
     if (!question || !question.trim()) {
@@ -189,7 +210,7 @@ export async function POST(request: Request) {
     const token = match ? decodeURIComponent(match[2]) : null;
 
     const now = Date.now();
-    let limitData = token ? verifyToken(token) : null;
+    let limitData = token ? verifyToken(token, secretKey) : null;
 
     if (!limitData || now > limitData.resetTime) {
       // First request or timer expired (reset daily)
@@ -213,7 +234,7 @@ export async function POST(request: Request) {
 
     // Increment count
     limitData.count += 1;
-    const nextLimitToken = signToken(limitData.count, limitData.resetTime);
+    const nextLimitToken = signToken(limitData.count, limitData.resetTime, secretKey);
 
     // 2. Security Checks
     if (isUnsafeQuery(question)) {
@@ -223,7 +244,7 @@ export async function POST(request: Request) {
           sources: []
         }
       );
-      response.headers.set("Set-Cookie", `${limitCookieName}=${encodeURIComponent(nextLimitToken)}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}; SameSite=Lax`);
+      response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
       return response;
     }
 
@@ -234,7 +255,7 @@ export async function POST(request: Request) {
           sources: []
         }
       );
-      response.headers.set("Set-Cookie", `${limitCookieName}=${encodeURIComponent(nextLimitToken)}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}; SameSite=Lax`);
+      response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
       return response;
     }
 
@@ -339,10 +360,10 @@ ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templates
       remainingRequests: 20 - limitData.count
     });
 
-    response.headers.set("Set-Cookie", `${limitCookieName}=${encodeURIComponent(nextLimitToken)}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}; SameSite=Lax`);
+    response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
     return response;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Consultant API Error:", error);
     return NextResponse.json(
       { error: "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже." },

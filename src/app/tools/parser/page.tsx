@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { gsap } from "gsap";
-import { 
-  ArrowLeft, Search, CheckSquare, Square, FileText, Globe, Terminal, Play, 
-  Loader2, Download, ExternalLink, ShieldCheck, Plus, Trash2, CheckCircle2, 
-  HelpCircle, ChevronRight, AlertTriangle, Maximize2, Minimize2
+import {
+  ArrowLeft, CheckSquare, Square, FileText, Globe, Terminal,
+  Loader2, Download, ExternalLink, ShieldCheck, Plus, Trash2, CheckCircle2,
+  HelpCircle, AlertTriangle, Maximize2, Minimize2
 } from "lucide-react";
 
 interface CrawlerSource {
@@ -197,10 +197,8 @@ export default function ParserAdminPage() {
   // Real-time stats calculation during vectorization run
   useEffect(() => {
     if (isVectorizing) {
-      if (!statsBaselineRef.current) {
-        statsBaselineRef.current = { ...stats };
-      }
-      
+      if (!statsBaselineRef.current) return;
+
       let localIndexed = 0;
       let localFailed = 0;
       const processedFiles = new Set<string>();
@@ -239,7 +237,6 @@ export default function ParserAdminPage() {
   // Timer loop for estimated remaining time (chunk-based + dynamic speed calculation)
   useEffect(() => {
     if (!isVectorizing) {
-      setEstimatedTimeRemaining(null);
       // Clean up chunk timing references
       lastChunkKeyRef.current = null;
       lastChunkTimestampRef.current = null;
@@ -349,6 +346,8 @@ export default function ParserAdminPage() {
       for (const log of logs) {
         const match = log.match(/Найдено файлов для векторизации:\s*(\d+)/);
         if (match) {
+          // Progress is synchronized from the server log stream.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setProgressTotal(parseInt(match[1]));
         }
       }
@@ -385,6 +384,8 @@ export default function ParserAdminPage() {
   };
 
   useEffect(() => {
+    // This starts an asynchronous external data subscription on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSources();
   }, []);
 
@@ -606,6 +607,8 @@ export default function ParserAdminPage() {
     setLogs(prev => [...prev, "⚡ Запуск векторизации...", "Установка соединения с сервером векторизации..."]);
     setProgressTotal(0);
     setProgressCurrent(0);
+    setEstimatedTimeRemaining(null);
+    statsBaselineRef.current = { ...stats };
     vectorizeStartTimestampRef.current = Date.now();
     setErrorMsg(null);
 
@@ -658,8 +661,8 @@ export default function ParserAdminPage() {
       }
       
       loadSources();
-    } catch (err: any) {
-      if (err.name === "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
         setLogs(prev => [...prev, "🛑 Векторизация прервана пользователем."]);
       } else {
         console.error(err);
@@ -668,6 +671,8 @@ export default function ParserAdminPage() {
     } finally {
       setIsVectorizing(false);
       setVectorizeController(null);
+      setEstimatedTimeRemaining(null);
+      statsBaselineRef.current = null;
     }
   };
 
@@ -791,7 +796,11 @@ export default function ParserAdminPage() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    isVectorizing ? handleStopVectorize() : handleGlobalVectorize();
+                    if (isVectorizing) {
+                      handleStopVectorize();
+                    } else {
+                      void handleGlobalVectorize();
+                    }
                   }}
                   className={`w-full py-1.5 rounded-xl font-extrabold text-[10px] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-sm border ${
                     isVectorizing 

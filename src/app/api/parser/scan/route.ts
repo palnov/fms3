@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         try {
           const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
           const parentEntry = Object.entries(manifest).find(
-            ([_, m]: [string, any]) => m.original_url === url && m.parent_page_url === url
+            ([, m]: [string, any]) => m.original_url === url && m.parent_page_url === url
           );
           if (parentEntry) {
             const [filename, meta] = parentEntry as [string, any];
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
               const extractedText = fs.readFileSync(filePath, "utf-8");
               
               const pageFiles = Object.entries(manifest)
-                .filter(([_, m]: [string, any]) => m.parent_page_url === url && m.original_url !== url)
+                .filter(([, m]: [string, any]) => m.parent_page_url === url && m.original_url !== url)
                 .map(([fName, m]: [string, any]) => ({
                   title: m.title,
                   url: m.original_url,
@@ -355,7 +355,7 @@ export async function POST(request: Request) {
       });
 
     const parentEntry = Object.entries(manifest).find(
-      ([_, m]: [string, any]) => m.original_url === url && m.parent_page_url === url
+      ([, m]: [string, any]) => m.original_url === url && m.parent_page_url === url
     );
     const parentStatus = parentEntry ? (parentEntry[1] as any).status : null;
 

@@ -46,12 +46,12 @@ async function main() {
   // Dynamically add columns if they don't exist
   try {
     db.exec("ALTER TABLE chunks ADD COLUMN source_url TEXT");
-  } catch (e) {
+  } catch {
     // Ignore error if column already exists
   }
   try {
     db.exec("ALTER TABLE chunks ADD COLUMN local_download_url TEXT");
-  } catch (e) {
+  } catch {
     // Ignore error if column already exists
   }
 
@@ -149,7 +149,7 @@ async function main() {
   if (fs.existsSync(sourcesPath)) {
     try {
       const sources = JSON.parse(fs.readFileSync(sourcesPath, "utf-8"));
-      for (const [parentUrl, src] of Object.entries(sources) as [string, any][]) {
+      for (const parentUrl of Object.keys(sources)) {
         const pageFiles = Object.values(manifest).filter(m => m.parent_page_url === parentUrl);
         const hasPendingFiles = pageFiles.some(m => m.status === "downloaded");
         if (!hasPendingFiles && pageFiles.length > 0) {

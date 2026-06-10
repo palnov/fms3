@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Направления редизайна</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;background:#e9e8e3;color:#171b21;font-family:Arial,sans-serif}
+  .wrap{max-width:1480px;margin:auto;padding:42px 28px 70px}
+  .intro{max-width:830px;margin-bottom:28px}.intro small{font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#59616b}.intro h1{font-size:clamp(30px,4vw,58px);line-height:1.02;margin:12px 0}.intro p{font-size:18px;line-height:1.55;color:#4e555e}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+  .choice{background:white;border:2px solid transparent;border-radius:18px;overflow:hidden;cursor:pointer;box-shadow:0 18px 45px rgba(20,29,38,.08);transition:.2s}
+  .choice:hover{transform:translateY(-4px)}.choice.selected{border-color:#176b5b;box-shadow:0 0 0 4px rgba(23,107,91,.13)}
+  .screen{min-height:660px;padding:0;position:relative;overflow:hidden}.meta{padding:20px 22px 24px}.meta h2{margin:0 0 7px;font-size:21px}.meta p{margin:0;color:#626973;line-height:1.48;font-size:14px}.tag{display:inline-block;margin-top:14px;padding:7px 10px;background:#eef0ed;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  /* A */
+  .a{background:#f7f5ef;color:#172029;font-family:Georgia,serif}.a .mast{padding:17px 20px;border-bottom:1px solid #bfc3bf;display:flex;justify-content:space-between;align-items:center}.a .logo{font-weight:bold;font-size:23px}.a .nav{font:11px Arial,sans-serif;letter-spacing:.08em}.a .hero{padding:34px 25px 26px}.a .kicker{font:700 10px Arial,sans-serif;letter-spacing:.16em;color:#a24533;text-transform:uppercase}.a h3{font-size:42px;line-height:.98;margin:14px 0 17px;letter-spacing:-.035em}.a .lead{font-size:15px;line-height:1.6;max-width:90%}.a .rule{height:1px;background:#9ba09d;margin:24px 0}.a .cols{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.a .news{border-top:3px solid #172029;padding-top:12px}.a .news b{font-size:18px;line-height:1.2}.a .source{font:11px Arial,sans-serif;color:#60686d;margin-top:9px}.a .alert{background:#e8e3d7;padding:17px;border-left:4px solid #a24533;font:13px/1.5 Arial,sans-serif}
+  /* B */
+  .b{background:#edf3f0;color:#0d2923;font-family:Arial,sans-serif}.b .mast{padding:18px 20px;display:flex;justify-content:space-between;border-bottom:1px solid rgba(13,41,35,.18)}.b .logo{font-size:19px;font-weight:900;letter-spacing:-.04em}.b .mark{width:23px;height:23px;border:2px solid #0f6b58;transform:rotate(45deg);border-radius:5px}.b .hero{padding:38px 24px}.b .eyebrow{font-size:11px;font-weight:800;color:#0f6b58}.b h3{font-family:Georgia,serif;font-size:39px;line-height:1.03;margin:12px 0 16px;letter-spacing:-.025em}.b .lead{font-size:15px;line-height:1.62;color:#3c5550}.b .index{margin-top:30px;border-top:1px solid #aabdb7}.b .row{display:grid;grid-template-columns:32px 1fr auto;gap:10px;padding:14px 0;border-bottom:1px solid #c8d4d0;align-items:center}.b .num{font:11px monospace;color:#0f6b58}.b .row b{font-size:14px}.b .arrow{font-size:19px}.b .ai{margin-top:26px;background:#0d2923;color:#fff;padding:18px;border-radius:4px}.b .ai small{color:#9bd3c5}.b .ai p{font-size:13px;line-height:1.5}
+  /* C */
+  .c{background:#f1f3f6;color:#152238;font-family:Arial,sans-serif}.c .mast{background:#172a47;color:#fff;padding:17px 20px;display:flex;justify-content:space-between;align-items:center}.c .logo{font-weight:850;font-size:20px}.c .seal{width:27px;height:27px;border:1px solid #aebbd0;border-radius:50%;display:grid;place-items:center;font:10px Georgia}.c .hero{padding:32px 24px}.c .status{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;color:#50647f}.c .dot{width:7px;height:7px;background:#b24a3b;border-radius:50%}.c h3{font-family:Georgia,serif;font-size:38px;line-height:1.04;margin:15px 0}.c .lead{font-size:14px;line-height:1.62;color:#536175}.c .panel{background:#fff;border:1px solid #d4dbe5;margin-top:25px;padding:18px;box-shadow:0 10px 30px rgba(18,38,64,.07)}.c .panel h4{font-family:Georgia,serif;margin:0 0 11px;font-size:19px}.c .steps{display:grid;gap:8px}.c .step{padding:10px 0;border-top:1px solid #e2e7ee;display:flex;justify-content:space-between;font-size:13px;font-weight:700}.c .note{margin-top:18px;padding:14px;background:#e3e8ef;font-size:12px;line-height:1.5}
+  .hint{margin-top:26px;padding:18px 20px;background:#dce5e1;border-radius:10px;color:#21352f}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}.screen{min-height:560px}}
+</style>
+<script>
+function pick(el){
+ document.querySelectorAll('.choice').forEach(x=>x.classList.remove('selected'));
+ el.classList.add('selected');
+ fetch('/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'click',choice:el.dataset.choice,text:el.dataset.text,timestamp:Date.now()})}).catch(()=>{});
+}
+</script>
+</head>
+<body>
+<main class="wrap">
+  <div class="intro">
+    <small>Редизайн миграционного издания</small>
+    <h1>Как должен выглядеть экспертный юридический журнал?</h1>
+    <p>Все варианты строятся вокруг доверия, кириллической типографики, длинного чтения и мягкого перехода от ответа к консультации. Выберите направление, которое ближе по характеру.</p>
+  </div>
+  <div class="grid">
+    <article class="choice" data-choice="a" data-text="A — Правовой вестник" onclick="pick(this)">
+      <div class="screen a">
+        <header class="mast"><div class="logo">Право на переезд</div><div class="nav">СТАТЬИ&nbsp;&nbsp; СПРАВОЧНИК</div></header>
+        <section class="hero">
+          <div class="kicker">Разбор законодательства · 11 июня 2026</div>
+          <h3>Вид на жительство в России: основания, документы и сроки</h3>
+          <p class="lead">Подробно разбираем порядок оформления, изменения законодательства и ошибки, из-за которых заявление возвращают без рассмотрения.</p>
+          <div class="rule"></div>
+          <div class="cols">
+            <div class="news"><b>Что изменилось в правилах подачи в 2026 году</b><div class="source">Проверено по ФЗ-115 и приказам МВД</div></div>
+            <aside class="alert"><b>Важно</b><br>Сроки и пакет документов зависят от основания. Сначала определите свою категорию.</aside>
+          </div>
+        </section>
+      </div>
+      <div class="meta"><h2>A. Правовой вестник</h2><p>Классическая редакционная подача: крупный антиквенный заголовок, газетная сетка, строгие линии и теплый бумажный фон.</p><span class="tag">Самый журнальный</span></div>
+    </article>
+    <article class="choice" data-choice="b" data-text="B — Навигатор права" onclick="pick(this)">
+      <div class="screen b">
+        <header class="mast"><div class="logo">основание</div><div class="mark"></div></header>
+        <section class="hero">
+          <div class="eyebrow">Миграционное право простыми словами</div>
+          <h3>Как получить ВНЖ и не потеряться в требованиях</h3>
+          <p class="lead">Редакция проверяет каждый материал по первоисточникам и превращает правовые нормы в понятные сценарии действий.</p>
+          <div class="index">
+            <div class="row"><span class="num">01</span><b>Определить основание</b><span class="arrow">→</span></div>
+            <div class="row"><span class="num">02</span><b>Собрать документы</b><span class="arrow">→</span></div>
+            <div class="row"><span class="num">03</span><b>Проверить сроки</b><span class="arrow">→</span></div>
+          </div>
+          <div class="ai"><small>ИИ-КОНСУЛЬТАНТ ПО МАТЕРИАЛАМ РЕДАКЦИИ</small><p>Опишите ситуацию. Помощник найдет нужное основание и покажет источники.</p></div>
+        </section>
+      </div>
+      <div class="meta"><h2>B. Навигатор права</h2><p>Современное digital-издание: спокойный зеленый акцент, ясная навигация, редакционность без ощущения старой газеты.</p><span class="tag">Рекомендуемый баланс</span></div>
+    </article>
+    <article class="choice" data-choice="c" data-text="C — Юридическое досье" onclick="pick(this)">
+      <div class="screen c">
+        <header class="mast"><div class="logo">Миграционное досье</div><div class="seal">МД</div></header>
+        <section class="hero">
+          <div class="status"><span class="dot"></span>МАТЕРИАЛ ОБНОВЛЕН 10 ИЮНЯ 2026</div>
+          <h3>ВНЖ в России: полное руководство</h3>
+          <p class="lead">Основания для получения, требования МВД, список документов и порядок действий после выдачи статуса.</p>
+          <div class="panel"><h4>Содержание досье</h4><div class="steps"><div class="step"><span>Кому доступно</span><span>01</span></div><div class="step"><span>Документы</span><span>02</span></div><div class="step"><span>Сроки и расходы</span><span>03</span></div></div></div>
+          <div class="note"><b>Редакционная проверка:</b> ссылки на нормы права, дата актуализации и автор разъяснения видны в начале статьи.</div>
+        </section>
+      </div>
+      <div class="meta"><h2>C. Юридическое досье</h2><p>Наиболее строгий вариант: архивная эстетика, темно-синий цвет, ощущение системности и проверенного справочника.</p><span class="tag">Самый консервативный</span></div>
+    </article>
+  </div>
+  <div class="hint"><b>Моя рекомендация — B.</b> Он достаточно авторитетный для юридической темы, но остается понятным цифровым продуктом и лучше всего связывает статьи, инструменты и ИИ-консультанта.</div>
+</main>
+</body>
+</html>

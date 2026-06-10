@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Find all files with "downloaded" or "failed" status
-        const pendingFiles = Object.entries(manifest).filter(([_, meta]) => meta.status === "downloaded" || meta.status === "failed");
+        const pendingFiles = Object.entries(manifest).filter(([, meta]) => meta.status === "downloaded" || meta.status === "failed");
 
         if (pendingFiles.length === 0) {
           sendLog("Все файлы уже векторизованы. Нет новых данных.");

@@ -9,7 +9,7 @@
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-manrope);
+  --font-sans: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
 :root {
@@ -122,5 +122,4 @@ input:focus-visible {
 .animate-pulse-glow {
   animation: pulse-glow 10s ease-in-out infinite;
 }
-
 

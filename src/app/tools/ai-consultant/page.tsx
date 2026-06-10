@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Send, Bot, User, Sparkles, Shield, Bookmark, AlertCircle, RefreshCw, Download, ExternalLink } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Sparkles, Shield, Bookmark, AlertCircle, Download, ExternalLink } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
+import SafeMessageText from "@/components/chat/SafeMessageText";
 
 interface Source {
   name: string;
@@ -164,11 +165,12 @@ export default function AIConsultantPage() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [remainingRequests, setRemainingRequests] = useState<number | null>(null);
+  const [remainingRequests, setRemainingRequests] = useState(20);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const messageIdRef = useRef(0);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -182,40 +184,36 @@ export default function AIConsultantPage() {
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
-  useEffect(() => {
-    // Dynamic welcome message translation if it is the only one in the history
-    setMessages(prev => {
+  const createMessageId = () => {
+    messageIdRef.current += 1;
+    return `message-${messageIdRef.current}`;
+  };
+
+  const selectLanguage = (nextLanguage: string) => {
+    setLanguage(nextLanguage);
+    const nextTranslation = TRANSLATIONS[nextLanguage] || TRANSLATIONS.ru;
+    setMessages((prev) => {
       if (prev.length === 1 && prev[0].id === "welcome") {
         return [{
           ...prev[0],
-          text: t.welcome
+          text: nextTranslation.welcome
         }];
       }
       return prev;
     });
-  }, [language, t.welcome]);
+    setShowLangMenu(false);
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
-
-  // Read initial limits if available
-  useEffect(() => {
-    // Basic local tracking as fallback
-    const localLimit = localStorage.getItem("ai_requests_left");
-    if (localLimit !== null) {
-      setRemainingRequests(parseInt(localLimit, 10));
-    } else {
-      setRemainingRequests(20);
-    }
-  }, []);
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
 
     setErrorMsg(null);
     const userMsg: Message = {
-      id: Math.random().toString(),
+      id: createMessageId(),
       sender: "user",
       text,
       timestamp: new Date()
@@ -236,7 +234,7 @@ export default function AIConsultantPage() {
 
       if (response.ok) {
         const fullText = data.text;
-        const msgId = Math.random().toString();
+        const msgId = createMessageId();
 
         const aiMsg: Message = {
           id: msgId,
@@ -277,7 +275,7 @@ export default function AIConsultantPage() {
         
         if (response.status === 429) {
           const aiMsg: Message = {
-            id: Math.random().toString(),
+            id: createMessageId(),
             sender: "ai",
             text: data.text || errorText,
             showLeadForm: true,
@@ -296,26 +294,6 @@ export default function AIConsultantPage() {
     } finally {
       setIsTyping(false);
     }
-  };
-
-  // Helper to safely render simple markdown
-  const formatMessageText = (text: string) => {
-    const lines = text.split("\n");
-    return lines.map((line, idx) => {
-      let formatted = line;
-      // Bold Markdown **text**
-      formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-      // Markdown Links [text](url)
-      formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-500 hover:text-blue-600 underline font-semibold transition-colors" target="_blank" rel="noopener noreferrer">$1</a>');
-      
-      return (
-        <p
-          key={idx}
-          className="min-h-[1.25rem] mb-1.5"
-          dangerouslySetInnerHTML={{ __html: formatted }}
-        />
-      );
-    });
   };
 
   return (
@@ -367,8 +345,7 @@ export default function AIConsultantPage() {
                       key={lang.code}
                       type="button"
                       onClick={() => {
-                        setLanguage(lang.code);
-                        setShowLangMenu(false);
+                        selectLanguage(lang.code);
                       }}
                       className={`flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                         language === lang.code
@@ -417,7 +394,15 @@ export default function AIConsultantPage() {
                     ? "bg-blue-600 text-white rounded-tr-none shadow-md shadow-blue-500/10"
                     : "bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-tl-none text-slate-800 dark:text-slate-200 shadow-sm"
                 }`}>
-                  {msg.sender === "user" ? msg.text : formatMessageText(msg.text)}
+                  {msg.sender === "user" ? (
+                    msg.text
+                  ) : (
+                    <SafeMessageText
+                      text={msg.text}
+                      linkClassName="font-semibold text-blue-500 underline transition-colors hover:text-blue-600"
+                      paragraphClassName="mb-1.5 min-h-[1.25rem]"
+                    />
+                  )}
                 </div>
 
                 {/* Inline Lead Form Card */}

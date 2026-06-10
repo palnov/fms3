@@ -5,8 +5,12 @@ import Database from "better-sqlite3";
 
 // Polyfill DOMMatrix for PDF parsing in Node.js
 if (typeof global.DOMMatrix === "undefined") {
-  // @ts-ignore
+  // @ts-expect-error pdf-parse expects a browser DOMMatrix implementation.
   global.DOMMatrix = class DOMMatrix {};
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function extractTextFromBinaryDoc(buffer: Buffer): string {
@@ -110,28 +114,29 @@ export async function getEmbedding(text: string, openRouterApiKey?: string): Pro
         throw new Error(`Invalid response structure from OpenRouter: ${JSON.stringify(data)}`);
       }
       return embedding;
-    } catch (err: any) {
+    } catch (err: unknown) {
       attempt++;
+      const errorMessage = getErrorMessage(err);
       const isTransient = 
-        err.message.includes("500") || 
-        err.message.includes("502") || 
-        err.message.includes("503") || 
-        err.message.includes("504") || 
-        err.message.includes("429") ||
-        err.message.toLowerCase().includes("fetch failed") ||
-        err.message.toLowerCase().includes("timeout") ||
-        err.message.toLowerCase().includes("econnreset") ||
-        err.message.toLowerCase().includes("econnrefused") ||
-        err.message.toLowerCase().includes("enotfound");
+        errorMessage.includes("500") ||
+        errorMessage.includes("502") ||
+        errorMessage.includes("503") ||
+        errorMessage.includes("504") ||
+        errorMessage.includes("429") ||
+        errorMessage.toLowerCase().includes("fetch failed") ||
+        errorMessage.toLowerCase().includes("timeout") ||
+        errorMessage.toLowerCase().includes("econnreset") ||
+        errorMessage.toLowerCase().includes("econnrefused") ||
+        errorMessage.toLowerCase().includes("enotfound");
 
       if (isTransient && attempt <= maxRetries) {
         const backoffMs = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-        console.warn(`Embedding failed (attempt ${attempt}/${maxRetries}): ${err.message}. Retrying in ${Math.round(backoffMs)}ms...`);
+        console.warn(`Embedding failed (attempt ${attempt}/${maxRetries}): ${errorMessage}. Retrying in ${Math.round(backoffMs)}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoffMs));
         continue;
       }
 
-      console.error("Embedding generation failed:", err.message);
+      console.error("Embedding generation failed:", errorMessage);
       throw err;
     }
   }
@@ -187,8 +192,8 @@ export async function ocrPdfWithGemini(
         const errText = await response.text();
         console.warn(`Direct Gemini OCR API failed: ${response.status} - ${errText}`);
       }
-    } catch (err: any) {
-      console.warn("Direct Gemini OCR exception:", err.message);
+    } catch (err: unknown) {
+      console.warn("Direct Gemini OCR exception:", getErrorMessage(err));
     }
   }
 
@@ -247,8 +252,8 @@ export async function ocrPdfWithGemini(
           const errText = await response.text();
           console.warn(`OpenRouter OCR API failed for ${model}: ${response.status} - ${errText}`);
         }
-      } catch (err: any) {
-        console.warn(`OpenRouter OCR exception for ${model}:`, err.message);
+      } catch (err: unknown) {
+        console.warn(`OpenRouter OCR exception for ${model}:`, getErrorMessage(err));
       }
     }
   }
@@ -269,10 +274,8 @@ export async function extractText(
   } else if (ext === ".pdf") {
     let pdfText = "";
     let useOcr = false;
-    let parseError = null;
-
     try {
-      const { PDFParse } = require("pdf-parse");
+      const { PDFParse } = await import("pdf-parse");
       const parser = new PDFParse({ data: fileBuffer });
       const textResult = await parser.getText();
       await parser.destroy();
@@ -285,17 +288,16 @@ export async function extractText(
         console.warn(`PDF ${filePath} has low text density (length: ${cleanText.length}, pages: ${pageCount}). Falling back to OCR.`);
         useOcr = true;
       }
-    } catch (err: any) {
-      console.warn(`Standard PDF parsing failed for ${filePath}: ${err.message}. Falling back to OCR...`);
-      parseError = err;
+    } catch (err: unknown) {
+      console.warn(`Standard PDF parsing failed for ${filePath}: ${getErrorMessage(err)}. Falling back to OCR...`);
       useOcr = true;
     }
 
     if (useOcr) {
       try {
         pdfText = await ocrPdfWithGemini(fileBuffer, geminiApiKey, openRouterApiKey);
-      } catch (ocrErr: any) {
-        console.warn(`OCR fallback failed for ${filePath}: ${ocrErr.message}. Falling back to standard PDF parsed text or filename metadata.`);
+      } catch (ocrErr: unknown) {
+        console.warn(`OCR fallback failed for ${filePath}: ${getErrorMessage(ocrErr)}. Falling back to standard PDF parsed text or filename metadata.`);
         // If standard parser extracted some text (even if low density), use it as fallback
         if (pdfText && pdfText.trim().length > 20) {
           return pdfText;
@@ -311,7 +313,7 @@ export async function extractText(
     try {
       const result = await mammoth.extractRawText({ buffer: fileBuffer });
       return result.value;
-    } catch (err) {
+    } catch {
       console.warn(`Mammoth failed on ${filePath}, falling back to binary doc parser...`);
       return extractTextFromBinaryDoc(fileBuffer);
     }
@@ -350,8 +352,8 @@ export async function indexFileContent(
       const embedding = await getEmbedding(chunk, openRouterApiKey);
       insertChunk.run(chunk, filename, JSON.stringify(embedding), sourceUrl, localDownloadUrl);
       count++;
-    } catch (err: any) {
-      if (logCallback) logCallback(`  Ошибка чанка ${i + 1}: ${err.message}`);
+    } catch (err: unknown) {
+      if (logCallback) logCallback(`  Ошибка чанка ${i + 1}: ${getErrorMessage(err)}`);
       throw err;
     }
   }

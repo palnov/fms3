@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, AlertTriangle, FileCheck, ArrowLeft, Loader2, ExternalLink } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, ExternalLink } from "lucide-react";
 
 type DocType = "passport" | "patent" | "ban";
 

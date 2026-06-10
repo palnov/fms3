@@ -2,7 +2,6 @@ import { getEmbedding } from "../src/lib/knowledge-indexer";
 import fs from "fs";
 import path from "path";
 import Database from "better-sqlite3";
-import crypto from "crypto";
 
 function loadEnv() {
   const envPath = path.join(process.cwd(), ".env.local");

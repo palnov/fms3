@@ -5,7 +5,7 @@ import Link from "next/link";
 import { 
   ArrowRight, ShieldCheck, FileText, Globe, 
   MapPin, CheckCircle2, Target, ClipboardList, 
-  BookOpen, Bot, ChevronRight, Search, Landmark, LandmarkIcon
+  BookOpen, Bot, ChevronRight, Search, Landmark
 } from "lucide-react";
 import gsap from "gsap";
 import MigrationIllustration from "@/components/illustrations/MigrationIllustration";

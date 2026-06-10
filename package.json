@@ -1,10 +1,10 @@
 {
-  "name": "temp_app",
+  "name": "fms3",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next dev --webpack",
-    "build": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next build",
+    "build": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next build --webpack",
     "start": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem next start",
     "lint": "eslint",
     "index-kb": "NODE_EXTRA_CA_CERTS=./russian_trusted_root_ca/combined_ca.pem tsx scripts/index-knowledge.ts"
