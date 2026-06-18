@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import ArticleLayout from '@/components/mdx/ArticleLayout';
 
 export const metadata: Metadata = {
-  title: 'РВП в России: как получить в 2026 году',
-  description: 'Пошаговое руководство по получению Разрешения на временное проживание (РВП) в России. Квоты, основания вне квоты и списки документов.',
+  title: 'РВП в России в 2026 году: как получить',
+  description: 'Как получить РВП по квоте и без неё: основания, документы, заявление, медкомиссия, подача и обязанности после выдачи.',
+  alternates: { canonical: '/pathways/rvp' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <ArticleLayout>{children}</ArticleLayout>;
 }

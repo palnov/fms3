@@ -3,7 +3,7 @@ import path from "path";
 import fs from "fs";
 import Database from "better-sqlite3";
 import crypto from "crypto";
-import { getEmbedding } from "@/lib/knowledge-indexer";
+import { getQueryEmbedding } from "@/lib/query-embedding";
 
 interface ChunkRow {
   id: number;
@@ -276,7 +276,7 @@ export async function POST(request: Request) {
     const db = new Database(dbPath, { readonly: true });
 
     // 4. Retrieve context using Embeddings (RAG)
-    const queryVector = await getEmbedding(question, openrouterApiKey);
+    const queryVector = await getQueryEmbedding(question, openrouterApiKey);
 
     // Fetch all chunks to compute similarity
     const allChunks = db.prepare("SELECT id, content, source_file, embedding, source_url, local_download_url FROM chunks").all() as ChunkRow[];

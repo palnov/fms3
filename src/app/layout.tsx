@@ -1,27 +1,40 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import FloatingLawyerWidget from "@/components/widgets/FloatingLawyerWidget";
+
+const golos = localFont({
+  src: [
+    { path: "./fonts/golos-text-400.ttf", weight: "400", style: "normal" },
+    { path: "./fonts/golos-text-600.ttf", weight: "600", style: "normal" },
+    { path: "./fonts/golos-text-700.ttf", weight: "700", style: "normal" },
+    { path: "./fonts/golos-text-800.ttf", weight: "800", style: "normal" },
+  ],
+  variable: "--font-golos",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru"),
   title: {
-    default: "Миграция в Россию 2026 | ВНЖ, РВП, Гражданство",
-    template: "%s | Миграция в Россию",
+    default: "Миграционный справочник | ВНЖ, РВП и гражданство России",
+    template: "%s | Миграционный справочник",
   },
-  description: "Официальная информация, чек-листы и интерактивные инструкции по переезду в Российскую Федерацию.",
-  applicationName: "Миграция в Россию",
+  description: "Понятные инструкции по ВНЖ, РВП, гражданству и работе в России: документы, сроки, изменения законодательства и интерактивные инструменты.",
+  applicationName: "Миграционный справочник",
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    siteName: "Миграция в Россию",
-    title: "Миграция в Россию 2026 | ВНЖ, РВП, Гражданство",
-    description: "Официальная информация, чек-листы и интерактивные инструкции по переезду в Российскую Федерацию.",
+    siteName: "Миграционный справочник",
+    title: "Миграционный справочник",
+    description: "Инструкции, документы и сервисы для легального проживания и работы в России.",
   },
   twitter: {
     card: "summary",
-    title: "Миграция в Россию 2026",
-    description: "Инструкции по РВП, ВНЖ, гражданству и переезду в Россию.",
+    title: "Миграционный справочник",
+    description: "Инструкции по РВП, ВНЖ, гражданству и работе в России.",
   },
 };
 
@@ -31,10 +44,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ru" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50">
+    <html lang="ru" className={`${golos.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col">
+        <a className="skip-link" href="#main-content">Перейти к содержанию</a>
         <Header />
-        <main className="flex-grow flex flex-col">{children}</main>
+        <main id="main-content" className="flex-grow flex flex-col">{children}</main>
+        <Footer />
         <FloatingLawyerWidget />
       </body>
     </html>

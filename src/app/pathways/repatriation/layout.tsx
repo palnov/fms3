@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import ArticleLayout from '@/components/mdx/ArticleLayout';
 
 export const metadata: Metadata = {
-  title: 'Государственная программа переселения соотечественников 2026',
-  description: 'Всё о программе переселения соотечественников в РФ. Как получить подъемные выплаты, выбрать регион и оформить гражданство.',
+  title: 'Программа переселения соотечественников 2026',
+  description: 'Как участвовать в программе переселения в Россию: выбор региона, документы, этапы, выплаты, РВП и гражданство.',
+  alternates: { canonical: '/pathways/repatriation' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <ArticleLayout>{children}</ArticleLayout>;
 }

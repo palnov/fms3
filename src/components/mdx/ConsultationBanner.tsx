@@ -1,55 +1,67 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { ArrowRight, Bot, Scale } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 
 interface ConsultationBannerProps {
   title?: string;
   description?: string;
   context?: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
 }
 
 export default function ConsultationBanner({
-  title = "Остались вопросы или нужна помощь?",
-  description = "Оставьте заявку, и наш старший миграционный юрист бесплатно оценит вашу ситуацию и расскажет пошаговый план решения.",
+  title = "Разберите свою ситуацию по материалам справочника",
+  description = "Сначала задайте вопрос ИИ-помощнику. Он найдёт связанные инструкции и источники. Если потребуется индивидуальный анализ, можно оставить заявку специалисту.",
   context = "Баннер в статье",
+  secondaryHref,
+  secondaryLabel,
 }: ConsultationBannerProps) {
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <div className="my-8 rounded-2xl border border-blue-500/30 bg-gradient-to-br from-blue-900/40 to-slate-900 overflow-hidden relative">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-      
-      <div className="p-6 sm:p-8 relative z-10 flex flex-col md:flex-row gap-8 items-center justify-between">
-        <div className="flex-1 text-center md:text-left">
-          <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 tracking-tight">
-            {title}
-          </h3>
-          <p className="text-gray-300 text-sm sm:text-base leading-relaxed mb-0">
-            {description}
-          </p>
+    <section className="my-8 overflow-hidden rounded-2xl bg-[#1f2c41] p-5 text-white sm:p-7">
+      <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
+        <div>
+          <span className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff7b7e]">
+            <Bot className="h-4 w-4" />
+            Следующий шаг
+          </span>
+          <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
+          <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-300">{description}</p>
         </div>
-
-        <div className="shrink-0 w-full md:w-auto">
-          {!showForm ? (
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full md:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:shadow-[0_0_25px_rgba(37,99,235,0.5)] transition-all active:scale-95 whitespace-nowrap"
+        <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+          <Link href="/tools/ai-consultant" className="button-primary whitespace-nowrap">
+            Задать вопрос <ArrowRight className="h-4 w-4" />
+          </Link>
+          {secondaryHref && secondaryLabel ? (
+            <Link
+              href={secondaryHref}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
             >
-              Отправить заявку юристу
+              {secondaryLabel}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowForm((value) => !value)}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
+            >
+              <Scale className="h-4 w-4" />
+              Нужен специалист
             </button>
-          ) : null}
+          )}
         </div>
       </div>
 
       {showForm && (
-        <div className="p-6 pt-0 sm:p-8 sm:pt-0 animate-in fade-in slide-in-from-top-4">
-          <div className="max-w-xl mx-auto md:mx-0 w-full">
-            <LeadForm sourceContext={context} />
-          </div>
+        <div className="mt-6 rounded-xl bg-white p-4 text-[#1f2c41] sm:p-6">
+          <LeadForm sourceContext={context} />
         </div>
       )}
-    </div>
+    </section>
   );
 }

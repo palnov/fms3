@@ -7,7 +7,7 @@
 - Next.js 16 App Router, React 19, TypeScript
 - Tailwind CSS 4 и MDX
 - SQLite (`better-sqlite3`) для локальной базы знаний
-- OpenRouter/Gemini для embeddings, генерации ответов и OCR
+- OpenRouter для embeddings и генерации ответов
 
 ## Локальный запуск
 
@@ -28,15 +28,11 @@ npm run dev       # локальная разработка
 npm run lint      # ESLint
 npm run build     # production build
 npm run start     # запуск production build
-npm run index-kb  # индексация базы знаний
 ```
 
 ## Основные разделы
 
 - `src/app/pathways` — SEO-руководства и миграционные сценарии.
-- `src/app/tools` — консультант, калькуляторы, проверка документов и внутренний парсер.
+- `src/app/tools` — консультант, калькуляторы и проверка документов.
 - `src/app/api/consultant` — RAG API консультанта.
-- `src/app/api/parser` — загрузка, извлечение и векторизация источников.
-- `knowledge` и `public/downloads` — манифесты и локальные документы базы знаний.
-
-Парсер и векторизатор пока входят в приложение. Перед публичным размещением их необходимо защитить авторизацией либо вынести во внутренний сервис.
+- `knowledge` и `public/downloads` — runtime-метаданные и локальные документы базы знаний.

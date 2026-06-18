@@ -2,35 +2,45 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Menu, Search, X } from "lucide-react";
+
+const links = [
+  { href: "/pathways/vnzh", label: "ВНЖ" },
+  { href: "/pathways/rvp", label: "РВП" },
+  { href: "/pathways/citizenship", label: "Гражданство" },
+  { href: "/pathways/work/patent", label: "Работа" },
+  { href: "/pathways", label: "Все инструкции" },
+];
 
 export default function Header() {
   const pathname = usePathname();
-
-  const links = [
-    { href: "/pathways/vnzh", label: "ВНЖ" },
-    { href: "/pathways/rvp", label: "РВП" },
-    { href: "/pathways/citizenship", label: "Гражданство" },
-    { href: "/tools/calculator", label: "Калькулятор шансов" }
-  ];
+  const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full glass border-b border-slate-200/40 dark:border-slate-800/30">
-      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-slate-800 dark:from-primary-400 dark:to-slate-200 active:scale-95 transition-transform duration-100">
-          Миграция РФ
+    <header className="sticky top-0 z-50 border-b border-[#d8dee7]/90 bg-[#f4f6fa]/92 backdrop-blur-xl">
+      <div className="site-container flex min-h-20 items-center gap-5">
+        <Link href="/" className="mr-auto flex items-center gap-3" onClick={() => setOpen(false)}>
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#1f2c41] text-sm font-black text-white">
+            МС
+          </span>
+          <span className="leading-none">
+            <strong className="block text-[15px] font-extrabold tracking-[-0.035em]">Миграционный</strong>
+            <span className="text-[13px] font-bold text-[#ff2e32]">справочник</span>
+          </span>
         </Link>
-        
-        <nav className="hidden md:flex gap-8 text-sm font-semibold">
+
+        <nav aria-label="Основная навигация" className="hidden items-center gap-6 lg:flex">
           {links.map((link) => {
-            const isActive = pathname.startsWith(link.href);
+            const active = pathname === link.href || (link.href !== "/pathways" && pathname.startsWith(`${link.href}/`));
             return (
-              <Link 
+              <Link
                 key={link.href}
-                href={link.href} 
-                className={`transition-colors relative py-2 after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-primary-500 after:transition-all duration-300 ${
-                  isActive 
-                    ? "text-primary-500 after:w-full font-bold" 
-                    : "text-slate-600 dark:text-slate-300 hover:text-primary-500 after:w-0 hover:after:w-full"
+                href={link.href}
+                className={`border-b-2 py-7 text-sm font-bold transition-colors ${
+                  active
+                    ? "border-[#ff2e32] text-[#1f2c41]"
+                    : "border-transparent text-[#667287] hover:text-[#02629f]"
                 }`}
               >
                 {link.label}
@@ -39,16 +49,42 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/tools/calculator" 
-            className="hidden sm:inline-flex px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-primary-600 hover:bg-primary-500 transition-all shadow-sm active:scale-97 cursor-pointer"
-          >
-            Начать оценку
-          </Link>
-        </div>
+        <Link
+          href="/tools/ai-consultant"
+          className="hidden min-h-11 items-center gap-2 rounded-xl border border-[#d8dee7] bg-white px-4 text-sm font-bold text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] sm:inline-flex"
+        >
+          <Search className="h-4 w-4" />
+          Найти ответ
+        </Link>
+
+        <button
+          type="button"
+          className="grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white lg:hidden"
+          aria-label={open ? "Закрыть меню" : "Открыть меню"}
+          aria-expanded={open}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </div>
+
+      {open && (
+        <nav aria-label="Мобильная навигация" className="site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-3 py-3 text-sm font-bold text-[#1f2c41] hover:bg-white"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <Link href="/tools/ai-consultant" onClick={() => setOpen(false)} className="button-primary mt-2">
+            Задать вопрос справочнику
+          </Link>
+        </nav>
+      )}
     </header>
   );
 }
-

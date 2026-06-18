@@ -15,12 +15,12 @@ interface Message {
 const PARTNER_PHONE = process.env.NEXT_PUBLIC_PARTNER_PHONE || "8 (800) 350-84-13";
 
 const LANGUAGES = [
-  { code: "ru", name: "Русский", flag: "🇷🇺" },
-  { code: "tg", name: "Тоҷикӣ", flag: "🇹🇯" },
-  { code: "uz", name: "O'zbekcha", flag: "🇺🇿" },
-  { code: "ro", name: "Română", flag: "🇲🇩" },
-  { code: "kk", name: "Қазақша", flag: "🇰🇿" },
-  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "ru", name: "Русский" },
+  { code: "tg", name: "Тоҷикӣ" },
+  { code: "uz", name: "O'zbekcha" },
+  { code: "ro", name: "Română" },
+  { code: "kk", name: "Қазақша" },
+  { code: "en", name: "English" },
 ];
 
 const TRANSLATIONS: Record<string, {
@@ -225,32 +225,29 @@ export default function FloatingLawyerWidget() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-500 hover:scale-105 transition-all z-50 flex items-center justify-center ${
+        className={`fixed bottom-5 right-5 min-h-12 gap-2 rounded-xl bg-[#ff2e32] px-4 text-white shadow-[0_14px_36px_rgba(31,44,65,.18)] transition-all hover:bg-[#d92327] z-50 flex items-center justify-center ${
           isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
         }`}
         aria-label="Задать вопрос ИИ"
       >
-        <MessageSquare className="w-6 h-6" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-        </span>
+        <MessageSquare className="w-5 h-5" />
+        <span className="text-sm font-extrabold">Задать вопрос</span>
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:justify-end sm:items-end sm:bottom-6 sm:right-6 sm:top-auto sm:left-auto sm:p-0 bg-black/50 sm:bg-transparent">
-          <div className="bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl w-full sm:w-[380px] h-[85vh] sm:h-[550px] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f2c41]/35 sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:items-end sm:justify-end sm:bg-transparent">
+          <div className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#d8dee7] bg-white shadow-2xl sm:h-[590px] sm:w-[400px] sm:rounded-2xl">
             {/* Header */}
-            <div className="bg-slate-800/90 backdrop-blur border-b border-slate-700/60 p-3.5 flex flex-col gap-1.5 shrink-0 relative">
+            <div className="relative flex shrink-0 flex-col gap-2 border-b border-[#d8dee7] bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center relative shrink-0">
+                  <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#02629f]">
                     <Bot className="w-5 h-5 text-white" />
-                    <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border-2 border-slate-800"></span>
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500"></span>
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-xs sm:text-sm">{t.assistantTitle}</h3>
+                    <h3 className="text-sm font-extrabold text-[#1f2c41]">{t.assistantTitle}</h3>
                     <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {t.online}
                     </p>
@@ -261,17 +258,16 @@ export default function FloatingLawyerWidget() {
                     <button
                       type="button"
                       onClick={() => setShowLangMenu(!showLangMenu)}
-                      className="flex items-center gap-1 text-[11px] font-extrabold bg-slate-950/65 hover:bg-slate-950/90 border border-slate-700 rounded-lg px-2.5 py-1 text-white transition-all cursor-pointer shadow-md active:scale-95"
+                      className="flex min-h-9 items-center gap-1 rounded-lg border border-[#d8dee7] bg-[#f4f6fa] px-2.5 text-[11px] font-extrabold text-[#1f2c41]"
                     >
-                      <span>{LANGUAGES.find(l => l.code === language)?.flag}</span>
-                      <span className="text-[9px] text-slate-300 font-bold uppercase">{language}</span>
-                      <svg className={`w-2.5 h-2.5 text-slate-400 transition-transform ${showLangMenu ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <span className="text-[9px] font-black uppercase">{language}</span>
+                      <svg className={`w-2.5 h-2.5 text-[#667287] transition-transform ${showLangMenu ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
 
                     {showLangMenu && (
-                      <div className="absolute right-0 mt-1.5 w-32 bg-slate-950/95 backdrop-blur-md border border-slate-800 rounded-xl p-1 shadow-2xl z-50 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="absolute right-0 z-50 mt-1.5 flex w-36 flex-col gap-0.5 rounded-xl border border-[#d8dee7] bg-white p-1 shadow-2xl">
                         {LANGUAGES.map((lang) => (
                           <button
                             key={lang.code}
@@ -281,12 +277,12 @@ export default function FloatingLawyerWidget() {
                             }}
                             className={`flex items-center justify-between w-full px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                               language === lang.code
-                                ? "bg-blue-600 text-white"
-                                : "text-slate-350 hover:bg-slate-800 hover:text-white"
+                                ? "bg-[#02629f] text-white"
+                                : "text-[#4f5c70] hover:bg-[#f4f6fa]"
                             }`}
                           >
                             <span className="flex items-center gap-1.5">
-                              <span>{lang.flag}</span>
+                              <span className="w-5 text-[9px] font-black uppercase">{lang.code}</span>
                               <span>{lang.name}</span>
                             </span>
                             {language === lang.code && (
@@ -301,7 +297,7 @@ export default function FloatingLawyerWidget() {
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="text-slate-400 hover:text-white transition-colors p-1"
+                    className="rounded-lg p-2 text-[#667287] hover:bg-[#f4f6fa] hover:text-[#1f2c41]"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -309,36 +305,36 @@ export default function FloatingLawyerWidget() {
               </div>
               
               {/* Partner Hotline Number */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-950/40 border border-slate-700/30 rounded-lg text-[10px] sm:text-xs font-semibold text-slate-300">
-                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0 animate-pulse" />
+              <div className="flex items-center gap-1.5 rounded-lg bg-[#f4f6fa] px-2.5 py-2 text-[10px] font-semibold text-[#667287] sm:text-xs">
+                <Phone className="w-3.5 h-3.5 text-[#02629f] shrink-0" />
                 <span>{t.hotline}</span>
-                <a href={`tel:${PARTNER_PHONE.replace(/\D/g, "")}`} className="hover:text-white underline text-emerald-400 font-bold ml-auto">
+                <a href={`tel:${PARTNER_PHONE.replace(/\D/g, "")}`} className="ml-auto font-bold text-[#02629f] underline">
                   {PARTNER_PHONE}
                 </a>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-slate-950/20">
+            <div className="flex-grow space-y-4 overflow-y-auto bg-[#f4f6fa] p-4">
               {messages.map((msg) => (
                 <div key={msg.id} className="space-y-2">
                   <div className={`flex gap-2.5 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs ${
-                      msg.sender === "user" ? "bg-slate-700 text-white" : "bg-blue-600/10 text-blue-400 border border-blue-500/10"
+                      msg.sender === "user" ? "bg-[#1f2c41] text-white" : "border border-[#d8dee7] bg-white text-[#02629f]"
                     }`}>
                       {msg.sender === "user" ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                     </div>
                     <div className={`p-3 rounded-2xl text-xs font-medium leading-relaxed ${
                       msg.sender === "user" 
-                        ? "bg-blue-600 text-white rounded-tr-none" 
-                        : "bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none"
+                        ? "bg-[#02629f] text-white rounded-tr-none"
+                        : "border border-[#d8dee7] bg-white text-[#4f5c70] rounded-tl-none"
                     }`}>
                       {msg.sender === "user" ? (
                         msg.text
                       ) : (
                         <SafeMessageText
                           text={msg.text}
-                          linkClassName="font-semibold text-blue-400 hover:underline"
+                          linkClassName="font-semibold text-[#02629f] hover:underline"
                         />
                       )}
                     </div>
@@ -346,12 +342,12 @@ export default function FloatingLawyerWidget() {
 
                   {/* Inline Lead Form */}
                   {msg.sender === "ai" && msg.showLeadForm && (
-                    <div className="ml-9 p-4 bg-slate-900/90 border border-slate-800 rounded-xl max-w-[85%] space-y-2">
-                      <div className="flex items-center gap-1.5 text-blue-400 text-[10px] font-bold">
-                        <Sparkles className="w-3 h-3 animate-pulse" />
+                    <div className="ml-9 max-w-[85%] space-y-2 rounded-xl border border-[#d8dee7] bg-white p-4">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#ff2e32]">
+                        <Sparkles className="w-3 h-3" />
                         <span>{t.lawyerTitle}</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 font-semibold leading-normal">
+                      <p className="text-[10px] font-semibold leading-normal text-[#667287]">
                         {t.lawyerText}
                       </p>
                       <LeadForm 
@@ -366,13 +362,13 @@ export default function FloatingLawyerWidget() {
 
               {isTyping && (
                 <div className="flex gap-2.5 max-w-[80%]">
-                  <div className="w-7 h-7 rounded-lg bg-blue-600/10 text-blue-400 border border-blue-500/10 flex items-center justify-center shrink-0">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[#d8dee7] bg-white text-[#02629f]">
                     <Bot className="w-3.5 h-3.5" />
                   </div>
-                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:0.2s]"></span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 animate-bounce [animation-delay:0.4s]"></span>
+                  <div className="flex items-center gap-1 rounded-2xl rounded-tl-none border border-[#d8dee7] bg-white p-3">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#667287]"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#667287]"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#667287]"></span>
                   </div>
                 </div>
               )}
@@ -380,19 +376,19 @@ export default function FloatingLawyerWidget() {
             </div>
 
             {/* Input Bar */}
-            <form onSubmit={handleSend} className="p-3 border-t border-slate-800/80 bg-slate-900/40 flex gap-2 shrink-0">
+            <form onSubmit={handleSend} className="flex shrink-0 gap-2 border-t border-[#d8dee7] bg-white p-3">
               <input
                 type="text"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 placeholder={t.placeholder}
                 disabled={isTyping}
-                className="flex-grow px-3 py-2 text-xs rounded-lg border border-slate-800 bg-slate-950 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors shadow-inner"
+                className="flex-grow rounded-lg border border-[#d8dee7] bg-[#f4f6fa] px-3 py-2 text-xs text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={isTyping || !inputVal.trim()}
-                className="p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 text-white rounded-lg transition-colors flex items-center justify-center shrink-0"
+                className="flex shrink-0 items-center justify-center rounded-lg bg-[#ff2e32] p-2 text-white hover:bg-[#d92327] disabled:bg-[#abb3c2]"
               >
                 <Send className="w-4 h-4" />
               </button>

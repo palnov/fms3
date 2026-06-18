@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local knowledge database
 knowledge.db
+knowledge.db-*
+
+# local visual brainstorming sessions
+.superpowers/

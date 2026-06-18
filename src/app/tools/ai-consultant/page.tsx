@@ -22,12 +22,12 @@ interface Message {
 }
 
 const LANGUAGES = [
-  { code: "ru", name: "Русский", flag: "🇷🇺" },
-  { code: "tg", name: "Тоҷикӣ", flag: "🇹🇯" },
-  { code: "uz", name: "O'zbekcha", flag: "🇺🇿" },
-  { code: "ro", name: "Română", flag: "🇲🇩" },
-  { code: "kk", name: "Қазақша", flag: "🇰🇿" },
-  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "ru", name: "Русский" },
+  { code: "tg", name: "Тоҷикӣ" },
+  { code: "uz", name: "O'zbekcha" },
+  { code: "ro", name: "Română" },
+  { code: "kk", name: "Қазақша" },
+  { code: "en", name: "English" },
 ];
 
 const TRANSLATIONS: Record<string, {
@@ -38,7 +38,6 @@ const TRANSLATIONS: Record<string, {
   presetsLabel: string;
   presets: string[];
   mvdShield: string;
-  ragTag: string;
   errorLimit: string;
   inputPlaceholderLimit: string;
   sourcesLabel: string;
@@ -56,7 +55,6 @@ const TRANSLATIONS: Record<string, {
       "Можно ли получить ВНЖ без РВП?"
     ],
     mvdShield: "Подключен к ФЗ-115, ФЗ-62 и шаблонам МВД",
-    ragTag: "RAG / SQLite",
     errorLimit: "Вы исчерпали лимит вопросов...",
     inputPlaceholderLimit: "Вы исчерпали лимит вопросов...",
     sourcesLabel: "Источники:",
@@ -74,7 +72,6 @@ const TRANSLATIONS: Record<string, {
       "Оё бе РВП ВНЖ гирифтан мумкин аст?"
     ],
     mvdShield: "Ба ФЗ-115, ФЗ-62 ва қолибҳои ВКД пайваст аст",
-    ragTag: "RAG / SQLite",
     errorLimit: "Шумо лимити саволҳоро тамом кардед...",
     inputPlaceholderLimit: "Шумо лимити саволҳоро тамом кардед...",
     sourcesLabel: "Манбаъҳо:",
@@ -92,7 +89,6 @@ const TRANSLATIONS: Record<string, {
       "RVP-siz VNJ olish mumkinmi?"
     ],
     mvdShield: "FZ-115, FZ-62 va IIV shablonlariga ulangan",
-    ragTag: "RAG / SQLite",
     errorLimit: "Siz savollar limitini tugatdingiz...",
     inputPlaceholderLimit: "Siz savollar limitini tugatdingiz...",
     sourcesLabel: "Manbalar:",
@@ -110,7 +106,6 @@ const TRANSLATIONS: Record<string, {
       "Se poate obține permisul de ședere fără RVP?"
     ],
     mvdShield: "Conectat la FZ-115, FZ-62 și șabloanele MAI",
-    ragTag: "RAG / SQLite",
     errorLimit: "Ați epuizat limita de întrebări...",
     inputPlaceholderLimit: "Ați epuizat limita de întrebări...",
     sourcesLabel: "Surse:",
@@ -128,7 +123,6 @@ const TRANSLATIONS: Record<string, {
       "РВП-сыз ВНЖ алуға бола ма?"
     ],
     mvdShield: "ФЗ-115, ФЗ-62 және ІІМ үлгілеріне қосылған",
-    ragTag: "RAG / SQLite",
     errorLimit: "Сұрақтар лимиті таусылды...",
     inputPlaceholderLimit: "Сұрақтар лимиті таусылды...",
     sourcesLabel: "Дереккөздер:",
@@ -146,7 +140,6 @@ const TRANSLATIONS: Record<string, {
       "Is it possible to get a residence permit without TRP?"
     ],
     mvdShield: "Connected to FZ-115, FZ-62 and MVD templates",
-    ragTag: "RAG / SQLite",
     errorLimit: "You have reached your question limit...",
     inputPlaceholderLimit: "You have reached your question limit...",
     sourcesLabel: "Sources:",
@@ -205,7 +198,9 @@ export default function AIConsultantPage() {
   };
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 1 || isTyping) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }, [messages, isTyping]);
 
   const handleSend = async (text: string) => {
@@ -331,7 +326,7 @@ export default function AIConsultantPage() {
                 onClick={() => setShowLangMenu(!showLangMenu)}
                 className="flex items-center gap-2 text-xs font-extrabold bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-slate-700 dark:text-slate-250 transition-all cursor-pointer shadow-sm active:scale-95"
               >
-                <span>{LANGUAGES.find(l => l.code === language)?.flag}</span>
+                <span className="rounded bg-[#edf2fd] px-1.5 py-0.5 text-[10px] font-black uppercase text-[#02629f]">{language}</span>
                 <span className="font-bold">{LANGUAGES.find(l => l.code === language)?.name}</span>
                 <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showLangMenu ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
@@ -354,7 +349,7 @@ export default function AIConsultantPage() {
                       }`}
                     >
                       <span className="flex items-center gap-2.5">
-                        <span>{lang.flag}</span>
+                        <span className="w-6 text-[10px] font-black uppercase">{lang.code}</span>
                         <span>{lang.name}</span>
                       </span>
                       {language === lang.code && (
@@ -366,9 +361,6 @@ export default function AIConsultantPage() {
                   ))}
                 </div>
               )}
-            </div>
-            <div className="text-[10px] sm:text-xs font-bold tracking-widest px-3 py-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl uppercase">
-              {t.ragTag}
             </div>
           </div>
         </div>

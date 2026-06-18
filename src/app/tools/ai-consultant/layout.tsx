@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function AIConsultantLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return children;
+  return <div className="tool-page">{children}</div>;
 }

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import ArticleLayout from '@/components/mdx/ArticleLayout';
 
 export const metadata: Metadata = {
-  title: 'Вид на жительство (ВНЖ) в России 2026: как получить без РВП, список документов',
-  description: 'Подробное руководство по оформлению ВНЖ в РФ в 2026 году. Кто имеет право получить ВНЖ без РВП (Республика Беларусь, Казахстан, Молдова, брак с детьми), размер госпошлины и сроки.',
+  title: 'ВНЖ в России в 2026 году: как получить',
+  description: 'Как получить вид на жительство в России: основания через РВП и без него, документы, сроки, подача и обязанности после выдачи.',
+  alternates: { canonical: '/pathways/vnzh' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <ArticleLayout>{children}</ArticleLayout>;
 }

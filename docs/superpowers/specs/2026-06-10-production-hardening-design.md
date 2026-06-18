@@ -8,14 +8,13 @@ Included:
 
 - Remove the hard-coded consultant cookie signing secret.
 - Render model output without `dangerouslySetInnerHTML`.
-- Fix React 19, TypeScript, and ESLint errors in the application, parser, and maintenance scripts.
+- Fix React 19, TypeScript, and ESLint errors in the application and maintenance scripts.
 - Add the basic Next.js metadata files required for technical SEO.
 - Update project documentation to match the implemented functionality.
 - Verify the result with ESLint and a production build.
 
 Excluded:
 
-- Parser authentication or extraction into a separate service.
 - Replacing local SQLite.
 - Choosing between Vercel and VPS/Coolify.
 - Large UI or domain architecture refactors.
@@ -30,13 +29,13 @@ AI responses are untrusted text. A shared client component parses only the suppo
 
 React state derived from language or local storage is initialized or changed from event handlers instead of synchronous effects where practical. Message identifiers use `crypto.randomUUID()` in event and request callbacks.
 
-API payloads and JSON documents receive explicit interfaces or `unknown`-based error handling. The parser keeps its current endpoints and filesystem behavior.
+API payloads and JSON documents receive explicit interfaces or `unknown`-based error handling.
 
 ESLint excludes `.agents`, which contains external agent skill implementation files rather than shipped application code.
 
 ## SEO
 
-The root metadata receives a title template, metadata base, canonical URL, Open Graph data, and Twitter data. `robots.ts` and `sitemap.ts` expose crawl rules and the currently implemented public routes. Internal parser routes are excluded from indexing.
+The root metadata receives a title template, metadata base, canonical URL, Open Graph data, and Twitter data. `robots.ts` and `sitemap.ts` expose crawl rules and the currently implemented public routes.
 
 The public site origin is configured by `NEXT_PUBLIC_SITE_URL`, with `https://fms3.ru` as the production default.
 

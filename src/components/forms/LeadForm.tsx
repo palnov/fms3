@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 interface LeadFormProps {
   defaultQuestion?: string;
@@ -20,8 +20,8 @@ export default function LeadForm({
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setStatus("loading");
     setErrorMessage("");
 
@@ -29,107 +29,63 @@ export default function LeadForm({
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          phone,
-          question: `[${sourceContext}] ${question}`,
-        }),
+        body: JSON.stringify({ name, phone, question: `[${sourceContext}] ${question}` }),
       });
-
       const data = await response.json();
 
-      if (response.ok && data.success) {
-        setStatus("success");
-        if (onSuccess) {
-          setTimeout(onSuccess, 3000);
-        }
-      } else {
-        setStatus("error");
-        setErrorMessage(data.error || "Произошла ошибка при отправке.");
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Не удалось отправить заявку.");
       }
-    } catch (err) {
-      console.error(err);
+
+      setStatus("success");
+      onSuccess?.();
+    } catch (error) {
       setStatus("error");
-      setErrorMessage("Ошибка сети. Попробуйте еще раз.");
+      setErrorMessage(error instanceof Error ? error.message : "Ошибка сети. Попробуйте ещё раз.");
     }
   };
 
   if (status === "success") {
     return (
-      <div className="flex flex-col items-center justify-center p-6 text-center bg-green-500/10 border border-green-500/20 rounded-xl">
-        <CheckCircle2 className="w-12 h-12 text-green-500 mb-3" />
-        <h3 className="text-lg font-semibold text-white mb-2">Заявка успешно отправлена!</h3>
-        <p className="text-sm text-gray-400">
-          Юрист скоро свяжется с вами по указанному номеру для проведения консультации.
-        </p>
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center">
+        <CheckCircle2 className="mx-auto mb-3 h-9 w-9 text-emerald-600" />
+        <h3 className="!m-0 !text-lg !font-bold !text-[#1f2c41]">Заявка отправлена</h3>
+        <p className="!mb-0 !mt-2 !text-sm !text-[#667287]">Специалист свяжется с вами по указанному номеру.</p>
       </div>
     );
   }
 
+  const fieldClass = "mt-1.5 w-full rounded-xl border border-[#d8dee7] bg-[#f4f6fa] px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] focus:bg-white";
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="name">
-          Ваше Имя
+    <form onSubmit={handleSubmit} className="grid gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="text-sm font-bold text-[#1f2c41]">
+          Имя
+          <input className={fieldClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Как к вам обращаться" />
         </label>
-        <input
-          id="name"
-          type="text"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Например: Иван Иванов"
-          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-500 transition-all"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="phone">
-          Ваш Телефон
+        <label className="text-sm font-bold text-[#1f2c41]">
+          Телефон
+          <input className={fieldClass} type="tel" required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+7 999 123-45-67" />
         </label>
-        <input
-          id="phone"
-          type="tel"
-          required
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="7 999 123 45 67"
-          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-500 transition-all"
-        />
-        <p className="text-xs text-gray-500 mt-1">Обязательно 11 цифр, начиная с 7.</p>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="question">
-          Суть вопроса
-        </label>
-        <textarea
-          id="question"
-          required
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Опишите вашу ситуацию (например: хочу узнать как получить ВНЖ по профессии...)"
-          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder:text-gray-500 min-h-[100px] resize-y transition-all"
-        />
-      </div>
+      <label className="text-sm font-bold text-[#1f2c41]">
+        Вопрос
+        <textarea className={`${fieldClass} min-h-28 resize-y`} required value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Кратко опишите ситуацию" />
+      </label>
 
       {status === "error" && (
-        <div className="flex items-start gap-2 p-3 text-red-400 bg-red-500/10 rounded-lg text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-          <p>{errorMessage}</p>
+        <div className="flex gap-2 rounded-xl bg-[#fff0f0] p-3 text-sm text-[#9b272a]">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-      >
-        {status === "loading" && <Loader2 className="w-5 h-5 animate-spin" />}
-        <span>Получить консультацию бесплатно</span>
+      <button type="submit" disabled={status === "loading"} className="button-primary disabled:cursor-not-allowed disabled:opacity-60">
+        {status === "loading" && <Loader2 className="h-5 w-5 animate-spin" />}
+        Отправить вопрос специалисту
       </button>
-      
-      <p className="text-xs text-center text-gray-500 mt-2">
+      <p className="!m-0 !text-xs !leading-5 !text-[#7b8799]">
         Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.
       </p>
     </form>

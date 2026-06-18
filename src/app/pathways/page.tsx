@@ -1,79 +1,110 @@
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, FileText, Globe, MapPin } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, FileText, Globe2, House, MapPinned, ShieldCheck } from "lucide-react";
 
 export const metadata = {
-  title: "Все пути переезда в Россию: виды на жительство, РВП, Гражданство",
-  description: "Каталог всех доступных способов легализации в РФ. Подберите свой путь миграции."
+  title: "Все пути легализации в России",
+  description: "Сравните РВП, ВНЖ, гражданство, патент и программу переселения. Выберите подходящий маршрут и перейдите к пошаговой инструкции.",
 };
+
+const paths = [
+  {
+    href: "/pathways/vnzh",
+    icon: ShieldCheck,
+    eyebrow: "Постоянное проживание",
+    title: "Вид на жительство",
+    text: "Бессрочный статус, работа без патента и возможность двигаться к гражданству.",
+    links: ["Без РВП", "По семье", "Документы"],
+    featured: true,
+  },
+  {
+    href: "/pathways/rvp",
+    icon: FileText,
+    eyebrow: "Временное проживание",
+    title: "РВП",
+    text: "Статус на три года по квоте или предусмотренному законом основанию.",
+    links: ["Квота", "По браку", "Общий порядок"],
+  },
+  {
+    href: "/pathways/citizenship",
+    icon: Globe2,
+    eyebrow: "Паспорт России",
+    title: "Гражданство",
+    text: "Общий и упрощённый порядок, требования, сроки и основания.",
+    links: ["Упрощённый порядок", "Документы", "Требования"],
+  },
+  {
+    href: "/pathways/repatriation",
+    icon: House,
+    eyebrow: "Государственная программа",
+    title: "Переселение",
+    text: "Маршрут для соотечественников и репатриантов с региональными условиями.",
+    links: ["Участие", "Регионы", "Выплаты"],
+  },
+  {
+    href: "/pathways/work/patent",
+    icon: BriefcaseBusiness,
+    eyebrow: "Работа в России",
+    title: "Трудовой патент",
+    text: "Оформление, ежемесячная оплата и обязанности иностранного работника.",
+    links: ["Стоимость", "Сроки", "Проверка"],
+  },
+  {
+    href: "/legal/check-ban",
+    icon: MapPinned,
+    eyebrow: "Правовой риск",
+    title: "Запрет на въезд",
+    text: "Как проверить сведения, понять основание ограничения и выбрать следующий шаг.",
+    links: ["Проверка", "Причины", "Обжалование"],
+  },
+];
 
 export default function PathwaysHub() {
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-16">
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-6xl font-black mb-6">Пути <span className="text-primary-600">легализации</span> в РФ</h1>
-        <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Выберите нужный статус, чтобы получить подробную инструкцию по оформлению документов.
+    <div className="site-container py-12 sm:py-20">
+      <header className="grid items-end gap-6 lg:grid-cols-[1fr_30rem]">
+        <div>
+          <p className="section-kicker">Каталог инструкций</p>
+          <h1 className="display-title mt-4 max-w-[12ch]">Выберите путь легализации</h1>
+        </div>
+        <p className="text-lg leading-8 text-[#667287]">
+          Начните со статуса или жизненной ситуации. Внутри каждого раздела собраны основания, документы, сроки и связанные сервисы.
         </p>
+      </header>
+
+      <div className="mt-10 grid gap-4 lg:grid-cols-2">
+        {paths.map((path) => (
+          <Link
+            key={path.href}
+            href={path.href}
+            className={`group flex min-h-72 flex-col rounded-[1.6rem] p-6 transition-transform hover:-translate-y-1 sm:p-8 ${
+              path.featured ? "bg-[#02629f] text-white" : "surface-card"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <span className={`grid h-12 w-12 place-items-center rounded-xl ${path.featured ? "bg-white/14" : "bg-[#edf2fd] text-[#02629f]"}`}>
+                <path.icon className="h-6 w-6" />
+              </span>
+              <ArrowRight className={`h-5 w-5 transition-transform group-hover:translate-x-1 ${path.featured ? "text-[#ff8588]" : "text-[#ff2e32]"}`} />
+            </div>
+            <span className={`mt-auto text-xs font-extrabold uppercase tracking-[0.08em] ${path.featured ? "text-white/55" : "text-[#ff2e32]"}`}>{path.eyebrow}</span>
+            <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em]">{path.title}</h2>
+            <p className={`mt-3 max-w-xl text-sm leading-6 ${path.featured ? "text-white/70" : "text-[#667287]"}`}>{path.text}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {path.links.map((item) => (
+                <span key={item} className={`rounded-lg px-3 py-2 text-xs font-bold ${path.featured ? "bg-white/12" : "bg-[#f4f6fa] text-[#4f5c70]"}`}>{item}</span>
+              ))}
+            </div>
+          </Link>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Link href="/pathways/vnzh" className="p-8 glass rounded-[2rem] hover:ring-2 hover:ring-primary-500 transition-all flex flex-col justify-between">
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center mb-6">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">Вид на жительство (ВНЖ)</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              Статус, дающий бессрочное право жить и трудиться в РФ. Основания для ВНЖ: брак, профессия из перечня, диплом.
-            </p>
-          </div>
-          <div className="font-bold flex items-center text-primary-600 dark:text-primary-400">
-            Перейти к инструкции <ArrowRight className="w-5 h-5 ml-2" />
-          </div>
-        </Link>
-        <Link href="/pathways/rvp" className="p-8 glass rounded-[2rem] hover:ring-2 hover:ring-primary-500 transition-all flex flex-col justify-between">
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center mb-6">
-              <FileText className="w-7 h-7" />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">РВП</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              Разрешение на временное проживание. Первая ступень к паспорту. Квоты и основания.
-            </p>
-          </div>
-          <div className="font-bold flex items-center text-primary-600 dark:text-primary-400">
-            Перейти к инструкции <ArrowRight className="w-5 h-5 ml-2" />
-          </div>
-        </Link>
-        <Link href="/pathways/citizenship" className="p-8 glass rounded-[2rem] hover:ring-2 hover:ring-primary-500 transition-all flex flex-col justify-between">
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-purple-100 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 flex items-center justify-center mb-6">
-              <Globe className="w-7 h-7" />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">Гражданство РФ</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              Оформление паспорта Российской Федерации. Упрощенные порядки и изменения в законах.
-            </p>
-          </div>
-          <div className="font-bold flex items-center text-primary-600 dark:text-primary-400">
-            Перейти к инструкции <ArrowRight className="w-5 h-5 ml-2" />
-          </div>
-        </Link>
-        <Link href="/pathways/repatriation" className="p-8 glass rounded-[2rem] hover:ring-2 hover:ring-primary-500 transition-all flex flex-col justify-between">
-          <div>
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center mb-6">
-              <MapPin className="w-7 h-7" />
-            </div>
-            <h2 className="text-2xl font-bold mb-4">Программа переселения</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-8">
-              Ускоренный путь миграции для соотечественников. Выбор региона и получение выплат.
-            </p>
-          </div>
-          <div className="font-bold flex items-center text-primary-600 dark:text-primary-400">
-            Перейти к инструкции <ArrowRight className="w-5 h-5 ml-2" />
-          </div>
-        </Link>
-      </div>
+      <section className="mt-12 grid items-center gap-6 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white sm:p-9 lg:grid-cols-[1fr_auto]">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-[-0.04em]">Не знаете, с какого статуса начать?</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">Опишите исходные данные ИИ-помощнику. Он найдёт подходящие разделы справочника и даст ссылки на материалы.</p>
+        </div>
+        <Link href="/tools/ai-consultant" className="button-primary">Подобрать маршрут <ArrowRight className="h-4 w-4" /></Link>
+      </section>
     </div>
   );
 }

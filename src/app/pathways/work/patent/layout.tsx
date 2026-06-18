@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import ArticleLayout from '@/components/mdx/ArticleLayout';
 
 export const metadata: Metadata = {
-  title: 'Патент на работу в России 2026: как оформить и сколько стоит',
-  description: 'Пошаговый процесс оформления трудового патента для иностранных граждан в РФ в 2026 году. Стоимость патента по регионам, сроки оформления и штрафы.',
+  title: 'Патент на работу в России в 2026 году',
+  description: 'Как оформить патент иностранному гражданину: сроки, документы, медкомиссия, экзамен, регион работы и ежемесячная оплата.',
+  alternates: { canonical: '/pathways/work/patent' },
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return <ArticleLayout>{children}</ArticleLayout>;
 }
