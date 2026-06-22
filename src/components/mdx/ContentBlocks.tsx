@@ -25,7 +25,7 @@ export function ArticleMeta({
 
 export function QuickAnswer({ children }: { children: React.ReactNode }) {
   return (
-    <section className="content-callout content-callout-answer">
+    <section data-motion-card className="content-callout content-callout-answer">
       <strong>Короткий ответ</strong>
       <div>{children}</div>
     </section>
@@ -40,7 +40,7 @@ export function LegalSource({
   children: React.ReactNode;
 }) {
   return (
-    <aside className="content-callout content-callout-source">
+    <aside data-motion-card className="content-callout content-callout-source">
       <strong><BookOpenCheck aria-hidden="true" /> {title}</strong>
       <div>{children}</div>
     </aside>
@@ -49,7 +49,7 @@ export function LegalSource({
 
 export function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <aside className="content-callout content-callout-notice">
+    <aside data-motion-card className="content-callout content-callout-notice">
       <strong><Info aria-hidden="true" /> Обратите внимание</strong>
       <div>{children}</div>
     </aside>
@@ -58,7 +58,7 @@ export function Notice({ children }: { children: React.ReactNode }) {
 
 export function Warning({ children }: { children: React.ReactNode }) {
   return (
-    <aside className="content-callout content-callout-warning">
+    <aside data-motion-card className="content-callout content-callout-warning">
       <strong><AlertTriangle aria-hidden="true" /> Важно</strong>
       <div>{children}</div>
     </aside>
@@ -71,9 +71,9 @@ export function FaqAccordion({
   items: Array<{ question: string; answer: string }>;
 }) {
   return (
-    <div className="faq-list">
+    <div data-motion-stagger className="faq-list">
       {items.map((item) => (
-        <details key={item.question}>
+        <details key={item.question} data-motion-card>
           <summary>{item.question}</summary>
           <p>{item.answer}</p>
         </details>
@@ -92,7 +92,7 @@ export function RelatedGuide({
   description: string;
 }) {
   return (
-    <Link href={href} className="related-guide">
+    <Link href={href} data-motion-card className="related-guide">
       <span><CheckCircle2 aria-hidden="true" /> Следующий шаг</span>
       <strong>{title}</strong>
       <p>{description}</p>

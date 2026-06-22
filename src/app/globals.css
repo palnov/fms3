@@ -101,6 +101,69 @@ summary:focus-visible {
   outline-offset: 3px;
 }
 
+.header-search-input:focus,
+.header-search-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+[data-motion],
+[data-motion-card],
+[data-motion-stagger] > * {
+  will-change: transform, opacity;
+}
+
+.motion-search-panel,
+.motion-mobile-menu,
+.motion-popover {
+  animation: motion-pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: top right;
+}
+
+.header-search-morph {
+  position: relative;
+  width: 9.65rem;
+  height: 2.75rem;
+  transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.header-search-morph.is-open {
+  width: min(34vw, 25rem);
+  min-width: 18rem;
+}
+
+.header-search-trigger,
+.header-search-form {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  transition:
+    opacity 180ms ease,
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.header-search-form {
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0.92);
+  transform-origin: right center;
+}
+
+.header-search-morph.is-open .header-search-form {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scaleX(1);
+  transition-delay: 70ms;
+}
+
+.header-search-morph.is-open .header-search-trigger {
+  opacity: 0;
+  pointer-events: none;
+  transform: scaleX(0.92);
+}
+
 .skip-link {
   position: fixed;
   top: 0.75rem;
@@ -509,6 +572,18 @@ summary:focus-visible {
   padding: 2rem 1rem 5rem;
 }
 
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @keyframes passport-float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-13px) rotate(1.2deg); }
@@ -632,4 +707,15 @@ summary:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.motion-reduced [data-motion],
+.motion-reduced [data-motion-card],
+.motion-reduced [data-motion-stagger] > *,
+.motion-reduced .motion-search-panel,
+.motion-reduced .motion-mobile-menu,
+.motion-reduced .motion-popover {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
 }

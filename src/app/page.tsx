@@ -6,7 +6,6 @@ import {
   Bot,
   BriefcaseBusiness,
   Calculator,
-  CheckCircle2,
   FileCheck2,
   GraduationCap,
   House,
@@ -15,6 +14,7 @@ import {
   ShieldCheck,
   Users,
 } from "lucide-react";
+import HomeFaqAccordion from "@/components/HomeFaqAccordion";
 
 export const metadata: Metadata = {
   title: "Как переехать и легализоваться в России в 2026 году",
@@ -146,8 +146,8 @@ export default function Home() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="site-container grid gap-8 pb-12 pt-10 lg:grid-cols-[1.08fr_.92fr] lg:pb-16 lg:pt-16">
-        <div className="min-w-0 self-center">
+      <section data-motion="home-hero" className="site-container grid gap-8 pb-12 pt-10 lg:grid-cols-[1.08fr_.92fr] lg:pb-16 lg:pt-16">
+        <div data-motion="hero-copy" className="min-w-0 self-center">
           <p className="section-kicker">Правовой навигатор · обновлено 11 июня 2026</p>
           <h1 className="display-title mt-4 max-w-[13ch]">Найдите законный путь к жизни и работе в России</h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[#667287]">
@@ -167,20 +167,20 @@ export default function Home() {
             <span className="rounded-lg bg-white px-3 py-2">Бесплатные инструменты</span>
           </div>
         </div>
-        <div className="min-w-0 overflow-hidden rounded-[2rem]">
+        <div data-motion="hero-visual" className="min-w-0 overflow-hidden rounded-[2rem]">
           <PassportIllustration />
         </div>
       </section>
 
-      <section className="site-container pb-16" aria-label="О справочнике">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <section data-motion="section" className="site-container pb-10" aria-label="О справочнике">
+        <div data-motion-stagger className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             ["2026", "актуальная редакция материалов"],
             ["115-ФЗ", "правовые основания со ссылками"],
             ["89 регионов", "региональные особенности процедур"],
             ["Без оплаты", "доступ к статьям и сервисам"],
           ].map(([title, text]) => (
-            <div key={title} className="rounded-2xl bg-white p-4 sm:p-5">
+            <div key={title} data-motion-card className="rounded-2xl bg-white p-4 sm:p-5">
               <strong className="block text-xl font-extrabold tracking-[-0.04em]">{title}</strong>
               <span className="mt-1 block text-xs leading-5 text-[#667287]">{text}</span>
             </div>
@@ -188,7 +188,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="situations" className="border-y border-[#d8dee7] bg-white py-16 sm:py-20">
+      <section id="situations" data-motion="section" className="border-y border-[#d8dee7] bg-white py-16 sm:py-20">
         <div className="site-container">
           <div className="grid items-end gap-4 md:grid-cols-[1fr_28rem]">
             <div>
@@ -197,9 +197,9 @@ export default function Home() {
             </div>
             <p className="text-base leading-7 text-[#667287]">Каждый вариант ведёт в тематический кластер со статьями, документами и подходящими инструментами.</p>
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div data-motion-stagger className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             {situations.map((item, index) => (
-              <Link key={item.title} href={item.href} className="group flex min-h-56 flex-col rounded-2xl border border-[#d8dee7] bg-[#f4f6fa] p-5 transition-transform hover:-translate-y-1">
+              <Link key={item.title} href={item.href} data-motion-card className="group flex min-h-56 flex-col rounded-2xl border border-[#d8dee7] bg-[#f4f6fa] p-5 transition-transform hover:-translate-y-1">
                 <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#02629f] text-white">
                   <item.icon className="h-5 w-5" />
                 </span>
@@ -212,7 +212,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="site-container py-16 sm:py-24">
+      <section data-motion="section" className="site-container py-16 sm:py-24">
         <div className="grid items-end gap-4 md:grid-cols-[1fr_28rem]">
           <div>
             <p className="section-kicker">Тематические хабы</p>
@@ -220,8 +220,8 @@ export default function Home() {
           </div>
           <p className="text-base leading-7 text-[#667287]">Начните с обзорной страницы, затем переходите к основанию, документам и следующему шагу.</p>
         </div>
-        <div className="mt-8 grid gap-4 lg:grid-cols-[1.3fr_.7fr]">
-          <Link href="/pathways/vnzh" className="group min-h-[360px] rounded-[1.75rem] bg-[#02629f] p-7 text-white sm:p-9">
+        <div data-motion-stagger className="mt-8 grid gap-4 lg:grid-cols-[1.3fr_.7fr]">
+          <Link href="/pathways/vnzh" data-motion-card className="group min-h-[360px] rounded-[1.75rem] bg-[#02629f] p-7 text-white sm:p-9">
             <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-white/65">Главный кластер</span>
             <ShieldCheck className="mt-14 h-10 w-10" />
             <h3 className="mt-5 text-3xl font-extrabold tracking-[-0.045em]">Вид на жительство</h3>
@@ -233,13 +233,13 @@ export default function Home() {
             </div>
           </Link>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            <Link href="/pathways/rvp" className="surface-card group p-6">
+            <Link href="/pathways/rvp" data-motion-card className="surface-card group p-6">
               <span className="section-kicker">Кластер</span>
               <h3 className="mt-8 text-2xl font-extrabold tracking-[-0.04em]">РВП</h3>
               <p className="mt-2 text-sm leading-6 text-[#667287]">Квота, брак и другие основания для временного проживания.</p>
               <ArrowRight className="mt-5 h-5 w-5 text-[#ff2e32]" />
             </Link>
-            <Link href="/pathways/citizenship" className="surface-card group p-6">
+            <Link href="/pathways/citizenship" data-motion-card className="surface-card group p-6">
               <span className="section-kicker">Кластер</span>
               <h3 className="mt-8 text-2xl font-extrabold tracking-[-0.04em]">Гражданство</h3>
               <p className="mt-2 text-sm leading-6 text-[#667287]">Общий и упрощённый порядок, требования и документы.</p>
@@ -247,13 +247,13 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
+        <div data-motion-stagger className="mt-4 grid gap-4 md:grid-cols-3">
           {[
             ["/pathways/work/patent", "Работа и патент", "Оформление, оплата и сроки"],
             ["/pathways/repatriation", "Переселение", "Программа для соотечественников"],
             ["/legal/check-ban", "Запреты и легальность", "Проверка рисков и порядок действий"],
           ].map(([href, title, text]) => (
-            <Link key={href} href={href} className="rounded-2xl border border-[#d8dee7] bg-white p-5">
+            <Link key={href} href={href} data-motion-card className="rounded-2xl border border-[#d8dee7] bg-white p-5">
               <h3 className="text-lg font-extrabold tracking-[-0.03em]">{title}</h3>
               <p className="mt-2 text-sm text-[#667287]">{text}</p>
             </Link>
@@ -261,13 +261,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#1f2c41] py-16 text-white sm:py-20">
+      <section data-motion="section" className="bg-[#1f2c41] py-16 text-white sm:py-20">
         <div className="site-container">
           <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#ff7b7e]">Следим за изменениями</p>
           <h2 className="section-title mt-3 max-w-3xl">Что важно проверить в 2026 году</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div data-motion-stagger className="mt-8 grid gap-4 md:grid-cols-3">
             {updates.map((item) => (
-              <article key={item.title} className="rounded-2xl bg-white p-5 text-[#1f2c41]">
+              <article key={item.title} data-motion-card className="rounded-2xl bg-white p-5 text-[#1f2c41]">
                 <time className="text-xs font-extrabold text-[#ff2e32]">{item.date}</time>
                 <h3 className="mt-5 text-xl font-extrabold leading-6 tracking-[-0.035em]">{item.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-[#667287]">{item.text}</p>
@@ -280,23 +280,23 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="site-container py-16 sm:py-24">
+      <section data-motion="section" className="site-container py-16 sm:py-24">
         <p className="section-kicker">Практические сервисы</p>
         <h2 className="section-title mt-3">Проверьте ситуацию, а затем читайте нужное</h2>
-        <div className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_.8fr_.8fr]">
-          <Link href="/tools/ai-consultant" className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white">
+        <div data-motion-stagger className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_.8fr_.8fr]">
+          <Link href="/tools/ai-consultant" data-motion-card className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white">
             <Bot className="h-8 w-8 text-[#ff5d61]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-white/55">RAG-помощник</span>
             <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em]">Задать вопрос базе знаний</h3>
             <p className="mt-3 text-sm leading-6 text-white/65">Ответ со ссылками на статьи и официальные источники.</p>
           </Link>
-          <Link href="/tools/document-check" className="surface-card min-h-64 p-6">
+          <Link href="/tools/document-check" data-motion-card className="surface-card min-h-64 p-6">
             <FileCheck2 className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Проверка</span>
             <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Проверить документы</h3>
             <p className="mt-3 text-sm leading-6 text-[#667287]">Найдите пропуски до обращения в ведомство.</p>
           </Link>
-          <Link href="/tools/calculators" className="surface-card min-h-64 p-6">
+          <Link href="/tools/calculators" data-motion-card className="surface-card min-h-64 p-6">
             <Calculator className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Расчёт</span>
             <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Сроки и платежи</h3>
@@ -305,9 +305,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-[#d8dee7] bg-white py-16 sm:py-20">
-        <div className="site-container grid gap-8 lg:grid-cols-[1fr_.8fr]">
-          <div className="rounded-[1.6rem] bg-[#edf2fd] p-7 sm:p-9">
+      <section data-motion="section" className="border-y border-[#d8dee7] bg-white py-16 sm:py-20">
+        <div data-motion-stagger className="site-container grid gap-8 lg:grid-cols-[1fr_.8fr]">
+          <div data-motion-card className="rounded-[1.6rem] bg-[#edf2fd] p-7 sm:p-9">
             <span className="section-kicker">Полное руководство</span>
             <BookOpen className="mt-12 h-9 w-9 text-[#02629f]" />
             <h2 className="mt-5 text-3xl font-extrabold tracking-[-0.045em]">Как получить ВНЖ в России в 2026 году</h2>
@@ -321,7 +321,7 @@ export default function Home() {
               ["/pathways/work/patent", "Патент на работу для иностранного гражданина"],
               ["/pathways/citizenship/simplified", "Гражданство в упрощённом порядке"],
             ].map(([href, title]) => (
-              <Link key={href} href={href} className="flex items-center justify-between rounded-xl border border-[#d8dee7] p-4 text-sm font-bold hover:border-[#02629f]/40">
+              <Link key={href} href={href} data-motion-card className="flex items-center justify-between rounded-xl border border-[#d8dee7] p-4 text-sm font-bold hover:border-[#02629f]/40">
                 {title}<ArrowRight className="h-4 w-4 text-[#ff2e32]" />
               </Link>
             ))}
@@ -329,8 +329,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="site-container py-16 sm:py-24">
-        <div className="grid items-center gap-8 rounded-[1.75rem] bg-[#1f2c41] p-7 text-white sm:p-10 lg:grid-cols-[1fr_auto]">
+      <section data-motion="section" className="site-container py-16 sm:py-24">
+        <div data-motion-card className="grid items-center gap-8 rounded-[1.75rem] bg-[#1f2c41] p-7 text-white sm:p-10 lg:grid-cols-[1fr_auto]">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#ff7b7e]">Не нашли точный ответ?</p>
             <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em]">Сначала спросите ИИ-помощника</h2>
@@ -342,21 +342,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="site-container pb-20">
-        <div className="grid gap-3 md:grid-cols-3">
-          {[
+      <section data-motion="section" className="site-container pb-20">
+        <HomeFaqAccordion
+          items={[
             ["Можно ли доверять информации?", "Материалы содержат даты актуализации и ссылки на правовые основания. Перед подачей проверяйте требования своего региона."],
             ["Сайт относится к МВД?", "Нет. Это независимый информационный справочник, который помогает разобраться в открытых официальных материалах."],
             ["Когда нужна консультация?", "Когда факты вашей ситуации не укладываются в типовой сценарий или требуется оценка документов и рисков."],
-          ].map(([question, answer]) => (
-            <details key={question} className="rounded-2xl border border-[#d8dee7] bg-white p-5">
-              <summary className="flex min-h-11 items-center justify-between gap-3 font-extrabold">
-                {question}<CheckCircle2 className="h-5 w-5 shrink-0 text-[#02629f]" />
-              </summary>
-              <p className="mt-3 text-sm leading-6 text-[#667287]">{answer}</p>
-            </details>
-          ))}
-        </div>
+          ]}
+        />
       </section>
     </>
   );

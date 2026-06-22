@@ -225,19 +225,19 @@ export default function FloatingLawyerWidget() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-5 right-5 min-h-12 gap-2 rounded-xl bg-[#ff2e32] px-4 text-white shadow-[0_14px_36px_rgba(31,44,65,.18)] transition-all hover:bg-[#d92327] z-50 flex items-center justify-center ${
+        className={`fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center gap-2 rounded-xl bg-[#ff2e32] px-0 text-white shadow-[0_14px_36px_rgba(31,44,65,.18)] transition-all hover:bg-[#d92327] sm:w-auto sm:px-4 ${
           isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
         }`}
         aria-label="Задать вопрос ИИ"
       >
         <MessageSquare className="w-5 h-5" />
-        <span className="text-sm font-extrabold">Задать вопрос</span>
+        <span className="hidden text-sm font-extrabold sm:inline">Задать вопрос</span>
       </button>
 
       {/* Chat Window */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f2c41]/35 sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:items-end sm:justify-end sm:bg-transparent">
-          <div className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#d8dee7] bg-white shadow-2xl sm:h-[590px] sm:w-[400px] sm:rounded-2xl">
+          <div data-motion-live className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#d8dee7] bg-white shadow-2xl sm:h-[590px] sm:w-[400px] sm:rounded-2xl">
             {/* Header */}
             <div className="relative flex shrink-0 flex-col gap-2 border-b border-[#d8dee7] bg-white p-4">
               <div className="flex items-center justify-between">
@@ -267,7 +267,7 @@ export default function FloatingLawyerWidget() {
                     </button>
 
                     {showLangMenu && (
-                      <div className="absolute right-0 z-50 mt-1.5 flex w-36 flex-col gap-0.5 rounded-xl border border-[#d8dee7] bg-white p-1 shadow-2xl">
+                      <div className="motion-popover absolute right-0 z-50 mt-1.5 flex w-36 flex-col gap-0.5 rounded-xl border border-[#d8dee7] bg-white p-1 shadow-2xl">
                         {LANGUAGES.map((lang) => (
                           <button
                             key={lang.code}
@@ -317,7 +317,7 @@ export default function FloatingLawyerWidget() {
             {/* Chat Messages */}
             <div className="flex-grow space-y-4 overflow-y-auto bg-[#f4f6fa] p-4">
               {messages.map((msg) => (
-                <div key={msg.id} className="space-y-2">
+                <div key={msg.id} data-motion-live className="space-y-2">
                   <div className={`flex gap-2.5 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs ${
                       msg.sender === "user" ? "bg-[#1f2c41] text-white" : "border border-[#d8dee7] bg-white text-[#02629f]"
@@ -342,7 +342,7 @@ export default function FloatingLawyerWidget() {
 
                   {/* Inline Lead Form */}
                   {msg.sender === "ai" && msg.showLeadForm && (
-                    <div className="ml-9 max-w-[85%] space-y-2 rounded-xl border border-[#d8dee7] bg-white p-4">
+                    <div data-motion-live className="ml-9 max-w-[85%] space-y-2 rounded-xl border border-[#d8dee7] bg-white p-4">
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#ff2e32]">
                         <Sparkles className="w-3 h-3" />
                         <span>{t.lawyerTitle}</span>

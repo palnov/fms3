@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingLawyerWidget from "@/components/widgets/FloatingLawyerWidget";
+import SiteMotion from "@/components/motion/SiteMotion";
 
 const golos = localFont({
   src: [
@@ -51,6 +52,7 @@ export default function RootLayout({
         <main id="main-content" className="flex-grow flex flex-col">{children}</main>
         <Footer />
         <FloatingLawyerWidget />
+        <SiteMotion />
       </body>
     </html>
   );

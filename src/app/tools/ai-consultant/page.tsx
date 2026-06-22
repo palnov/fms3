@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { Suspense, useCallback, useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Send, Bot, User, Sparkles, Shield, Bookmark, AlertCircle, Download, ExternalLink } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
@@ -146,7 +147,8 @@ const TRANSLATIONS: Record<string, {
   }
 };
 
-export default function AIConsultantPage() {
+function AIConsultantChat() {
+  const searchParams = useSearchParams();
   const [language, setLanguage] = useState<string>("ru");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -164,6 +166,7 @@ export default function AIConsultantPage() {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const messageIdRef = useRef(0);
+  const initialQuestionSentRef = useRef(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -177,10 +180,10 @@ export default function AIConsultantPage() {
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
-  const createMessageId = () => {
+  const createMessageId = useCallback(() => {
     messageIdRef.current += 1;
     return `message-${messageIdRef.current}`;
-  };
+  }, []);
 
   const selectLanguage = (nextLanguage: string) => {
     setLanguage(nextLanguage);
@@ -203,7 +206,7 @@ export default function AIConsultantPage() {
     }
   }, [messages, isTyping]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
     setErrorMsg(null);
@@ -289,10 +292,20 @@ export default function AIConsultantPage() {
     } finally {
       setIsTyping(false);
     }
-  };
+  }, [createMessageId, language]);
+
+  useEffect(() => {
+    const initialQuestion = searchParams.get("q")?.trim();
+    if (!initialQuestion || initialQuestionSentRef.current) {
+      return;
+    }
+
+    initialQuestionSentRef.current = true;
+    handleSend(initialQuestion);
+  }, [handleSend, searchParams]);
 
   return (
-    <div className="flex-grow w-full max-w-5xl mx-auto px-4 py-6 md:py-10 flex flex-col h-[90vh]">
+    <div data-motion="section" className="flex-grow w-full max-w-5xl mx-auto px-4 py-6 md:py-10 flex flex-col h-[90vh]">
       <div className="mb-4 shrink-0 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-500 transition-colors">
           <ArrowLeft className="w-4 h-4" /> {t.backToHome}
@@ -304,7 +317,7 @@ export default function AIConsultantPage() {
         )}
       </div>
 
-      <div className="flex-grow bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-xl">
+      <div data-motion-card className="flex-grow bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-3xl flex flex-col overflow-hidden relative shadow-xl">
         {/* Header */}
         <div className="p-5 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-950/30 shrink-0">
           <div className="flex items-center gap-3">
@@ -334,7 +347,7 @@ export default function AIConsultantPage() {
               </button>
 
               {showLangMenu && (
-                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="motion-popover absolute right-0 mt-2 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-1.5 shadow-2xl z-50 flex flex-col gap-0.5">
                   {LANGUAGES.map((lang) => (
                     <button
                       key={lang.code}
@@ -370,6 +383,7 @@ export default function AIConsultantPage() {
           {messages.map((msg) => (
             <div
               key={msg.id}
+              data-motion-live
               className={`flex gap-4 max-w-[90%] md:max-w-[80%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}
             >
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
@@ -399,7 +413,7 @@ export default function AIConsultantPage() {
 
                 {/* Inline Lead Form Card */}
                 {msg.sender === "ai" && msg.showLeadForm && (
-                  <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner max-w-md animate-in fade-in-50 duration-300">
+                  <div data-motion-live className="p-5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner max-w-md">
                     <div className="flex items-center gap-2 mb-3 text-blue-400">
                       <Sparkles className="w-4 h-4 animate-pulse" />
                       <h4 className="text-sm font-bold text-white">Бесплатная экспресс-помощь юриста</h4>
@@ -526,5 +540,13 @@ export default function AIConsultantPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AIConsultantPage() {
+  return (
+    <Suspense fallback={<div className="flex-grow" />}>
+      <AIConsultantChat />
+    </Suspense>
   );
 }
