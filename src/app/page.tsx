@@ -221,12 +221,16 @@ export default function Home() {
           <p className="text-base leading-7 text-[#667287]">Начните с обзорной страницы, затем переходите к основанию, документам и следующему шагу.</p>
         </div>
         <div data-motion-stagger className="mt-8 grid gap-4 lg:grid-cols-[1.3fr_.7fr]">
-          <Link href="/pathways/vnzh" data-motion-card className="group min-h-[360px] rounded-[1.75rem] bg-[#02629f] p-7 text-white sm:p-9">
-            <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-white/65">Главный кластер</span>
-            <ShieldCheck className="mt-14 h-10 w-10" />
-            <h3 className="mt-5 text-3xl font-extrabold tracking-[-0.045em]">Вид на жительство</h3>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-white/75">Основания, документы, сроки, обязанности после получения и частые ошибки.</p>
-            <div className="mt-7 grid gap-2 text-xs font-bold sm:grid-cols-2">
+          <Link href="/pathways/vnzh" data-motion-card className="group relative min-h-[360px] overflow-hidden rounded-[1.75rem] bg-[#02629f] p-7 text-white sm:p-9">
+            <svg aria-hidden="true" viewBox="0 0 100 112" className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 text-white/10 sm:-right-18 sm:-top-20 sm:h-72 sm:w-72">
+              <path d="M50 8 88 22v29c0 27-17 44-38 54C29 95 12 78 12 51V22L50 8Z" fill="none" stroke="currentColor" strokeWidth="9" strokeLinejoin="miter" />
+              <path d="m31 55 13 13 27-32" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="square" strokeLinejoin="miter" />
+            </svg>
+            <span className="relative z-10 text-xs font-extrabold uppercase tracking-[0.08em] text-white/65">Главный кластер</span>
+            <ShieldCheck className="relative z-10 mt-14 h-10 w-10" />
+            <h3 className="relative z-10 mt-5 text-3xl font-extrabold tracking-[-0.045em]">Вид на жительство</h3>
+            <p className="relative z-10 mt-3 max-w-xl text-sm leading-6 text-white/75">Основания, документы, сроки, обязанности после получения и частые ошибки.</p>
+            <div className="relative z-10 mt-7 grid gap-2 text-xs font-bold sm:grid-cols-2">
               {["ВНЖ без РВП", "Документы на ВНЖ", "ВНЖ по семье", "Порядок подачи"].map((item) => (
                 <span key={item} className="rounded-lg bg-white/12 px-3 py-2">{item}</span>
               ))}
@@ -247,17 +251,22 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        <div data-motion-stagger className="mt-4 grid gap-4 md:grid-cols-3">
-          {[
-            ["/pathways/work/patent", "Работа и патент", "Оформление, оплата и сроки"],
-            ["/pathways/repatriation", "Переселение", "Программа для соотечественников"],
-            ["/legal/check-ban", "Запреты и легальность", "Проверка рисков и порядок действий"],
-          ].map(([href, title, text]) => (
-            <Link key={href} href={href} data-motion-card className="rounded-2xl border border-[#d8dee7] bg-white p-5">
-              <h3 className="text-lg font-extrabold tracking-[-0.03em]">{title}</h3>
-              <p className="mt-2 text-sm text-[#667287]">{text}</p>
-            </Link>
-          ))}
+        <div data-motion-stagger className="mt-4 grid gap-4 lg:grid-cols-[1.3fr_.7fr]">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ["/pathways/work/patent", "Работа и патент", "Оформление, оплата и сроки"],
+              ["/pathways/repatriation", "Переселение", "Программа для соотечественников"],
+            ].map(([href, title, text]) => (
+              <Link key={href} href={href} data-motion-card className="rounded-2xl border border-[#d8dee7] bg-white p-5">
+                <h3 className="text-lg font-extrabold tracking-[-0.03em]">{title}</h3>
+                <p className="mt-2 text-sm text-[#667287]">{text}</p>
+              </Link>
+            ))}
+          </div>
+          <Link href="/legal/check-ban" data-motion-card className="rounded-2xl border border-[#d8dee7] bg-white p-5">
+            <h3 className="text-lg font-extrabold tracking-[-0.03em]">Запреты и легальность</h3>
+            <p className="mt-2 text-sm text-[#667287]">Проверка рисков и порядок действий</p>
+          </Link>
         </div>
       </section>
 
@@ -286,9 +295,9 @@ export default function Home() {
         <div data-motion-stagger className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_.8fr_.8fr]">
           <Link href="/tools/ai-consultant" data-motion-card className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white">
             <Bot className="h-8 w-8 text-[#ff5d61]" />
-            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-white/55">RAG-помощник</span>
-            <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em]">Задать вопрос базе знаний</h3>
-            <p className="mt-3 text-sm leading-6 text-white/65">Ответ со ссылками на статьи и официальные источники.</p>
+            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-white/55">ИИ-помощник</span>
+            <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em]">Задать вопрос по базе знаний</h3>
+            <p className="mt-3 text-sm leading-6 text-white/65">Наш ИИ отвечает по ФЗ-115 и ФЗ-138, материалам МВД и реальным шаблонам миграционных документов.</p>
           </Link>
           <Link href="/tools/document-check" data-motion-card className="surface-card min-h-64 p-6">
             <FileCheck2 className="h-8 w-8 text-[#02629f]" />
@@ -314,11 +323,13 @@ export default function Home() {
             <p className="mt-4 max-w-xl text-base leading-7 text-[#667287]">Основания, документы, сроки и порядок подачи в одной структурированной инструкции.</p>
             <Link href="/pathways/vnzh" className="button-primary mt-7">Открыть руководство <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="grid content-start gap-2">
+          <div className="grid gap-2 lg:h-full lg:content-between">
             {[
               ["/pathways/rvp/quota", "Квота на РВП: критерии и документы"],
+              ["/pathways/vnzh/without-rvp", "ВНЖ без РВП: кто может подать напрямую"],
               ["/pathways/vnzh/by-marriage", "ВНЖ по браку и близким родственникам"],
               ["/pathways/work/patent", "Патент на работу для иностранного гражданина"],
+              ["/legal/registration", "Миграционный учёт: сроки и подтверждение"],
               ["/pathways/citizenship/simplified", "Гражданство в упрощённом порядке"],
             ].map(([href, title]) => (
               <Link key={href} href={href} data-motion-card className="flex items-center justify-between rounded-xl border border-[#d8dee7] p-4 text-sm font-bold hover:border-[#02629f]/40">
