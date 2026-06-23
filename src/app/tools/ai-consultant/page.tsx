@@ -31,6 +31,8 @@ const LANGUAGES = [
   { code: "en", name: "English" },
 ];
 
+const DAILY_REQUEST_LIMIT = 10;
+
 const TRANSLATIONS: Record<string, {
   welcome: string;
   placeholder: string;
@@ -160,7 +162,7 @@ function AIConsultantChat() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [remainingRequests, setRemainingRequests] = useState(20);
+  const [remainingRequests, setRemainingRequests] = useState(DAILY_REQUEST_LIMIT);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -312,7 +314,7 @@ function AIConsultantChat() {
         </Link>
         {remainingRequests !== null && (
           <span className="text-xs text-slate-500 font-bold">
-            {t.remaining} <span className={`${remainingRequests <= 5 ? "text-amber-500" : "text-emerald-500"}`}>{remainingRequests} / 20</span>
+            {t.remaining} <span className={`${remainingRequests <= 2 ? "text-amber-500" : "text-emerald-500"}`}>{remainingRequests} / {DAILY_REQUEST_LIMIT}</span>
           </span>
         )}
       </div>

@@ -19,7 +19,7 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000).
 
-Для работы ИИ-консультанта нужны `JWT_SECRET`, `OPENROUTER_API_KEY` и подготовленный `knowledge.db`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
+Для работы ИИ-консультанта нужны `JWT_SECRET`, `RATE_LIMIT_SECRET`, `OPENROUTER_API_KEY` и подготовленный `knowledge.db`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
 
 ## Команды
 

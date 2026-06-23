@@ -44,6 +44,8 @@ next-env.d.ts
 # local knowledge database
 knowledge.db
 knowledge.db-*
+security-rate-limit.db
+security-rate-limit.db-*
 
 # local visual brainstorming sessions
 .superpowers/

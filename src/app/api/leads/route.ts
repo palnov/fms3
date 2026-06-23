@@ -1,9 +1,42 @@
 import { NextResponse } from "next/server";
+import {
+  asTrimmedString,
+  checkRateLimit,
+  getClientIp,
+  hashRateLimitKey,
+  rateLimitHeaders,
+  readJsonBody,
+} from "@/lib/security";
+
+const LEAD_BODY_LIMIT_BYTES = 8 * 1024;
+const LEAD_IP_HOURLY_LIMIT = 5;
+const LEAD_PHONE_DAILY_LIMIT = 3;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, phone, question } = body;
+    const body = await readJsonBody<{
+      name?: unknown;
+      phone?: unknown;
+      question?: unknown;
+      company?: unknown;
+    }>(request, LEAD_BODY_LIMIT_BYTES);
+
+    if (!body) {
+      return NextResponse.json(
+        { error: "Некорректный или слишком большой запрос." },
+        { status: 400 }
+      );
+    }
+
+    if (typeof body.company === "string" && body.company.trim()) {
+      return NextResponse.json({ success: true });
+    }
+
+    const name = asTrimmedString(body.name, 80);
+    const phone = asTrimmedString(body.phone, 40);
+    const question = asTrimmedString(body.question, 1000);
 
     // Validate required fields
     if (!name || !phone || !question) {
@@ -19,6 +52,30 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Телефон должен состоять из 11 цифр и начинаться с 7 (например, 79991234567)." },
         { status: 400 }
+      );
+    }
+
+    const ipLimit = checkRateLimit(
+      hashRateLimitKey(["lead", "ip", getClientIp(request)]),
+      LEAD_IP_HOURLY_LIMIT,
+      HOUR_MS,
+    );
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: "Слишком много заявок. Пожалуйста, попробуйте позже." },
+        { status: 429, headers: rateLimitHeaders(ipLimit) }
+      );
+    }
+
+    const phoneLimit = checkRateLimit(
+      hashRateLimitKey(["lead", "phone", phoneClean]),
+      LEAD_PHONE_DAILY_LIMIT,
+      DAY_MS,
+    );
+    if (!phoneLimit.allowed) {
+      return NextResponse.json(
+        { error: "По этому номеру уже отправлено несколько заявок. Пожалуйста, попробуйте позже." },
+        { status: 429, headers: rateLimitHeaders(phoneLimit) }
       );
     }
 
@@ -54,14 +111,14 @@ export async function POST(request: Request) {
     if (apiResponse.ok && result.code === 200 && result.edata?.result === "success") {
       return NextResponse.json({ success: true, leadId: result.edata.entityId });
     } else {
-      console.error("Pravoved API Error:", result);
+      console.error("Pravoved API Error", { status: apiResponse.status, code: result?.code });
       return NextResponse.json(
         { error: "Ошибка при отправке заявки. Пожалуйста, попробуйте позже." },
         { status: 400 }
       );
     }
   } catch (error) {
-    console.error("Lead processing error:", error);
+    console.error("Lead processing error:", error instanceof Error ? error.message : "unknown error");
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера." },
       { status: 500 }

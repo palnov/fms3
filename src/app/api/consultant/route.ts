@@ -4,6 +4,14 @@ import fs from "fs";
 import Database from "better-sqlite3";
 import crypto from "crypto";
 import { getQueryEmbedding } from "@/lib/query-embedding";
+import {
+  asTrimmedString,
+  checkRateLimit,
+  getClientIp,
+  hashRateLimitKey,
+  rateLimitHeaders,
+  readJsonBody,
+} from "@/lib/security";
 
 interface ChunkRow {
   id: number;
@@ -22,6 +30,12 @@ interface TemplateRow {
   keywords: string;
 }
 
+const CONSULTANT_DAILY_LIMIT = 10;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const REQUEST_BODY_LIMIT_BYTES = 2 * 1024;
+const OPENROUTER_TIMEOUT_MS = 25_000;
+const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
+
 // Cosine similarity between two vectors
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0.0;
@@ -37,58 +51,55 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 // Generate text with OpenRouter API
 async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
-  const models = [
-    process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash",
-    "meta-llama/llama-3.3-70b-instruct",
-    "openai/gpt-4o-mini"
-  ];
+  const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+  const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+      "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru",
+      "X-Title": "FMS3 Migration Assistant"
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3,
+      max_tokens: 1200,
+    }),
+  }, OPENROUTER_TIMEOUT_MS);
 
-  let lastError = null;
-  for (const model of models) {
-    try {
-      console.log(`Calling OpenRouter model: ${model}...`);
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": "https://fms3.ru",
-          "X-Title": "FMS3 Migration Assistant"
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.3,
-          max_tokens: 1500,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data.choices?.[0]?.message?.content;
-        if (text) {
-          console.log(`Successfully generated answer using OpenRouter model: ${model}`);
-          return text;
-        }
-      } else {
-        const errText = await response.text();
-        console.warn(`OpenRouter model ${model} failed: ${response.status} - ${errText}`);
-        lastError = new Error(`OpenRouter error for ${model}: ${response.status} - ${errText}`);
-      }
-    } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      console.warn(`OpenRouter exception for ${model}:`, error.message);
-      lastError = error;
-    }
+  if (!response.ok) {
+    console.warn("OpenRouter chat request failed", { status: response.status, model });
+    throw new Error(`OpenRouter chat request failed with status ${response.status}`);
   }
 
-  throw lastError || new Error("Failed to generate answer from OpenRouter models");
+  const data = await response.json();
+  if (data.error) {
+    console.warn("OpenRouter chat returned an error", { model });
+    throw new Error("OpenRouter chat returned an error.");
+  }
+
+  const text = data.choices?.[0]?.message?.content;
+  if (!text || typeof text !== "string") {
+    throw new Error("Invalid response structure from OpenRouter chat.");
+  }
+
+  return text;
 }
 
 // Simple prompt injection detection
@@ -179,18 +190,44 @@ function createLimitCookie(name: string, value: string): string {
   return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}; SameSite=Lax${secure}`;
 }
 
+function createAnonymousCookie(name: string, value: string): string {
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; Max-Age=${365 * 24 * 60 * 60}; SameSite=Lax${secure}`;
+}
+
+function getCookieValue(cookiesHeader: string, name: string): string | null {
+  const match = cookiesHeader.match(new RegExp(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function applyLimitHeaders(response: NextResponse, limitCookie: string, anonymousCookie: string, rateLimit: ReturnType<typeof checkRateLimit>) {
+  response.headers.set("Set-Cookie", limitCookie);
+  response.headers.append("Set-Cookie", anonymousCookie);
+  Object.entries(rateLimitHeaders(rateLimit)).forEach(([key, value]) => response.headers.set(key, value));
+}
+
+function getStrictestRateLimit(...limits: Array<ReturnType<typeof checkRateLimit>>) {
+  return limits.reduce((strictest, current) => {
+    if (!current.allowed) return current;
+    return current.remaining < strictest.remaining ? current : strictest;
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const secretKey = getSecretKey();
-    const { question, language = "ru" } = await request.json();
+    const body = await readJsonBody<{ question?: unknown; language?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
+    if (!body) {
+      return NextResponse.json({ error: "Некорректный или слишком большой запрос." }, { status: 400 });
+    }
 
-    if (!question || !question.trim()) {
+    const question = asTrimmedString(body.question, 500);
+    if (!question) {
       return NextResponse.json({ error: "Вопрос не может быть пустым." }, { status: 400 });
     }
 
-    if (question.length > 500) {
-      return NextResponse.json({ error: "Вопрос слишком длинный. Максимум 500 символов." }, { status: 400 });
-    }
+    const requestedLanguage = typeof body.language === "string" ? body.language : "ru";
+    const language = ALLOWED_LANGUAGES.has(requestedLanguage) ? requestedLanguage : "ru";
 
     // Map language codes to names for the LLM
     const languageNames: Record<string, string> = {
@@ -206,8 +243,9 @@ export async function POST(request: Request) {
     // 1. Rate Limiting check
     const cookiesHeader = request.headers.get("cookie") || "";
     const limitCookieName = "ai_limit_token";
-    const match = cookiesHeader.match(new RegExp(`(^|;)\\s*${limitCookieName}\\s*=\\s*([^;]+)`));
-    const token = match ? decodeURIComponent(match[2]) : null;
+    const anonymousCookieName = "ai_client_id";
+    const token = getCookieValue(cookiesHeader, limitCookieName);
+    const anonymousId = getCookieValue(cookiesHeader, anonymousCookieName) || crypto.randomUUID();
 
     const now = Date.now();
     let limitData = token ? verifyToken(token, secretKey) : null;
@@ -216,25 +254,39 @@ export async function POST(request: Request) {
       // First request or timer expired (reset daily)
       limitData = {
         count: 0,
-        resetTime: now + 24 * 60 * 60 * 1000,
+        resetTime: now + DAY_MS,
       };
     }
 
-    if (limitData.count >= 20) {
+    const ipRateLimit = checkRateLimit(
+      hashRateLimitKey(["consultant", "ip", getClientIp(request)]),
+      CONSULTANT_DAILY_LIMIT,
+      DAY_MS,
+    );
+    const anonymousRateLimit = checkRateLimit(
+      hashRateLimitKey(["consultant", "anonymous", anonymousId]),
+      CONSULTANT_DAILY_LIMIT,
+      DAY_MS,
+    );
+    const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit);
+
+    if (!rateLimit.allowed || limitData.count >= CONSULTANT_DAILY_LIMIT) {
       return NextResponse.json(
         {
-          error: "Вы превысили лимит бесплатных вопросов на сегодня (максимум 20).",
+          error: `Вы превысили лимит бесплатных вопросов на сегодня (максимум ${CONSULTANT_DAILY_LIMIT}).`,
           isLimitReached: true,
-          text: "К сожалению, вы исчерпали дневной лимит в 20 бесплатных вопросов. Для детального решения вашего вопроса мы рекомендуем связаться с нашим юристом.",
+          text: `К сожалению, вы исчерпали дневной лимит в ${CONSULTANT_DAILY_LIMIT} бесплатных вопросов. Для детального решения вашего вопроса мы рекомендуем связаться с нашим юристом.`,
           showLeadForm: true
         },
-        { status: 429 }
+        { status: 429, headers: rateLimitHeaders(rateLimit) }
       );
     }
 
     // Increment count
-    limitData.count += 1;
+    limitData.count = Math.max(limitData.count + 1, CONSULTANT_DAILY_LIMIT - rateLimit.remaining);
     const nextLimitToken = signToken(limitData.count, limitData.resetTime, secretKey);
+    const limitCookie = createLimitCookie(limitCookieName, nextLimitToken);
+    const anonymousCookie = createAnonymousCookie(anonymousCookieName, anonymousId);
 
     // 2. Security Checks
     if (isUnsafeQuery(question)) {
@@ -244,7 +296,7 @@ export async function POST(request: Request) {
           sources: []
         }
       );
-      response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
+      applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
       return response;
     }
 
@@ -255,7 +307,7 @@ export async function POST(request: Request) {
           sources: []
         }
       );
-      response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
+      applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
       return response;
     }
 
@@ -356,11 +408,11 @@ ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templates
     const response = NextResponse.json({
       text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
       sources: sources,
-      showLeadForm: answer.toLowerCase().includes("[cta_lawyer_form]") || limitData.count >= 15, // show lead form if template matching occurred or if limit is getting close
-      remainingRequests: 20 - limitData.count
+      showLeadForm: answer.toLowerCase().includes("[cta_lawyer_form]") || rateLimit.remaining <= 2,
+      remainingRequests: rateLimit.remaining
     });
 
-    response.headers.set("Set-Cookie", createLimitCookie(limitCookieName, nextLimitToken));
+    applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
     return response;
 
   } catch (error: unknown) {

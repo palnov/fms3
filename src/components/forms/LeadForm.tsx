@@ -17,6 +17,7 @@ export default function LeadForm({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [question, setQuestion] = useState(defaultQuestion);
+  const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -29,7 +30,7 @@ export default function LeadForm({
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, question: `[${sourceContext}] ${question}` }),
+        body: JSON.stringify({ name, phone, question: `[${sourceContext}] ${question}`, company }),
       });
       const data = await response.json();
 
@@ -59,6 +60,16 @@ export default function LeadForm({
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        value={company}
+        onChange={(event) => setCompany(event.target.value)}
+        className="hidden"
+        aria-hidden="true"
+      />
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-bold text-[#1f2c41]">
           Имя
