@@ -33,7 +33,14 @@ const ROUTES = [
   ["/legal/registration", "monthly", 0.8],
   ["/tools/ai-consultant", "weekly", 0.7],
   ["/tools/calculators", "monthly", 0.7],
+  ["/tools/check-passport", "monthly", 0.7],
+  ["/tools/check-rvp", "monthly", 0.7],
+  ["/tools/check-vnzh", "monthly", 0.7],
+  ["/tools/check-citizenship", "monthly", 0.7],
+  ["/tools/check-patent", "monthly", 0.7],
+  ["/tools/checklist-generator", "monthly", 0.7],
   ["/tools/document-check", "monthly", 0.7],
+  ["/tools/path-finder", "monthly", 0.7],
 ] as const satisfies ReadonlyArray<
   readonly [string, MetadataRoute.Sitemap[number]["changeFrequency"], number]
 >;
