@@ -236,9 +236,7 @@ export default function ConsultationBanner({
           Спросите ИИ
         </span>
         <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl tracking-tight">{title}</h3>
-        {messages.length === 0 && !isTypingWelcome && (
-          <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
-        )}
+        <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
       </div>
 
       {/* Chat Messages Log */}
