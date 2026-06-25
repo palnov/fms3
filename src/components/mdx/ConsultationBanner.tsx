@@ -155,14 +155,6 @@ export default function ConsultationBanner({
             >
               Задать вопрос <ArrowRight className="h-4 w-4" />
             </button>
-            {secondaryHref && secondaryLabel && (
-              <Link
-                href={secondaryHref}
-                className="button-white-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10 text-center"
-              >
-                {secondaryLabel}
-              </Link>
-            )}
           </div>
         </div>
       </section>
