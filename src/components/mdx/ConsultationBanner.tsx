@@ -189,19 +189,23 @@ export default function ConsultationBanner({
             
             // Add message after typing delay
             setTimeout(() => {
+              // Dynamically resolve page title (H1) or fallback to banner title
+              const pageTitle = document.querySelector("h1")?.textContent || title;
+              const cleanTitle = pageTitle.replace(/ в \d{4} году/g, "").trim();
+
               const welcomeMsg: Message = {
                 id: "welcome-msg",
                 sender: "ai",
-                text: `Привет! Я ваш ИИ-помощник. Прочитал материал «${title}». Если у вас остались вопросы или вы хотите разобрать свою ситуацию — напишите мне ниже!`,
+                text: `Привет! Отвечу на любые вопросы по теме «${cleanTitle}». Спросите меня ниже.`,
                 timestamp: new Date()
               };
               setMessages([welcomeMsg]);
               setIsTypingWelcome(false);
-            }, 1800);
-          }, 600);
+            }, 1400);
+          }, 400);
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
 
     const currentBanner = bannerRef.current;
@@ -219,15 +223,19 @@ export default function ConsultationBanner({
   return (
     <section 
       ref={bannerRef}
-      className="bottom-banner-chat my-10 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/20 p-5 text-slate-850 sm:p-7 border-y border-r border-slate-200 border-l-4 border-l-blue-600 shadow-xl transition-all duration-300"
+      className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] bg-white border border-slate-200/70 p-6 text-slate-850 sm:p-8 shadow-[0_20px_50px_-20px_rgba(148,163,184,0.18)] hover:shadow-[0_25px_60px_-20px_rgba(148,163,184,0.25)] transition-all duration-500 relative"
     >
+      {/* Premium background mesh gradients */}
+      <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* Header Info */}
-      <div className="border-b border-slate-200 pb-4 mb-4">
-        <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-blue-600">
-          <Bot className="h-4 w-4" />
+      <div className="border-b border-slate-100 pb-4 mb-4 relative z-10">
+        <span className="mb-3 inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-blue-600 bg-blue-50/80 border border-blue-100/50 px-3 py-1 rounded-full shadow-sm">
+          <Bot className="h-3.5 w-3.5 animate-pulse text-blue-500" />
           Спросите ИИ
         </span>
-        <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl">{title}</h3>
+        <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl tracking-tight">{title}</h3>
         {messages.length === 0 && !isTypingWelcome && (
           <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
         )}
@@ -235,7 +243,7 @@ export default function ConsultationBanner({
 
       {/* Chat Messages Log */}
       {(messages.length > 0 || isTypingWelcome) && (
-        <div className="max-h-[320px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div className="max-h-[320px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -251,7 +259,7 @@ export default function ConsultationBanner({
               <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
                 msg.sender === "user"
                   ? "bg-blue-600 text-white rounded-tr-none shadow-sm"
-                  : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm"
+                  : "bg-slate-50 border border-slate-100 text-slate-800 rounded-tl-none shadow-sm"
               }`}>
                 {msg.sender === "user" ? (
                   msg.text
@@ -271,7 +279,7 @@ export default function ConsultationBanner({
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="p-3 rounded-2xl bg-white border border-slate-200 rounded-tl-none flex items-center gap-1.5 shadow-sm">
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 rounded-tl-none flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
@@ -284,7 +292,7 @@ export default function ConsultationBanner({
 
       {/* Error Message */}
       {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-bold flex items-center gap-2">
+        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-bold flex items-center gap-2 relative z-10">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -296,7 +304,7 @@ export default function ConsultationBanner({
           e.preventDefault();
           handleSend(inputText);
         }}
-        className="flex gap-2"
+        className="flex gap-2 relative z-10"
       >
         <input
           type="text"
@@ -304,12 +312,12 @@ export default function ConsultationBanner({
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
           disabled={isTyping || isTypingWelcome}
-          className="flex-grow px-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-slate-800 placeholder-slate-400 shadow-sm"
+          className="flex-grow px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:bg-white focus:border-blue-500 disabled:opacity-50 transition-all font-medium text-sm text-slate-800 placeholder-slate-400 shadow-sm"
         />
         <button
           type="submit"
           disabled={isTyping || isTypingWelcome || !inputText.trim()}
-          className="w-11 h-11 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-200 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-sm active:scale-95"
+          className="w-12 h-12 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-200 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-md active:scale-95"
         >
           <Send className="w-4 h-4" />
         </button>
