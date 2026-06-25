@@ -196,7 +196,7 @@ export default function ConsultationBanner({
               const welcomeMsg: Message = {
                 id: "welcome-msg",
                 sender: "ai",
-                text: `Привет! Отвечу на любые вопросы по теме «${cleanTitle}». Спросите меня ниже.`,
+                text: `Привет! Отвечу на любые вопросы по теме «${cleanTitle}». Спросите меня ниже. Это бесплатно.`,
                 timestamp: new Date()
               };
               setMessages([welcomeMsg]);
