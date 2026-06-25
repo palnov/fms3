@@ -456,7 +456,7 @@ summary:focus-visible {
 }
 
 .content-callout {
-  max-width: 68ch;
+  max-width: 100%;
   margin: 1.5rem 0;
   border: 1px solid var(--border);
   border-radius: 1rem;
@@ -496,7 +496,7 @@ summary:focus-visible {
 
 .faq-list {
   display: grid;
-  max-width: 68ch;
+  max-width: 100%;
   gap: 0.7rem;
   margin: 1rem 0 2rem;
 }
@@ -521,7 +521,7 @@ summary:focus-visible {
 
 .related-guide {
   display: grid;
-  max-width: 68ch;
+  max-width: 100%;
   gap: 0.45rem;
   margin: 1.5rem 0;
   border: 1px solid #b9d7ea;

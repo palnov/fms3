@@ -294,37 +294,83 @@ export default function Home() {
       <section data-motion="section" className="site-container py-16 sm:py-24">
         <p className="section-kicker">Практические сервисы</p>
         <h2 className="section-title mt-3">Проверьте ситуацию, а затем читайте нужное</h2>
-        <div data-motion-stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link href="/tools/ai-consultant" data-motion-card className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white sm:col-span-2 lg:col-span-1">
-            <Bot className="h-8 w-8 text-[#ff5d61]" />
-            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-white/55">ИИ-помощник</span>
-            <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em]">Задать вопрос по базе знаний</h3>
-            <p className="mt-3 text-sm leading-6 text-white/65">Наш ИИ отвечает по ФЗ-115 и ФЗ-138, материалам МВД и реальным шаблонам миграционных документов.</p>
+        <div data-motion-stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Link href="/tools/ai-consultant" data-motion-card className="surface-card p-6">
+            <Bot className="h-8 w-8 text-[#02629f]" />
+            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">ИИ-помощник</span>
+            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Консультант</h3>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Ответы на вопросы по базе знаний, ФЗ-115, ФЗ-138 и шаблонам миграционных документов.</p>
           </Link>
-          <Link href="/tools/path-finder" data-motion-card className="surface-card min-h-64 p-6">
+          <Link href="/tools/path-finder" data-motion-card className="surface-card p-6">
             <Compass className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Навигатор</span>
-            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Подобрать миграционный путь</h3>
+            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Подобрать путь</h3>
             <p className="mt-3 text-sm leading-6 text-[#667287]">Интерактивный квиз по подбору оптимального статуса (РВП, ВНЖ, гражданство).</p>
           </Link>
-          <Link href="/tools/checklist-generator" data-motion-card className="surface-card min-h-64 p-6">
+          <Link href="/tools/checklist-generator" data-motion-card className="surface-card p-6">
             <ListTodo className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Чек-листы</span>
-            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Генератор списков документов</h3>
+            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Списки документов</h3>
             <p className="mt-3 text-sm leading-6 text-[#667287]">Отмечайте готовые документы и готовьте идеальный пакет для подачи в МВД.</p>
           </Link>
-          <Link href="/tools/document-check" data-motion-card className="surface-card min-h-64 p-6">
-            <FileCheck2 className="h-8 w-8 text-[#02629f]" />
-            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Проверка</span>
-            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Проверить документы</h3>
-            <p className="mt-3 text-sm leading-6 text-[#667287]">Найдите пропуски или проверьте действительность паспорта/патента.</p>
-          </Link>
-          <Link href="/tools/calculators" data-motion-card className="surface-card min-h-64 p-6">
+          <Link href="/tools/calculators" data-motion-card className="surface-card p-6">
             <Calculator className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Расчёт</span>
             <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Сроки и платежи</h3>
-            <p className="mt-3 text-sm leading-6 text-[#667287]">Калькуляторы пребывания 90/180 и стоимости патента.</p>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Калькуляторы пребывания 90/180 и стоимости трудового патента.</p>
           </Link>
+        </div>
+
+        <div className="mt-16">
+          <h3 className="text-2xl font-extrabold tracking-tight mb-2 text-[#1f2c41] dark:text-white">Проверки документов и статусов</h3>
+          <p className="text-[#667287] text-sm mb-8">Интерактивные онлайн-проверки готовности решений и действительности документов.</p>
+          
+          <div data-motion-stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <Link href="/tools/check-passport" data-motion-card className="surface-card p-5 group flex flex-col justify-between min-h-48 hover:-translate-y-1 transition-transform">
+              <div>
+                <ShieldCheck className="h-6 h-6 text-[#02629f]" />
+                <h4 className="mt-4 text-base font-extrabold tracking-[-0.02em] group-hover:text-primary-500 transition-colors">Действительность паспорта</h4>
+                <p className="mt-2 text-xs leading-relaxed text-[#667287]">Проверить паспорт РФ по базе недействительных документов.</p>
+              </div>
+              <span className="text-xs font-bold text-primary-500 mt-4 flex items-center gap-1">Открыть <ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+            
+            <Link href="/tools/check-rvp" data-motion-card className="surface-card p-5 group flex flex-col justify-between min-h-48 hover:-translate-y-1 transition-transform">
+              <div>
+                <FileCheck2 className="h-6 h-6 text-[#02629f]" />
+                <h4 className="mt-4 text-base font-extrabold tracking-[-0.02em] group-hover:text-primary-500 transition-colors">Готовность РВП</h4>
+                <p className="mt-2 text-xs leading-relaxed text-[#667287]">Проверить статус рассмотрения разрешения на проживание.</p>
+              </div>
+              <span className="text-xs font-bold text-primary-500 mt-4 flex items-center gap-1">Открыть <ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+
+            <Link href="/tools/check-vnzh" data-motion-card className="surface-card p-5 group flex flex-col justify-between min-h-48 hover:-translate-y-1 transition-transform">
+              <div>
+                <FileCheck2 className="h-6 h-6 text-[#02629f]" />
+                <h4 className="mt-4 text-base font-extrabold tracking-[-0.02em] group-hover:text-primary-500 transition-colors">Готовность ВНЖ</h4>
+                <p className="mt-2 text-xs leading-relaxed text-[#667287]">Проверить готовность решения по виду на жительство.</p>
+              </div>
+              <span className="text-xs font-bold text-primary-500 mt-4 flex items-center gap-1">Открыть <ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+
+            <Link href="/tools/check-citizenship" data-motion-card className="surface-card p-5 group flex flex-col justify-between min-h-48 hover:-translate-y-1 transition-transform">
+              <div>
+                <Users className="h-6 h-6 text-[#02629f]" />
+                <h4 className="mt-4 text-base font-extrabold tracking-[-0.02em] group-hover:text-primary-500 transition-colors">Готовность гражданства</h4>
+                <p className="mt-2 text-xs leading-relaxed text-[#667287]">Статус рассмотрения заявления на прием в гражданство РФ.</p>
+              </div>
+              <span className="text-xs font-bold text-primary-500 mt-4 flex items-center gap-1">Открыть <ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+
+            <Link href="/tools/check-patent" data-motion-card className="surface-card p-5 group flex flex-col justify-between min-h-48 hover:-translate-y-1 transition-transform">
+              <div>
+                <BriefcaseBusiness className="h-6 h-6 text-[#02629f]" />
+                <h4 className="mt-4 text-base font-extrabold tracking-[-0.02em] group-hover:text-primary-500 transition-colors">Готовность патента</h4>
+                <p className="mt-2 text-xs leading-relaxed text-[#667287]">Проверка статуса оформления трудового патента.</p>
+              </div>
+              <span className="text-xs font-bold text-primary-500 mt-4 flex items-center gap-1">Открыть <ArrowRight className="w-3.5 h-3.5" /></span>
+            </Link>
+          </div>
         </div>
       </section>
 
