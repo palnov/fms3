@@ -176,7 +176,7 @@ export default function ConsultationBanner({
       <div className="border-b border-slate-200 pb-4 mb-4">
         <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-blue-600">
           <Bot className="h-4 w-4" />
-          Следующий шаг
+          Спросите ИИ
         </span>
         <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl">{title}</h3>
         {messages.length === 0 && (
