@@ -1,15 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, AlertCircle, ArrowRight } from "lucide-react";
+import { Send, Bot, User, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
 import SafeMessageText from "@/components/chat/SafeMessageText";
-
-interface Message {
-  id: string;
-  sender: "ai" | "user";
-  text: string;
-  timestamp: Date;
-}
+import LeadForm from "@/components/forms/LeadForm";
+import { useAIChat } from "@/components/chat/AIChatProvider";
 
 interface ConsultationBannerProps {
   title?: string;
@@ -29,21 +24,13 @@ export default function ConsultationBanner({
   // Auto-detect if it's the bottom banner by checking isBottom prop or if context has "Финальный"
   const isBottomBanner = isBottom || context.includes("Финальный");
 
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hasTriggeredWelcome, setHasTriggeredWelcome] = useState(false);
   const [isTypingWelcome, setIsTypingWelcome] = useState(false);
+  const { messages, isTyping, errorMsg, sendQuestion, addAssistantMessage } = useAIChat();
   
   const chatEndRef = useRef<HTMLDivElement>(null);
   const bannerRef = useRef<HTMLDivElement>(null);
-  const messageIdRef = useRef(0);
-
-  const createMessageId = useCallback(() => {
-    messageIdRef.current += 1;
-    return `banner-msg-${messageIdRef.current}`;
-  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -53,75 +40,9 @@ export default function ConsultationBanner({
 
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
-
-    setErrorMsg(null);
-    const userMsg: Message = {
-      id: createMessageId(),
-      sender: "user",
-      text,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMsg]);
     setInputText("");
-    setIsTyping(true);
-
-    try {
-      const response = await fetch("/api/consultant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language: "ru", context }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const fullText = data.text;
-        const msgId = createMessageId();
-
-        const aiMsg: Message = {
-          id: msgId,
-          sender: "ai",
-          text: "",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMsg]);
-
-        const words = fullText.split(" ");
-        let currentText = "";
-        let wordIndex = 0;
-
-        const interval = setInterval(() => {
-          if (wordIndex < words.length) {
-            currentText += (wordIndex === 0 ? "" : " ") + words[wordIndex];
-            setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: currentText } : m));
-            wordIndex++;
-          } else {
-            clearInterval(interval);
-          }
-        }, 30);
-
-      } else {
-        const errorText = data.error || "Произошла ошибка при получении ответа.";
-        if (response.status === 429) {
-          const aiMsg: Message = {
-            id: createMessageId(),
-            sender: "ai",
-            text: data.text || errorText,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiMsg]);
-        } else {
-          setErrorMsg(errorText);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Ошибка сети. Пожалуйста, попробуйте снова.");
-    } finally {
-      setIsTyping(false);
-    }
-  }, [createMessageId, context]);
+    await sendQuestion(text, { context });
+  }, [context, sendQuestion]);
 
   useEffect(() => {
     if (!isBottomBanner || hasTriggeredWelcome) return;
@@ -142,13 +63,10 @@ export default function ConsultationBanner({
               const pageTitle = document.querySelector("h1")?.textContent || title;
               const cleanTitle = pageTitle.replace(/ в \d{4} году/g, "").trim();
 
-              const welcomeMsg: Message = {
-                id: "welcome-msg",
-                sender: "ai",
-                text: `Привет! Отвечу на любые вопросы по теме «${cleanTitle}». Спросите меня ниже. Это бесплатно.`,
-                timestamp: new Date()
-              };
-              setMessages([welcomeMsg]);
+              addAssistantMessage(
+                `Привет! Отвечу на вопросы по теме «${cleanTitle}». Спросите меня ниже. Это бесплатно.`,
+                { id: `article-welcome-${context}`, once: true },
+              );
               setIsTypingWelcome(false);
             }, 1400);
           }, 400);
@@ -167,7 +85,7 @@ export default function ConsultationBanner({
         observer.unobserve(currentBanner);
       }
     };
-  }, [isBottomBanner, hasTriggeredWelcome, title]);
+  }, [addAssistantMessage, context, isBottomBanner, hasTriggeredWelcome, title]);
 
   const scrollToBottomChat = () => {
     const bottomChat = document.querySelector(".bottom-banner-chat");
@@ -179,6 +97,8 @@ export default function ConsultationBanner({
       }
     }
   };
+
+  const lastUserQuestion = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
 
   // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
   if (!isBottomBanner) {
@@ -264,6 +184,33 @@ export default function ConsultationBanner({
                 <span className={`mt-1 text-[11px] font-semibold text-[#6f7890] ${msg.sender === "user" ? "mr-12" : "ml-12"}`}>
                   {msg.timestamp.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                 </span>
+                {msg.sender === "ai" && msg.suggestedReplies && msg.suggestedReplies.length > 0 && !msg.showLeadForm && (
+                  <div className="ml-12 mt-2 flex max-w-[78%] flex-wrap gap-2">
+                    {msg.suggestedReplies.map((reply) => (
+                      <button
+                        key={reply}
+                        type="button"
+                        onClick={() => handleSend(reply)}
+                        disabled={isTyping || isTypingWelcome}
+                        className="rounded-full border border-white/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-[#02629f] shadow-sm transition-colors hover:bg-white disabled:opacity-50"
+                      >
+                        {reply}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {msg.sender === "ai" && msg.showLeadForm && (
+                  <div data-motion-live className="ml-12 mt-3 max-w-md rounded-[1.5rem] border border-white/85 bg-white/95 p-5 shadow-[0_10px_28px_rgba(89,111,160,0.12)]">
+                    <div className="mb-2 flex items-center gap-2 text-[#ff2e32]">
+                      <Sparkles className="h-4 w-4" />
+                      <h4 className="!m-0 !text-sm !font-bold !text-[#1f2c41]">Можно сверить ситуацию с юристом</h4>
+                    </div>
+                    <p className="!mb-4 !mt-0 !text-xs !leading-5 !text-[#667287]">
+                      Если есть срок, отказ, запрет или риск ошибки в документах, специалист бесплатно уточнит детали и подскажет следующий шаг.
+                    </p>
+                    <LeadForm sourceContext={context} defaultQuestion={lastUserQuestion} />
+                  </div>
+                )}
               </div>
             ))}
 

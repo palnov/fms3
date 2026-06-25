@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingLawyerWidget from "@/components/widgets/FloatingLawyerWidget";
 import SiteMotion from "@/components/motion/SiteMotion";
+import { AIChatProvider } from "@/components/chat/AIChatProvider";
 
 const golos = localFont({
   src: [
@@ -67,11 +68,13 @@ export default function RootLayout({
           </div>
         </noscript>
         <a className="skip-link" href="#main-content">Перейти к содержанию</a>
-        <Header />
-        <main id="main-content" className="flex-grow flex flex-col">{children}</main>
-        <Footer />
-        <FloatingLawyerWidget />
-        <SiteMotion />
+        <AIChatProvider>
+          <Header />
+          <main id="main-content" className="flex-grow flex flex-col">{children}</main>
+          <Footer />
+          <FloatingLawyerWidget />
+          <SiteMotion />
+        </AIChatProvider>
       </body>
     </html>
   );

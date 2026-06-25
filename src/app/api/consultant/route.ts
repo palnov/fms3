@@ -34,15 +34,23 @@ const CONSULTANT_DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REQUEST_BODY_LIMIT_BYTES = 2 * 1024;
 const OPENROUTER_TIMEOUT_MS = 25_000;
-const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4o";
+const DEFAULT_OPENROUTER_MODEL = "openrouter/free";
+const DEFAULT_OPENROUTER_FALLBACK_MODEL = "deepseek/deepseek-v4-flash";
 const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
+type LeadIntent = "none" | "soft_prompt" | "qualify" | "show_form";
 
-function getOpenRouterModel(): string {
-  const configuredModel = process.env.OPENROUTER_MODEL?.trim();
-  if (!configuredModel) return DEFAULT_OPENROUTER_MODEL;
+const HOT_LEAD_PATTERN =
+  /(депортац|выдворен|запрет|отказ|суд|штраф|просроч|аннулиров|реадмисс|завтра|сегодня|срочно|не пустили|не впустили|истекает|истек|обжал|жалоб)/i;
+const SOFT_LEAD_PATTERN =
+  /(документ|заявлен|бланк|образец|провер|срок|основан|можно ли|как получить|что делать|куда подать)/i;
 
-  const normalizedModel = configuredModel.toLowerCase();
+function normalizeOpenRouterModel(model: string): string {
+  const normalizedModel = model.toLowerCase();
   const aliases: Record<string, string> = {
+    free: "openrouter/free",
+    "openrouter free": "openrouter/free",
+    "free router": "openrouter/free",
+    "free models router": "openrouter/free",
     "gpt-4o": "openai/gpt-4o",
     "gpt 4o": "openai/gpt-4o",
     "gpt-4 omni": "openai/gpt-4o",
@@ -51,9 +59,21 @@ function getOpenRouterModel(): string {
     "openai gpt 4o": "openai/gpt-4o",
     "openai gpt-4 omni": "openai/gpt-4o",
     "openai gpt 4 omni": "openai/gpt-4o",
+    deepseek: DEFAULT_OPENROUTER_FALLBACK_MODEL,
+    "deepseek flash": DEFAULT_OPENROUTER_FALLBACK_MODEL,
+    "deepseek v4 flash": DEFAULT_OPENROUTER_FALLBACK_MODEL,
   };
 
-  return aliases[normalizedModel] || configuredModel;
+  return aliases[normalizedModel] || model;
+}
+
+function getOpenRouterModels(): string[] {
+  const configuredModel = process.env.OPENROUTER_MODEL?.trim();
+  const configuredFallbackModel = process.env.OPENROUTER_FALLBACK_MODEL?.trim();
+  const primaryModel = normalizeOpenRouterModel(configuredModel || DEFAULT_OPENROUTER_MODEL);
+  const fallbackModel = normalizeOpenRouterModel(configuredFallbackModel || DEFAULT_OPENROUTER_FALLBACK_MODEL);
+
+  return Array.from(new Set([primaryModel, fallbackModel].filter(Boolean)));
 }
 
 function getAvailableLocalDownloadUrl(downloadUrl?: string | null): string | null {
@@ -94,7 +114,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 
 // Generate text with OpenRouter API
 async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
-  const model = getOpenRouterModel();
+  const models = getOpenRouterModels();
   const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -104,7 +124,8 @@ async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
       "X-Title": "FMS3 Migration Assistant"
     },
     body: JSON.stringify({
-      model,
+      model: models[0],
+      models,
       messages: [
         { role: "user", content: prompt }
       ],
@@ -114,13 +135,13 @@ async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
   }, OPENROUTER_TIMEOUT_MS);
 
   if (!response.ok) {
-    console.warn("OpenRouter chat request failed", { status: response.status, model });
+    console.warn("OpenRouter chat request failed", { status: response.status, models });
     throw new Error(`OpenRouter chat request failed with status ${response.status}`);
   }
 
   const data = await response.json();
   if (data.error) {
-    console.warn("OpenRouter chat returned an error", { model });
+    console.warn("OpenRouter chat returned an error", { models });
     throw new Error("OpenRouter chat returned an error.");
   }
 
@@ -173,6 +194,25 @@ function isMigrationRelated(query: string): boolean {
   ];
   const queryLower = query.toLowerCase();
   return keywords.some((kw) => queryLower.includes(kw));
+}
+
+function getLeadIntent(question: string, remainingRequests: number): LeadIntent {
+  if (remainingRequests <= 0) return "show_form";
+  if (HOT_LEAD_PATTERN.test(question)) return "show_form";
+  if (SOFT_LEAD_PATTERN.test(question)) return "qualify";
+  return "soft_prompt";
+}
+
+function getSuggestedReplies(leadIntent: LeadIntent): string[] {
+  if (leadIntent === "qualify") {
+    return ["Есть отказ или запрет", "Срок меньше 30 дней", "Нужно проверить документы"];
+  }
+
+  if (leadIntent === "soft_prompt") {
+    return ["Проверить риски", "Уточнить список документов"];
+  }
+
+  return [];
 }
 
 // Cookie limits helpers
@@ -246,7 +286,7 @@ function getStrictestRateLimit(...limits: Array<ReturnType<typeof checkRateLimit
 export async function POST(request: Request) {
   try {
     const secretKey = getSecretKey();
-    const body = await readJsonBody<{ question?: unknown; language?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
+    const body = await readJsonBody<{ question?: unknown; language?: unknown; context?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
     if (!body) {
       return NextResponse.json({ error: "Некорректный или слишком большой запрос." }, { status: 400 });
     }
@@ -258,6 +298,7 @@ export async function POST(request: Request) {
 
     const requestedLanguage = typeof body.language === "string" ? body.language : "ru";
     const language = ALLOWED_LANGUAGES.has(requestedLanguage) ? requestedLanguage : "ru";
+    const pageContext = asTrimmedString(body.context, 160);
 
     // Map language codes to names for the LLM
     const languageNames: Record<string, string> = {
@@ -407,12 +448,16 @@ export async function POST(request: Request) {
    - [Скачать образец заполнения](/templates/rvp-brak-sample.pdf)"
    (Формат ссылок и путей оставь без изменений, но текст вокруг них переведи на язык ответа).
 4. В самом конце ответа ОБЯЗАТЕЛЬНО ненавязчиво предложи бесплатную помощь юриста на языке: ${targetLang}, так как законы сложны, а инспекторы часто придираются к деталям.
-5. Закончи свой ответ строго специальным служебным тегом: [CTA_LAWYER_FORM] на новой строке. Этот тег укажет интерфейсу отрендерить форму обратной связи.
+5. Не показывай форму заявки автоматически после каждого ответа. Сначала дай полезный ответ. Затем мягко предложи уточнить ситуацию с юристом только если есть риск ошибки, сроки, отказ, запрет, выдворение, суд, сложный комплект документов или пользователь явно просит индивидуальную помощь.
+6. Если вопрос явно срочный или рискованный, в конце ответа добавь короткую подводку к консультации и закончи ответ служебным тегом [CTA_LAWYER_FORM] на новой строке. В обычных вопросах НЕ добавляй этот тег.
 
 БАЗА ЗНАНИЙ:
 ${contextText || "Нет доступных выдержек из законов под этот запрос."}
 
 ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templatesText}` : ""}
+
+КОНТЕКСТ СТРАНИЦЫ:
+${pageContext || "Не указан"}
 
 ВОПРОС ПОЛЬЗОВАТЕЛЯ:
 "${question}"
@@ -434,11 +479,17 @@ ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templates
     }
     const sources = Array.from(uniqueSourcesMap.values());
 
+    const answerRequestsLeadForm = answer.toLowerCase().includes("[cta_lawyer_form]");
+    const leadIntent = answerRequestsLeadForm ? "show_form" : getLeadIntent(question, rateLimit.remaining);
+    const suggestedReplies = getSuggestedReplies(leadIntent);
+
     // 7. Send Response with cookie headers
     const response = NextResponse.json({
       text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
       sources: sources,
-      showLeadForm: answer.toLowerCase().includes("[cta_lawyer_form]") || rateLimit.remaining <= 2,
+      showLeadForm: answerRequestsLeadForm || rateLimit.remaining <= 2,
+      leadIntent,
+      suggestedReplies,
       remainingRequests: rateLimit.remaining
     });
 

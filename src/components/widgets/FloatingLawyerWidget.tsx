@@ -4,13 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { MessageSquare, X, Send, Bot, User, Phone, Sparkles } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
-
-interface Message {
-  id: string;
-  sender: "ai" | "user";
-  text: string;
-  showLeadForm?: boolean;
-}
+import { useAIChat } from "@/components/chat/AIChatProvider";
 
 const PARTNER_PHONE = process.env.NEXT_PUBLIC_PARTNER_PHONE || "8 (800) 350-84-13";
 
@@ -90,20 +84,11 @@ const TRANSLATIONS: Record<string, {
 
 export default function FloatingLawyerWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<string>("ru");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      sender: "ai",
-      text: TRANSLATIONS.ru.welcome
-    }
-  ]);
   const [inputVal, setInputVal] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  const messageIdRef = useRef(0);
+  const { messages, language, setLanguage, isTyping, sendQuestion } = useAIChat();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -115,25 +100,16 @@ export default function FloatingLawyerWidget() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
+  useEffect(() => {
+    if (isOpen && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [isOpen, messages, isTyping]);
 
-  const createMessageId = () => {
-    messageIdRef.current += 1;
-    return `widget-message-${messageIdRef.current}`;
-  };
+  const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
   const selectLanguage = (nextLanguage: string) => {
     setLanguage(nextLanguage);
-    const nextTranslation = TRANSLATIONS[nextLanguage] || TRANSLATIONS.ru;
-    setMessages((prev) => {
-      if (prev.length === 1 && prev[0].id === "welcome") {
-        return [{
-          ...prev[0],
-          text: nextTranslation.welcome
-        }];
-      }
-      return prev;
-    });
     setShowLangMenu(false);
   };
 
@@ -143,82 +119,13 @@ export default function FloatingLawyerWidget() {
 
     const text = inputVal;
     setInputVal("");
-
-    const userMsg: Message = {
-      id: createMessageId(),
-      sender: "user",
-      text
-    };
-    setMessages(prev => [...prev, userMsg]);
-    setIsTyping(true);
-
-    try {
-      const response = await fetch("/api/consultant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const fullText = data.text;
-        const msgId = createMessageId();
-        
-        setMessages(prev => [
-          ...prev,
-          {
-            id: msgId,
-            sender: "ai",
-            text: "",
-            showLeadForm: false
-          }
-        ]);
-
-        const words = fullText.split(" ");
-        let currentText = "";
-        let wordIndex = 0;
-
-        const interval = setInterval(() => {
-          if (wordIndex < words.length) {
-            currentText += (wordIndex === 0 ? "" : " ") + words[wordIndex];
-            setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: currentText } : m));
-            wordIndex++;
-          } else {
-            clearInterval(interval);
-            if (data.showLeadForm) {
-              setTimeout(() => {
-                setMessages(prev => prev.map(m => m.id === msgId ? { ...m, showLeadForm: true } : m));
-              }, 1000);
-            }
-          }
-        }, 30);
-      } else {
-        const errorText = data.text || data.error || "Произошла ошибка при отправке запроса.";
-        setMessages(prev => [
-          ...prev,
-          {
-            id: createMessageId(),
-            sender: "ai",
-            text: errorText,
-            showLeadForm: data.showLeadForm || response.status === 429
-          }
-        ]);
-      }
-    } catch (err) {
-      console.error(err);
-      setMessages(prev => [
-        ...prev,
-        {
-          id: createMessageId(),
-          sender: "ai",
-          text: "Ошибка сети. Пожалуйста, проверьте интернет-соединение."
-        }
-      ]);
-    } finally {
-      setIsTyping(false);
-    }
+    await sendQuestion(text, { context: "Виджет ИИ-чатбота" });
   };
+
+  const displayMessages = messages.length > 0
+    ? messages
+    : [{ id: "widget-welcome", sender: "ai" as const, text: t.welcome, timestamp: new Date() }];
+  const lastUserQuestion = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
 
   return (
     <>
@@ -316,7 +223,7 @@ export default function FloatingLawyerWidget() {
 
             {/* Chat Messages */}
             <div className="flex-grow space-y-4 overflow-y-auto bg-[#f4f6fa] p-4">
-              {messages.map((msg) => (
+              {displayMessages.map((msg) => (
                 <div key={msg.id} data-motion-live className="space-y-2">
                   <div className={`flex gap-2.5 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs ${
@@ -352,9 +259,25 @@ export default function FloatingLawyerWidget() {
                       </p>
                       <LeadForm 
                         sourceContext="Виджет ИИ-чатбота" 
-                        defaultQuestion={messages[messages.length - 2]?.text || ""}
+                        defaultQuestion={lastUserQuestion}
                         onSuccess={() => setTimeout(() => setIsOpen(false), 4000)}
                       />
+                    </div>
+                  )}
+
+                  {msg.sender === "ai" && msg.suggestedReplies && msg.suggestedReplies.length > 0 && !msg.showLeadForm && (
+                    <div data-motion-live className="ml-9 flex max-w-[85%] flex-wrap gap-2">
+                      {msg.suggestedReplies.map((reply) => (
+                        <button
+                          key={reply}
+                          type="button"
+                          onClick={() => sendQuestion(reply, { context: "Виджет ИИ-чатбота" })}
+                          disabled={isTyping}
+                          className="rounded-full border border-[#d8dee7] bg-white px-2.5 py-1.5 text-[10px] font-bold text-[#02629f] transition-colors hover:bg-[#f4f6fa] disabled:opacity-50"
+                        >
+                          {reply}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
