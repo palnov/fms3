@@ -217,6 +217,23 @@ export default function ConsultationBanner({
       ref={bannerRef}
       className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] bg-white border border-slate-200/70 p-6 text-slate-850 sm:p-8 shadow-[0_20px_50px_-20px_rgba(148,163,184,0.18)] hover:shadow-[0_25px_60px_-20px_rgba(148,163,184,0.25)] transition-all duration-500 relative"
     >
+      {/* Inject custom CSS keyframes for premium message animations */}
+      <style>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-message-appear {
+          animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
+
       {/* Premium background mesh gradients */}
       <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -237,7 +254,7 @@ export default function ConsultationBanner({
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
+              className={`flex gap-3 max-w-[85%] animate-message-appear ${msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
             >
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 msg.sender === "user" 
@@ -265,7 +282,7 @@ export default function ConsultationBanner({
           ))}
 
           {(isTyping || isTypingWelcome) && (
-            <div className="flex gap-3 max-w-[85%] mr-auto">
+            <div className="flex gap-3 max-w-[85%] mr-auto animate-message-appear">
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
