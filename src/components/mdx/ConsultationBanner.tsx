@@ -170,8 +170,57 @@ export default function ConsultationBanner({
   }
 
   // 2. BOTTOM BANNER: Light theme with full inline chatbot
+  const [hasTriggeredWelcome, setHasTriggeredWelcome] = useState(false);
+  const [isTypingWelcome, setIsTypingWelcome] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isBottomBanner || hasTriggeredWelcome) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setHasTriggeredWelcome(true);
+          
+          // Trigger typing animation after a short delay
+          setTimeout(() => {
+            setIsTypingWelcome(true);
+            
+            // Add message after typing delay
+            setTimeout(() => {
+              const welcomeMsg: Message = {
+                id: "welcome-msg",
+                sender: "ai",
+                text: `Привет! Я ваш ИИ-помощник. Прочитал материал «${title}». Если у вас остались вопросы или вы хотите разобрать свою ситуацию — напишите мне ниже!`,
+                timestamp: new Date()
+              };
+              setMessages([welcomeMsg]);
+              setIsTypingWelcome(false);
+            }, 1800);
+          }, 600);
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    const currentBanner = bannerRef.current;
+    if (currentBanner) {
+      observer.observe(currentBanner);
+    }
+
+    return () => {
+      if (currentBanner) {
+        observer.unobserve(currentBanner);
+      }
+    };
+  }, [isBottomBanner, hasTriggeredWelcome, title]);
+
   return (
-    <section className="bottom-banner-chat my-8 overflow-hidden rounded-2xl bg-slate-50 p-5 text-slate-850 sm:p-7 border border-slate-200 shadow-md transition-all duration-300">
+    <section 
+      ref={bannerRef}
+      className="bottom-banner-chat my-10 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/20 p-5 text-slate-850 sm:p-7 border-y border-r border-slate-200 border-l-4 border-l-blue-600 shadow-xl transition-all duration-300"
+    >
       {/* Header Info */}
       <div className="border-b border-slate-200 pb-4 mb-4">
         <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-blue-600">
@@ -179,14 +228,14 @@ export default function ConsultationBanner({
           Спросите ИИ
         </span>
         <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl">{title}</h3>
-        {messages.length === 0 && (
+        {messages.length === 0 && !isTypingWelcome && (
           <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
         )}
       </div>
 
       {/* Chat Messages Log */}
-      {messages.length > 0 && (
-        <div className="max-h-[300px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+      {(messages.length > 0 || isTypingWelcome) && (
+        <div className="max-h-[320px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -201,7 +250,7 @@ export default function ConsultationBanner({
               </div>
               <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
                 msg.sender === "user"
-                  ? "bg-blue-600 text-white rounded-tr-none"
+                  ? "bg-blue-600 text-white rounded-tr-none shadow-sm"
                   : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm"
               }`}>
                 {msg.sender === "user" ? (
@@ -217,7 +266,7 @@ export default function ConsultationBanner({
             </div>
           ))}
 
-          {isTyping && (
+          {(isTyping || isTypingWelcome) && (
             <div className="flex gap-3 max-w-[85%] mr-auto">
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
@@ -254,12 +303,12 @@ export default function ConsultationBanner({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
-          disabled={isTyping}
+          disabled={isTyping || isTypingWelcome}
           className="flex-grow px-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-slate-800 placeholder-slate-400 shadow-sm"
         />
         <button
           type="submit"
-          disabled={isTyping || !inputText.trim()}
+          disabled={isTyping || isTypingWelcome || !inputText.trim()}
           className="w-11 h-11 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-200 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-sm active:scale-95"
         >
           <Send className="w-4 h-4" />
