@@ -10,7 +10,7 @@ export default function ArticleLayout({ children }: { children: React.ReactNode 
         <Link href="/pathways">Инструкции</Link>
       </div>
       <div className="article-frame">
-        <article data-motion-card className="article-main mdx-prose">{children}</article>
+        <article className="article-main mdx-prose">{children}</article>
         <aside className="article-aside" aria-label="Дополнительные материалы">
           <div data-motion-card className="article-aside-card">
             <strong className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#ff2e32]" /> Материал актуализируется</strong>

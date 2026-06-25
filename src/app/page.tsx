@@ -6,9 +6,11 @@ import {
   Bot,
   BriefcaseBusiness,
   Calculator,
+  Compass,
   FileCheck2,
   GraduationCap,
   House,
+  ListTodo,
   MapPinned,
   Search,
   ShieldCheck,
@@ -292,24 +294,36 @@ export default function Home() {
       <section data-motion="section" className="site-container py-16 sm:py-24">
         <p className="section-kicker">Практические сервисы</p>
         <h2 className="section-title mt-3">Проверьте ситуацию, а затем читайте нужное</h2>
-        <div data-motion-stagger className="mt-8 grid gap-4 lg:grid-cols-[1.2fr_.8fr_.8fr]">
-          <Link href="/tools/ai-consultant" data-motion-card className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white">
+        <div data-motion-stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Link href="/tools/ai-consultant" data-motion-card className="min-h-64 rounded-[1.6rem] bg-[#1f2c41] p-7 text-white sm:col-span-2 lg:col-span-1">
             <Bot className="h-8 w-8 text-[#ff5d61]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-white/55">ИИ-помощник</span>
             <h3 className="mt-3 text-2xl font-extrabold tracking-[-0.04em]">Задать вопрос по базе знаний</h3>
             <p className="mt-3 text-sm leading-6 text-white/65">Наш ИИ отвечает по ФЗ-115 и ФЗ-138, материалам МВД и реальным шаблонам миграционных документов.</p>
           </Link>
+          <Link href="/tools/path-finder" data-motion-card className="surface-card min-h-64 p-6">
+            <Compass className="h-8 w-8 text-[#02629f]" />
+            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Навигатор</span>
+            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Подобрать миграционный путь</h3>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Интерактивный квиз по подбору оптимального статуса (РВП, ВНЖ, гражданство).</p>
+          </Link>
+          <Link href="/tools/checklist-generator" data-motion-card className="surface-card min-h-64 p-6">
+            <ListTodo className="h-8 w-8 text-[#02629f]" />
+            <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Чек-листы</span>
+            <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Генератор списков документов</h3>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Отмечайте готовые документы и готовьте идеальный пакет для подачи в МВД.</p>
+          </Link>
           <Link href="/tools/document-check" data-motion-card className="surface-card min-h-64 p-6">
             <FileCheck2 className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Проверка</span>
             <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Проверить документы</h3>
-            <p className="mt-3 text-sm leading-6 text-[#667287]">Найдите пропуски до обращения в ведомство.</p>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Найдите пропуски или проверьте действительность паспорта/патента.</p>
           </Link>
           <Link href="/tools/calculators" data-motion-card className="surface-card min-h-64 p-6">
             <Calculator className="h-8 w-8 text-[#02629f]" />
             <span className="mt-12 block text-xs font-bold uppercase tracking-[0.08em] text-[#ff2e32]">Расчёт</span>
             <h3 className="mt-3 text-xl font-extrabold tracking-[-0.035em]">Сроки и платежи</h3>
-            <p className="mt-3 text-sm leading-6 text-[#667287]">Калькуляторы пребывания и патента.</p>
+            <p className="mt-3 text-sm leading-6 text-[#667287]">Калькуляторы пребывания 90/180 и стоимости патента.</p>
           </Link>
         </div>
       </section>
