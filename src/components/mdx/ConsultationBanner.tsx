@@ -237,7 +237,7 @@ export default function ConsultationBanner({
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-[85%] animate-message-appear ${msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
+              className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
             >
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 msg.sender === "user" 
@@ -265,7 +265,7 @@ export default function ConsultationBanner({
           ))}
 
           {(isTyping || isTypingWelcome) && (
-            <div className="flex gap-3 max-w-[85%] mr-auto animate-message-appear">
+            <div className="flex gap-3 max-w-[85%] mr-auto">
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
