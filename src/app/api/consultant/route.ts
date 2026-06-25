@@ -319,9 +319,9 @@ export async function POST(request: Request) {
     }
 
     // 3. Connect to SQLite DB
-    const dbPath = path.join(process.cwd(), "knowledge.db");
+    const dbPath = process.env.KNOWLEDGE_DB_PATH || path.join(process.cwd(), "knowledge.db");
     if (!fs.existsSync(dbPath)) {
-      console.error("knowledge.db file not found");
+      console.error("knowledge.db file not found", { dbPath });
       return NextResponse.json({ error: "База знаний еще не проиндексирована." }, { status: 500 });
     }
 
