@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { Send, Bot, User, AlertCircle, ArrowRight } from "lucide-react";
 import SafeMessageText from "@/components/chat/SafeMessageText";
 
@@ -25,8 +24,6 @@ export default function ConsultationBanner({
   title = "Разберите свою ситуацию по материалам справочника",
   description = "Сначала задайте вопрос ИИ-помощнику. Он найдёт связанные инструкции и источники. Если потребуется индивидуальный анализ, можно оставить заявку специалисту.",
   context = "Баннер в статье",
-  secondaryHref,
-  secondaryLabel,
   isBottom,
 }: ConsultationBannerProps) {
   // Auto-detect if it's the bottom banner by checking isBottom prop or if context has "Финальный"
@@ -36,8 +33,11 @@ export default function ConsultationBanner({
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [hasTriggeredWelcome, setHasTriggeredWelcome] = useState(false);
+  const [isTypingWelcome, setIsTypingWelcome] = useState(false);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
   const messageIdRef = useRef(0);
 
   const createMessageId = useCallback(() => {
@@ -123,49 +123,6 @@ export default function ConsultationBanner({
     }
   }, [createMessageId, context]);
 
-  const scrollToBottomChat = () => {
-    const bottomChat = document.querySelector(".bottom-banner-chat");
-    if (bottomChat) {
-      bottomChat.scrollIntoView({ behavior: "smooth", block: "center" });
-      const input = bottomChat.querySelector("input");
-      if (input) {
-        setTimeout(() => input.focus(), 800);
-      }
-    }
-  };
-
-  // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
-  if (!isBottomBanner) {
-    return (
-      <section className="my-8 overflow-hidden rounded-2xl bg-[#1f2c41] p-5 text-white sm:p-7 border border-slate-800 shadow-xl transition-all duration-300">
-        <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
-          <div>
-            <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff7b7e]">
-              <Bot className="h-4 w-4" />
-              Следующий шаг
-            </span>
-            <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
-            <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-300">{description}</p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row md:flex-col shrink-0">
-            <button
-              type="button"
-              onClick={scrollToBottomChat}
-              className="button-primary whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors px-4 text-sm font-bold text-white shadow-md active:scale-95"
-            >
-              Задать вопрос <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // 2. BOTTOM BANNER: Light theme with full inline chatbot
-  const [hasTriggeredWelcome, setHasTriggeredWelcome] = useState(false);
-  const [isTypingWelcome, setIsTypingWelcome] = useState(false);
-  const bannerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!isBottomBanner || hasTriggeredWelcome) return;
 
@@ -212,67 +169,106 @@ export default function ConsultationBanner({
     };
   }, [isBottomBanner, hasTriggeredWelcome, title]);
 
+  const scrollToBottomChat = () => {
+    const bottomChat = document.querySelector(".bottom-banner-chat");
+    if (bottomChat) {
+      bottomChat.scrollIntoView({ behavior: "smooth", block: "center" });
+      const input = bottomChat.querySelector("input");
+      if (input) {
+        setTimeout(() => input.focus(), 800);
+      }
+    }
+  };
+
+  // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
+  if (!isBottomBanner) {
+    return (
+      <section className="my-8 overflow-hidden rounded-2xl border border-[#1f2c41] bg-[#1f2c41] p-5 text-white shadow-xl transition-all duration-300 sm:p-7">
+        <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
+          <div>
+            <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff8a8c]">
+              <Bot className="h-4 w-4" />
+              Следующий шаг
+            </span>
+            <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
+            <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-300">{description}</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row md:flex-col shrink-0">
+            <button
+              type="button"
+              onClick={scrollToBottomChat}
+              className="button-primary inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#ff2e32] px-4 text-sm font-bold text-white shadow-md transition-colors hover:bg-[#d92327] active:scale-95"
+            >
+              Задать вопрос <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. BOTTOM BANNER: Light theme with full inline chatbot
   return (
     <section 
       ref={bannerRef}
-      className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] bg-white border border-slate-200/70 p-6 text-slate-850 sm:p-8 shadow-[0_20px_50px_-20px_rgba(148,163,184,0.18)] hover:shadow-[0_25px_60px_-20px_rgba(148,163,184,0.25)] transition-all duration-500 relative"
+      className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] border border-[#dfe8ff] bg-[#dfe9ff] p-4 text-[#1f2c41] shadow-[0_18px_48px_rgba(31,44,65,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(31,44,65,0.11)] sm:p-6"
     >
-      {/* Premium background mesh gradients */}
-      <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-pink-500/5 rounded-full blur-3xl pointer-events-none" />
-
       {/* Header Info */}
-      <div className="border-b border-slate-100 pb-4 mb-4 relative z-10">
-        <span className="mb-3 inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-blue-600 bg-blue-50/80 border border-blue-100/50 px-3 py-1 rounded-full shadow-sm">
-          <Bot className="h-3.5 w-3.5 animate-pulse text-blue-500" />
+      <div className="mb-5 rounded-[1.5rem] bg-white/55 px-4 py-4 backdrop-blur-sm sm:px-5">
+        <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#02629f] shadow-sm">
+          <Bot className="h-3.5 w-3.5 text-[#02629f]" />
           Спросите ИИ
         </span>
-        <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl tracking-tight">{title}</h3>
-        <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
+        <h3 className="!m-0 !text-xl !font-bold !tracking-normal text-[#1f2c41] sm:!text-2xl">{title}</h3>
+        <p className="!mb-0 !mt-3 !text-sm !leading-6 text-[#5f6e87]">{description}</p>
       </div>
 
       {/* Chat Messages Log */}
       {(messages.length > 0 || isTypingWelcome) && (
-        <div className="max-h-[320px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col relative z-10 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+        <div className="mb-5 flex max-h-[380px] flex-col gap-5 overflow-y-auto px-1 pr-2">
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
+              data-motion-live
+              className={`flex w-full flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                msg.sender === "user" 
-                  ? "bg-slate-700 text-white" 
-                  : "bg-blue-50 text-blue-600 border border-blue-100"
-              }`}>
-                {msg.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+              <div className={`flex max-w-[88%] items-end gap-2.5 sm:max-w-[78%] ${msg.sender === "user" ? "flex-row-reverse" : ""}`}>
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 shadow-sm ${
+                  msg.sender === "user" 
+                    ? "bg-[#02629f] text-white" 
+                    : "bg-white text-[#02629f]"
+                }`}>
+                  {msg.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                </div>
+                <div className={`rounded-[1.55rem] bg-white/95 px-5 py-4 !text-sm !leading-6 text-[#4d5564] shadow-[0_10px_28px_rgba(89,111,160,0.10)] ${
+                  msg.sender === "user" ? "rounded-br-md" : "rounded-bl-md"
+                }`}>
+                  {msg.sender === "user" ? (
+                    <p className="!m-0 min-h-[1.25rem] !max-w-none !text-sm !leading-6">{msg.text}</p>
+                  ) : (
+                    <SafeMessageText
+                      text={msg.text}
+                      linkClassName="font-semibold text-[#02629f] underline underline-offset-2 transition-colors hover:text-[#014f82]"
+                      paragraphClassName="!mb-1.5 min-h-[1.25rem] !max-w-none !text-sm !leading-6 last:!mb-0"
+                    />
+                  )}
+                </div>
               </div>
-              <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
-                msg.sender === "user"
-                  ? "bg-blue-600 text-white rounded-tr-none shadow-sm"
-                  : "bg-slate-50 border border-slate-100 text-slate-800 rounded-tl-none shadow-sm"
-              }`}>
-                {msg.sender === "user" ? (
-                  msg.text
-                ) : (
-                  <SafeMessageText
-                    text={msg.text}
-                    linkClassName="font-semibold text-blue-600 underline hover:text-blue-500 transition-colors"
-                    paragraphClassName="mb-1.5 min-h-[1.25rem]"
-                  />
-                )}
-              </div>
+              <span className={`mt-1 text-[11px] font-semibold text-[#6f7890] ${msg.sender === "user" ? "mr-12" : "ml-12"}`}>
+                {msg.timestamp.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
           ))}
 
           {(isTyping || isTypingWelcome) && (
-            <div className="flex gap-3 max-w-[85%] mr-auto">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-                <Bot className="w-4 h-4" />
+            <div data-motion-live className="flex w-full items-end gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 bg-white text-[#02629f] shadow-sm">
+                <Bot className="h-4 w-4" />
               </div>
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 rounded-tl-none flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
+              <div className="flex min-h-14 items-center gap-1.5 rounded-[1.55rem] rounded-bl-md bg-white/95 px-5 py-4 shadow-[0_10px_28px_rgba(89,111,160,0.10)]" aria-label="ИИ печатает">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287]"></span>
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287] [animation-delay:0.16s]"></span>
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287] [animation-delay:0.32s]"></span>
               </div>
             </div>
           )}
@@ -282,8 +278,8 @@ export default function ConsultationBanner({
 
       {/* Error Message */}
       {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-bold flex items-center gap-2 relative z-10">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div data-motion-live className="mb-3 flex items-center gap-2 rounded-xl border border-[#ff2e32]/20 bg-[#fff0f0] p-3 text-xs font-bold text-[#d92327]">
+          <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
@@ -294,7 +290,7 @@ export default function ConsultationBanner({
           e.preventDefault();
           handleSend(inputText);
         }}
-        className="flex gap-2 relative z-10"
+        className="flex items-center gap-2 rounded-full bg-white/95 p-2 shadow-[0_10px_28px_rgba(89,111,160,0.12)]"
       >
         <input
           type="text"
@@ -302,17 +298,17 @@ export default function ConsultationBanner({
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
           disabled={isTyping || isTypingWelcome}
-          className="flex-grow px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:outline-none focus:bg-white focus:border-blue-500 disabled:opacity-50 transition-all font-medium text-sm text-slate-800 placeholder-slate-400 shadow-sm"
+          className="min-w-0 flex-grow rounded-full border-0 bg-transparent px-4 py-3 text-sm font-medium text-[#1f2c41] transition-all placeholder:text-[#6f7890] focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={isTyping || isTypingWelcome || !inputText.trim()}
-          className="w-12 h-12 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-200 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-md active:scale-95"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#4d5564] transition-colors hover:bg-[#edf2fd] hover:text-[#02629f] active:scale-95 disabled:opacity-45"
+          aria-label="Отправить вопрос"
         >
-          <Send className="w-4 h-4" />
+          <Send className="h-4 w-4" />
         </button>
       </form>
     </section>
   );
 }
-
