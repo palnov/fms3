@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Bot, User, AlertCircle, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { Send, Bot, User, AlertCircle, ArrowRight } from "lucide-react";
 import SafeMessageText from "@/components/chat/SafeMessageText";
 
 interface Message {
@@ -17,13 +18,20 @@ interface ConsultationBannerProps {
   context?: string;
   secondaryHref?: string;
   secondaryLabel?: string;
+  isBottom?: boolean;
 }
 
 export default function ConsultationBanner({
   title = "Разберите свою ситуацию по материалам справочника",
   description = "Сначала задайте вопрос ИИ-помощнику. Он найдёт связанные инструкции и источники. Если потребуется индивидуальный анализ, можно оставить заявку специалисту.",
   context = "Баннер в статье",
+  secondaryHref,
+  secondaryLabel,
+  isBottom,
 }: ConsultationBannerProps) {
+  // Auto-detect if it's the bottom banner by checking isBottom prop or if context has "Финальный"
+  const isBottomBanner = isBottom || context.includes("Финальный");
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -115,23 +123,70 @@ export default function ConsultationBanner({
     }
   }, [createMessageId, context]);
 
+  const scrollToBottomChat = () => {
+    const bottomChat = document.querySelector(".bottom-banner-chat");
+    if (bottomChat) {
+      bottomChat.scrollIntoView({ behavior: "smooth", block: "center" });
+      const input = bottomChat.querySelector("input");
+      if (input) {
+        setTimeout(() => input.focus(), 800);
+      }
+    }
+  };
+
+  // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
+  if (!isBottomBanner) {
+    return (
+      <section className="my-8 overflow-hidden rounded-2xl bg-[#1f2c41] p-5 text-white sm:p-7 border border-slate-800 shadow-xl transition-all duration-300">
+        <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
+          <div>
+            <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff7b7e]">
+              <Bot className="h-4 w-4" />
+              Следующий шаг
+            </span>
+            <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
+            <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-300">{description}</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row md:flex-col shrink-0">
+            <button
+              type="button"
+              onClick={scrollToBottomChat}
+              className="button-primary whitespace-nowrap inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 transition-colors px-4 text-sm font-bold text-white shadow-md active:scale-95"
+            >
+              Задать вопрос <ArrowRight className="h-4 w-4" />
+            </button>
+            {secondaryHref && secondaryLabel && (
+              <Link
+                href={secondaryHref}
+                className="button-white-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10 text-center"
+              >
+                {secondaryLabel}
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 2. BOTTOM BANNER: Light theme with full inline chatbot
   return (
-    <section className="my-8 overflow-hidden rounded-2xl bg-[#1f2c41] p-5 text-white sm:p-7 border border-slate-800 shadow-xl transition-all duration-300">
+    <section className="bottom-banner-chat my-8 overflow-hidden rounded-2xl bg-slate-50 p-5 text-slate-850 sm:p-7 border border-slate-200 shadow-md transition-all duration-300">
       {/* Header Info */}
-      <div className="border-b border-white/10 pb-4 mb-4">
-        <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff7b7e]">
+      <div className="border-b border-slate-200 pb-4 mb-4">
+        <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-blue-600">
           <Bot className="h-4 w-4" />
           Следующий шаг
         </span>
-        <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
+        <h3 className="!m-0 !text-xl !font-bold text-slate-900 sm:!text-2xl">{title}</h3>
         {messages.length === 0 && (
-          <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-350">{description}</p>
+          <p className="!mb-0 !mt-3 !text-sm !leading-6 text-slate-500">{description}</p>
         )}
       </div>
 
       {/* Chat Messages Log */}
       {messages.length > 0 && (
-        <div className="max-h-[300px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="max-h-[300px] overflow-y-auto mb-4 pr-2 space-y-4 flex flex-col scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -140,21 +195,21 @@ export default function ConsultationBanner({
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 msg.sender === "user" 
                   ? "bg-slate-700 text-white" 
-                  : "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                  : "bg-blue-50 text-blue-600 border border-blue-100"
               }`}>
                 {msg.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
               <div className={`p-3 rounded-2xl text-sm leading-relaxed ${
                 msg.sender === "user"
                   ? "bg-blue-600 text-white rounded-tr-none"
-                  : "bg-white/5 border border-white/10 text-slate-100 rounded-tl-none"
+                  : "bg-white border border-slate-200 text-slate-800 rounded-tl-none shadow-sm"
               }`}>
                 {msg.sender === "user" ? (
                   msg.text
                 ) : (
                   <SafeMessageText
                     text={msg.text}
-                    linkClassName="font-semibold text-blue-400 underline hover:text-blue-300 transition-colors"
+                    linkClassName="font-semibold text-blue-600 underline hover:text-blue-500 transition-colors"
                     paragraphClassName="mb-1.5 min-h-[1.25rem]"
                   />
                 )}
@@ -164,10 +219,10 @@ export default function ConsultationBanner({
 
           {isTyping && (
             <div className="flex gap-3 max-w-[85%] mr-auto">
-              <div className="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 rounded-tl-none flex items-center gap-1.5">
+              <div className="p-3 rounded-2xl bg-white border border-slate-200 rounded-tl-none flex items-center gap-1.5 shadow-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:0.4s]"></span>
@@ -180,7 +235,7 @@ export default function ConsultationBanner({
 
       {/* Error Message */}
       {errorMsg && (
-        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold flex items-center gap-2">
+        <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-bold flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -200,12 +255,12 @@ export default function ConsultationBanner({
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
           disabled={isTyping}
-          className="flex-grow px-4 py-3 rounded-xl border border-white/10 bg-white/5 focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-white placeholder-slate-400 shadow-inner"
+          className="flex-grow px-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-slate-800 placeholder-slate-400 shadow-sm"
         />
         <button
           type="submit"
           disabled={isTyping || !inputText.trim()}
-          className="w-11 h-11 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-700 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-lg active:scale-95"
+          className="w-11 h-11 rounded-xl bg-[#ff7b7e] hover:bg-[#ff8c90] disabled:bg-slate-200 disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-sm active:scale-95"
         >
           <Send className="w-4 h-4" />
         </button>
