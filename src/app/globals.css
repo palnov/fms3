@@ -19,6 +19,7 @@
   --muted: #667287;
   --border: #d8dee7;
   --primary: #02629f;
+  --brand: var(--primary);
   --primary-dark: #014f82;
   --accent: #ff2e32;
   --accent-dark: #d92327;
@@ -718,4 +719,21 @@ summary:focus-visible {
   animation: none !important;
   transform: none !important;
   opacity: 1 !important;
+}
+
+/* Custom class for outline buttons on dark banner backgrounds to override global prose blue color and underline */
+.mdx-prose a.button-white-outline,
+.button-white-outline {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  transition: background-color 180ms ease, border-color 180ms ease !important;
+}
+
+.mdx-prose a.button-white-outline:hover,
+.button-white-outline:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
 }

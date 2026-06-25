@@ -40,7 +40,7 @@ export default function ConsultationBanner({
           {secondaryHref && secondaryLabel ? (
             <Link
               href={secondaryHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
+              className="button-white-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
             >
               {secondaryLabel}
             </Link>
@@ -48,7 +48,7 @@ export default function ConsultationBanner({
             <button
               type="button"
               onClick={() => setShowForm((value) => !value)}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
+              className="button-white-outline inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/20 px-4 text-sm font-bold text-white hover:bg-white/10"
             >
               <Scale className="h-4 w-4" />
               Нужен специалист

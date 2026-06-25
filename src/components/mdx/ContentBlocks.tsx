@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -6,6 +9,7 @@ import {
   CalendarCheck,
   CheckCircle2,
   Info,
+  ChevronDown,
 } from "lucide-react";
 
 export function ArticleMeta({
@@ -25,7 +29,7 @@ export function ArticleMeta({
 
 export function QuickAnswer({ children }: { children: React.ReactNode }) {
   return (
-    <section data-motion-card className="content-callout content-callout-answer">
+    <section className="content-callout content-callout-answer">
       <strong>Короткий ответ</strong>
       <div>{children}</div>
     </section>
@@ -40,7 +44,7 @@ export function LegalSource({
   children: React.ReactNode;
 }) {
   return (
-    <aside data-motion-card className="content-callout content-callout-source">
+    <aside className="content-callout content-callout-source">
       <strong><BookOpenCheck aria-hidden="true" /> {title}</strong>
       <div>{children}</div>
     </aside>
@@ -49,7 +53,7 @@ export function LegalSource({
 
 export function Notice({ children }: { children: React.ReactNode }) {
   return (
-    <aside data-motion-card className="content-callout content-callout-notice">
+    <aside className="content-callout content-callout-notice">
       <strong><Info aria-hidden="true" /> Обратите внимание</strong>
       <div>{children}</div>
     </aside>
@@ -58,10 +62,35 @@ export function Notice({ children }: { children: React.ReactNode }) {
 
 export function Warning({ children }: { children: React.ReactNode }) {
   return (
-    <aside data-motion-card className="content-callout content-callout-warning">
+    <aside className="content-callout content-callout-warning">
       <strong><AlertTriangle aria-hidden="true" /> Важно</strong>
       <div>{children}</div>
     </aside>
+  );
+}
+
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/40 overflow-hidden transition-all duration-200">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-4 p-4 text-left font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
+      >
+        <span>{question}</span>
+        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+      <div
+        className={`grid transition-all duration-200 ease-in-out ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <p className="p-4 pt-0 text-sm leading-relaxed text-slate-650 dark:text-slate-400">{answer}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -71,12 +100,9 @@ export function FaqAccordion({
   items: Array<{ question: string; answer: string }>;
 }) {
   return (
-    <div data-motion-stagger className="faq-list">
+    <div className="faq-list gap-3 grid mt-4 mb-6">
       {items.map((item) => (
-        <details key={item.question} data-motion-card>
-          <summary>{item.question}</summary>
-          <p>{item.answer}</p>
-        </details>
+        <FaqItem key={item.question} question={item.question} answer={item.answer} />
       ))}
     </div>
   );

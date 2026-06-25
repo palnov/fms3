@@ -15,6 +15,13 @@ export default function SiteMotion() {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Reset scroll to top instantly on pathname change, bypassing CSS smooth scroll
+    const html = document.documentElement;
+    const originalScrollBehavior = html.style.scrollBehavior;
+    html.style.scrollBehavior = "auto";
+    window.scrollTo(0, 0);
+    html.style.scrollBehavior = originalScrollBehavior;
+
     if (prefersReducedMotion()) {
       document.documentElement.classList.add("motion-reduced");
       return;
