@@ -56,6 +56,16 @@ function getOpenRouterModel(): string {
   return aliases[normalizedModel] || configuredModel;
 }
 
+function getAvailableLocalDownloadUrl(downloadUrl?: string | null): string | null {
+  if (!downloadUrl || !downloadUrl.startsWith("/")) return null;
+
+  const publicRoot = path.join(process.cwd(), "public");
+  const filePath = path.normalize(path.join(publicRoot, downloadUrl));
+  if (!filePath.startsWith(publicRoot + path.sep)) return null;
+
+  return fs.existsSync(filePath) ? downloadUrl : null;
+}
+
 // Cosine similarity between two vectors
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0.0;
@@ -418,7 +428,7 @@ ${matchedTemplates.length > 0 ? `ДОСТУПНЫЕ ШАБЛОНЫ:\n${templates
         uniqueSourcesMap.set(chunk.source_file, {
           name: chunk.source_file,
           parent_url: chunk.source_url,
-          download_url: chunk.local_download_url,
+          download_url: getAvailableLocalDownloadUrl(chunk.local_download_url),
         });
       }
     }
