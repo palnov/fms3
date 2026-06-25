@@ -19,7 +19,7 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000).
 
-Для работы ИИ-консультанта нужны `JWT_SECRET`, `RATE_LIMIT_SECRET`, `OPENROUTER_API_KEY` и подготовленный `knowledge.db`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
+Для работы ИИ-консультанта нужны `JWT_SECRET`, `RATE_LIMIT_SECRET`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` и подготовленный `knowledge.db`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
 
 ## Команды
 
@@ -35,4 +35,4 @@ npm run start     # запуск production build
 - `src/app/pathways` — SEO-руководства и миграционные сценарии.
 - `src/app/tools` — консультант, калькуляторы и проверка документов.
 - `src/app/api/consultant` — RAG API консультанта.
-- `knowledge` и `public/downloads` — runtime-метаданные и локальные документы базы знаний.
+- `knowledge.db` и `public/downloads` — runtime-метаданные и локальные документы базы знаний.

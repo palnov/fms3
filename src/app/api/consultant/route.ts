@@ -34,7 +34,27 @@ const CONSULTANT_DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REQUEST_BODY_LIMIT_BYTES = 2 * 1024;
 const OPENROUTER_TIMEOUT_MS = 25_000;
+const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4o";
 const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
+
+function getOpenRouterModel(): string {
+  const configuredModel = process.env.OPENROUTER_MODEL?.trim();
+  if (!configuredModel) return DEFAULT_OPENROUTER_MODEL;
+
+  const normalizedModel = configuredModel.toLowerCase();
+  const aliases: Record<string, string> = {
+    "gpt-4o": "openai/gpt-4o",
+    "gpt 4o": "openai/gpt-4o",
+    "gpt-4 omni": "openai/gpt-4o",
+    "gpt 4 omni": "openai/gpt-4o",
+    "openai gpt-4o": "openai/gpt-4o",
+    "openai gpt 4o": "openai/gpt-4o",
+    "openai gpt-4 omni": "openai/gpt-4o",
+    "openai gpt 4 omni": "openai/gpt-4o",
+  };
+
+  return aliases[normalizedModel] || configuredModel;
+}
 
 // Cosine similarity between two vectors
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
@@ -64,7 +84,7 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 
 // Generate text with OpenRouter API
 async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
-  const model = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
+  const model = getOpenRouterModel();
   const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
