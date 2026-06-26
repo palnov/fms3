@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export type LeadIntent = "none" | "soft_prompt" | "qualify" | "show_form";
 
@@ -39,6 +39,8 @@ interface AIChatContextValue {
 }
 
 const DAILY_REQUEST_LIMIT = 10;
+const CHAT_STORAGE_KEY = "fms3_shared_ai_chat";
+const CHAT_STORAGE_VERSION = 1;
 const HOT_QUERY_PATTERN =
   /(депортац|выдворен|запрет|отказ|суд|штраф|просроч|аннулиров|реадмисс|завтра|сегодня|срочно|не пустили|не впустили|истекает|истек|обжал|жалоб)/i;
 
@@ -58,6 +60,38 @@ function getRequestHistory(messages: ChatMessage[]) {
     }));
 }
 
+function restoreStoredMessages(value: unknown): ChatMessage[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): ChatMessage | null => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const sender = record.sender === "ai" || record.sender === "user" ? record.sender : null;
+      const text = typeof record.text === "string" ? record.text : "";
+      const id = typeof record.id === "string" ? record.id : crypto.randomUUID();
+      if (!sender || !text.trim()) return null;
+
+      return {
+        id,
+        sender,
+        text,
+        sources: Array.isArray(record.sources) ? record.sources as ChatSource[] : undefined,
+        showLeadForm: Boolean(record.showLeadForm),
+        leadIntent: record.leadIntent === "none" || record.leadIntent === "soft_prompt" || record.leadIntent === "qualify" || record.leadIntent === "show_form"
+          ? record.leadIntent
+          : undefined,
+        suggestedReplies: Array.isArray(record.suggestedReplies)
+          ? record.suggestedReplies.filter((reply): reply is string => typeof reply === "string")
+          : undefined,
+        timestamp: typeof record.timestamp === "string" || typeof record.timestamp === "number"
+          ? new Date(record.timestamp)
+          : new Date(),
+      };
+    })
+    .filter((message): message is ChatMessage => Boolean(message));
+}
+
 export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [language, setLanguage] = useState("ru");
@@ -66,6 +100,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const [remainingRequests, setRemainingRequests] = useState<number | null>(DAILY_REQUEST_LIMIT);
   const messageIdRef = useRef(0);
   const oneTimeMessagesRef = useRef(new Set<string>());
+  const hasRestoredStorageRef = useRef(false);
 
   const createMessageId = useCallback(() => {
     messageIdRef.current += 1;
@@ -89,6 +124,53 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       },
     ]);
   }, [createMessageId]);
+
+  useEffect(() => {
+    const restoreTimer = window.setTimeout(() => {
+      try {
+        const stored = window.localStorage.getItem(CHAT_STORAGE_KEY);
+        if (!stored) {
+          hasRestoredStorageRef.current = true;
+          return;
+        }
+
+        const parsed = JSON.parse(stored) as { version?: unknown; messages?: unknown; language?: unknown; remainingRequests?: unknown };
+        if (parsed.version !== CHAT_STORAGE_VERSION) {
+          window.localStorage.removeItem(CHAT_STORAGE_KEY);
+          hasRestoredStorageRef.current = true;
+          return;
+        }
+
+        const storedMessages = restoreStoredMessages(parsed.messages);
+        if (storedMessages.length > 0) {
+          setMessages(storedMessages);
+        }
+        if (typeof parsed.language === "string") {
+          setLanguage(parsed.language);
+        }
+        if (typeof parsed.remainingRequests === "number") {
+          setRemainingRequests(parsed.remainingRequests);
+        }
+      } catch {
+        window.localStorage.removeItem(CHAT_STORAGE_KEY);
+      } finally {
+        hasRestoredStorageRef.current = true;
+      }
+    }, 0);
+
+    return () => window.clearTimeout(restoreTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredStorageRef.current) return;
+
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
+      version: CHAT_STORAGE_VERSION,
+      messages: messages.slice(-20),
+      language,
+      remainingRequests,
+    }));
+  }, [language, messages, remainingRequests]);
 
   const sendQuestion = useCallback(async (question: string, options?: SendQuestionOptions) => {
     const text = question.trim();

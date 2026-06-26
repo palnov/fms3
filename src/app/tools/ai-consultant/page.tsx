@@ -32,6 +32,8 @@ const LANGUAGES = [
 ];
 
 const DAILY_REQUEST_LIMIT = 10;
+const CHAT_STORAGE_KEY = "fms3_ai_consultant_page_chat";
+const CHAT_STORAGE_VERSION = 1;
 
 function getRequestHistory(messages: Message[]) {
   return messages
@@ -41,6 +43,32 @@ function getRequestHistory(messages: Message[]) {
       sender: message.sender,
       text: message.text.slice(0, 300),
     }));
+}
+
+function restoreStoredMessages(value: unknown): Message[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item): Message | null => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const sender = record.sender === "ai" || record.sender === "user" ? record.sender : null;
+      const text = typeof record.text === "string" ? record.text : "";
+      const id = typeof record.id === "string" ? record.id : crypto.randomUUID();
+      if (!sender || !text.trim()) return null;
+
+      return {
+        id,
+        sender,
+        text,
+        sources: Array.isArray(record.sources) ? record.sources as (string | Source)[] : undefined,
+        showLeadForm: Boolean(record.showLeadForm),
+        timestamp: typeof record.timestamp === "string" || typeof record.timestamp === "number"
+          ? new Date(record.timestamp)
+          : new Date(),
+      };
+    })
+    .filter((message): message is Message => Boolean(message));
 }
 
 const TRANSLATIONS: Record<string, {
@@ -179,6 +207,7 @@ function AIConsultantChat() {
   const langMenuRef = useRef<HTMLDivElement>(null);
   const messageIdRef = useRef(0);
   const initialQuestionSentRef = useRef(false);
+  const hasRestoredStorageRef = useRef(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -196,6 +225,53 @@ function AIConsultantChat() {
     messageIdRef.current += 1;
     return `message-${messageIdRef.current}`;
   }, []);
+
+  useEffect(() => {
+    const restoreTimer = window.setTimeout(() => {
+      try {
+        const stored = window.localStorage.getItem(CHAT_STORAGE_KEY);
+        if (!stored) {
+          hasRestoredStorageRef.current = true;
+          return;
+        }
+
+        const parsed = JSON.parse(stored) as { version?: unknown; messages?: unknown; language?: unknown; remainingRequests?: unknown };
+        if (parsed.version !== CHAT_STORAGE_VERSION) {
+          window.localStorage.removeItem(CHAT_STORAGE_KEY);
+          hasRestoredStorageRef.current = true;
+          return;
+        }
+
+        const storedMessages = restoreStoredMessages(parsed.messages);
+        if (storedMessages.length > 0) {
+          setMessages(storedMessages);
+        }
+        if (typeof parsed.language === "string" && TRANSLATIONS[parsed.language]) {
+          setLanguage(parsed.language);
+        }
+        if (typeof parsed.remainingRequests === "number") {
+          setRemainingRequests(parsed.remainingRequests);
+        }
+      } catch {
+        window.localStorage.removeItem(CHAT_STORAGE_KEY);
+      } finally {
+        hasRestoredStorageRef.current = true;
+      }
+    }, 0);
+
+    return () => window.clearTimeout(restoreTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!hasRestoredStorageRef.current) return;
+
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
+      version: CHAT_STORAGE_VERSION,
+      messages: messages.slice(-20),
+      language,
+      remainingRequests,
+    }));
+  }, [language, messages, remainingRequests]);
 
   const selectLanguage = (nextLanguage: string) => {
     setLanguage(nextLanguage);
