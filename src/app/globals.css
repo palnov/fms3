@@ -170,17 +170,29 @@ summary:focus-visible {
   top: 0.75rem;
   left: 0.75rem;
   z-index: 100;
-  transform: translateY(-150%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  transform: translateY(-0.25rem);
   border-radius: 0.75rem;
   background: var(--foreground);
   padding: 0.75rem 1rem;
   color: white;
   font-weight: 700;
-  transition: transform 180ms ease;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.skip-link:focus {
+.skip-link:focus,
+.skip-link:focus-visible {
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
   transform: translateY(0);
+  opacity: 1;
 }
 
 .site-container {

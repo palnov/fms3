@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, ShieldCheck, Sparkles, HelpCircle, GraduationCap, BriefcaseBusiness, Users, MapPinned } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, ShieldCheck, Sparkles, GraduationCap, BriefcaseBusiness, Users, MapPinned } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 
 type CitizenshipType = "cis" | "eeu" | "visa" | "";

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Loader2, ExternalLink, Calendar, ShieldAlert, ChevronDown } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Loader2, ExternalLink, Calendar, ChevronDown } from "lucide-react";
 
 export default function CheckRvpPage() {
   const [formData, setFormData] = useState({
