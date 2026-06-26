@@ -101,7 +101,7 @@ export default function ConsultationBanner({
   // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
   if (!isBottomBanner) {
     return (
-      <section className="my-8 overflow-hidden rounded-2xl border border-[#1f2c41] bg-[#1f2c41] p-5 text-white shadow-xl transition-all duration-300 sm:p-7">
+      <section data-toc-exclude className="my-8 overflow-hidden rounded-2xl border border-[#1f2c41] bg-[#1f2c41] p-5 text-white shadow-xl transition-all duration-300 sm:p-7">
         <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
           <div>
             <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff8a8c]">
@@ -129,6 +129,7 @@ export default function ConsultationBanner({
   return (
     <section 
       ref={bannerRef}
+      data-toc-exclude
       className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] border border-[#dfe8ff] bg-[#dfe9ff] p-4 text-[#1f2c41] shadow-[0_18px_48px_rgba(31,44,65,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(31,44,65,0.11)] sm:p-6"
     >
       {/* Header Info */}

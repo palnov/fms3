@@ -118,7 +118,7 @@ export function RelatedGuide({
   description: string;
 }) {
   return (
-    <Link href={href} data-motion-card className="related-guide">
+    <Link href={href} data-motion-card data-toc-exclude className="related-guide">
       <span><CheckCircle2 aria-hidden="true" /> Следующий шаг</span>
       <strong>{title}</strong>
       <p>{description}</p>

@@ -248,8 +248,6 @@ summary:focus-visible {
 }
 
 .article-aside {
-  position: sticky;
-  top: 6.75rem;
   display: grid;
   gap: 0.8rem;
 }
@@ -265,6 +263,10 @@ summary:focus-visible {
   border-top: 3px solid var(--accent);
 }
 
+.article-aside-card:first-child:not(.article-toc) {
+  border-top: 0;
+}
+
 .article-aside-card strong {
   display: block;
   margin-bottom: 0.4rem;
@@ -275,6 +277,139 @@ summary:focus-visible {
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.5;
+}
+
+.article-status-card {
+  border-top: 3px solid var(--accent);
+}
+
+.article-toc ol {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article-toc-group {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.article-toc-row {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.2rem;
+}
+
+.article-toc-toggle,
+.article-toc-toggle-placeholder {
+  width: 1.25rem;
+  height: 1.55rem;
+}
+
+.article-toc-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.article-toc-toggle:hover {
+  background: rgba(2, 98, 159, 0.08);
+  color: var(--primary);
+}
+
+.article-toc-toggle svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  transition: transform 160ms ease;
+}
+
+.article-toc-toggle-open {
+  transform: rotate(90deg);
+}
+
+.article-toc a {
+  display: block;
+  border-radius: 0.45rem;
+  padding: 0.2rem 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.article-toc a:hover {
+  background: rgba(2, 98, 159, 0.08);
+  color: var(--primary);
+}
+
+.article-toc .article-toc-children {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  padding-left: 1.45rem;
+  transform: translateY(-0.2rem);
+  transition:
+    grid-template-rows 220ms ease,
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+.article-toc .article-toc-children-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.article-toc-children-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.article-toc-children-inner ol {
+  gap: 0.2rem;
+}
+
+.article-toc .article-toc-children a {
+  font-size: 0.76rem;
+}
+
+.article-related-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.article-related-link {
+  display: grid;
+  gap: 0.2rem;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.5rem;
+  transition: background 160ms ease;
+}
+
+.article-related-link:hover {
+  background: rgba(255, 46, 50, 0.07);
+}
+
+.article-related-link span {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.article-related-link small {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .mdx-prose > h1:first-child {
@@ -292,6 +427,7 @@ summary:focus-visible {
 }
 
 .mdx-prose h2 {
+  scroll-margin-top: 7rem;
   margin: 3.25rem 0 1rem;
   font-size: clamp(1.75rem, 3vw, 2.55rem);
   font-weight: 650;
@@ -301,6 +437,7 @@ summary:focus-visible {
 }
 
 .mdx-prose h3 {
+  scroll-margin-top: 7rem;
   margin: 2.25rem 0 0.75rem;
   font-size: clamp(1.3rem, 2vw, 1.65rem);
   font-weight: 650;
