@@ -27,7 +27,8 @@ export default function ConsultationBanner({
   const [inputText, setInputText] = useState("");
   const [hasTriggeredWelcome, setHasTriggeredWelcome] = useState(false);
   const [isTypingWelcome, setIsTypingWelcome] = useState(false);
-  const { messages, isTyping, errorMsg, sendQuestion, addAssistantMessage } = useAIChat();
+  const [welcomeText, setWelcomeText] = useState("");
+  const { messages, isTyping, errorMsg, sendQuestion } = useAIChat();
   
   const chatEndRef = useRef<HTMLDivElement>(null);
   const bannerRef = useRef<HTMLDivElement>(null);
@@ -63,10 +64,7 @@ export default function ConsultationBanner({
               const pageTitle = document.querySelector("h1")?.textContent || title;
               const cleanTitle = pageTitle.replace(/ в \d{4} году/g, "").trim();
 
-              addAssistantMessage(
-                `Привет! Отвечу на вопросы по теме «${cleanTitle}». Спросите меня ниже. Это бесплатно.`,
-                { id: `article-welcome-${context}`, once: true },
-              );
+              setWelcomeText(`Привет! Отвечу на вопросы по теме «${cleanTitle}». Спросите меня ниже. Это бесплатно.`);
               setIsTypingWelcome(false);
             }, 1400);
           }, 400);
@@ -85,7 +83,7 @@ export default function ConsultationBanner({
         observer.unobserve(currentBanner);
       }
     };
-  }, [addAssistantMessage, context, isBottomBanner, hasTriggeredWelcome, title]);
+  }, [isBottomBanner, hasTriggeredWelcome, title]);
 
   const scrollToBottomChat = () => {
     const bottomChat = document.querySelector(".bottom-banner-chat");
@@ -146,13 +144,25 @@ export default function ConsultationBanner({
       {/* Chat Messages Log */}
       <div
         className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${
-          messages.length > 0 || isTypingWelcome
+          messages.length > 0 || welcomeText || isTypingWelcome
             ? "mb-5 grid-rows-[1fr] opacity-100"
             : "mb-0 grid-rows-[0fr] opacity-0"
         }`}
       >
         <div className="min-h-0 overflow-hidden">
           <div className="flex max-h-[380px] flex-col gap-5 overflow-y-auto px-1 pr-2 transition-[max-height] duration-500 ease-out">
+            {welcomeText && (
+              <div data-motion-live className="flex w-full flex-col items-start">
+                <div className="flex max-w-[88%] items-end gap-2.5 sm:max-w-[78%]">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 bg-white text-[#02629f] shadow-sm">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="rounded-[1.55rem] rounded-bl-md bg-white/95 px-5 py-4 !text-sm !leading-6 text-[#4d5564] shadow-[0_10px_28px_rgba(89,111,160,0.10)]">
+                    <p className="!m-0 min-h-[1.25rem] !max-w-none !text-sm !leading-6">{welcomeText}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {messages.map((msg) => (
               <div
                 key={msg.id}
