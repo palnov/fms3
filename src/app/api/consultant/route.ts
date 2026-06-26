@@ -8,6 +8,7 @@ import {
   asTrimmedString,
   checkRateLimit,
   getClientIp,
+  getRateLimitStatus,
   hashRateLimitKey,
   rateLimitHeaders,
   readJsonBody,
@@ -286,10 +287,15 @@ function getSuggestedReplies(leadIntent: LeadIntent): string[] {
 // Cookie limits helpers
 function getSecretKey(): string {
   const secretKey = process.env.JWT_SECRET;
-  if (!secretKey) {
+  if (secretKey) {
+    return secretKey;
+  }
+
+  if (process.env.NODE_ENV === "production") {
     throw new Error("JWT_SECRET is not configured.");
   }
-  return secretKey;
+
+  return "development-consultant-limit-secret";
 }
 
 function signToken(count: number, resetTime: number, secretKey: string): string {
@@ -351,6 +357,72 @@ function getStrictestRateLimit(...limits: Array<ReturnType<typeof checkRateLimit
   });
 }
 
+function getCookieLimitStatus(token: string | null, secretKey: string) {
+  const now = Date.now();
+  const limitData = token ? verifyToken(token, secretKey) : null;
+
+  if (!limitData || now > limitData.resetTime) {
+    return {
+      allowed: true,
+      limit: CONSULTANT_DAILY_LIMIT,
+      remaining: CONSULTANT_DAILY_LIMIT,
+      resetAt: now + DAY_MS,
+      retryAfterSeconds: 0,
+    };
+  }
+
+  const remaining = Math.max(0, CONSULTANT_DAILY_LIMIT - limitData.count);
+
+  return {
+    allowed: limitData.count < CONSULTANT_DAILY_LIMIT,
+    limit: CONSULTANT_DAILY_LIMIT,
+    remaining,
+    resetAt: limitData.resetTime,
+    retryAfterSeconds: remaining > 0 ? 0 : Math.max(1, Math.ceil((limitData.resetTime - now) / 1000)),
+  };
+}
+
+export async function GET(request: Request) {
+  try {
+    const secretKey = getSecretKey();
+    const cookiesHeader = request.headers.get("cookie") || "";
+    const limitCookieName = "ai_limit_token";
+    const anonymousCookieName = "ai_client_id";
+    const token = getCookieValue(cookiesHeader, limitCookieName);
+    const anonymousId = getCookieValue(cookiesHeader, anonymousCookieName) || crypto.randomUUID();
+
+    const ipRateLimit = getRateLimitStatus(
+      hashRateLimitKey(["consultant", "ip", getClientIp(request)]),
+      CONSULTANT_DAILY_LIMIT,
+      DAY_MS,
+    );
+    const anonymousRateLimit = getRateLimitStatus(
+      hashRateLimitKey(["consultant", "anonymous", anonymousId]),
+      CONSULTANT_DAILY_LIMIT,
+      DAY_MS,
+    );
+    const cookieRateLimit = getCookieLimitStatus(token, secretKey);
+    const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit, cookieRateLimit);
+
+    const response = NextResponse.json({
+      limit: CONSULTANT_DAILY_LIMIT,
+      remainingRequests: rateLimit.remaining,
+      resetAt: rateLimit.resetAt,
+      isLimitReached: !rateLimit.allowed,
+    });
+
+    response.headers.set("Set-Cookie", createAnonymousCookie(anonymousCookieName, anonymousId));
+    Object.entries(rateLimitHeaders(rateLimit)).forEach(([key, value]) => response.headers.set(key, value));
+    return response;
+  } catch (error: unknown) {
+    console.error("Consultant limit status error:", error);
+    return NextResponse.json(
+      { error: "Не удалось проверить лимит запросов." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const secretKey = getSecretKey();
@@ -383,6 +455,19 @@ export async function POST(request: Request) {
     };
     const targetLang = languageNames[language] || "русский";
 
+    const openrouterApiKey = process.env.OPENROUTER_API_KEY;
+
+    if (!openrouterApiKey) {
+      console.error("Missing OPENROUTER_API_KEY env variable");
+      return NextResponse.json({ error: "ИИ-ассистент временно недоступен (не настроен API ключ OpenRouter)." }, { status: 500 });
+    }
+
+    const dbPath = process.env.KNOWLEDGE_DB_PATH || path.join(process.cwd(), "knowledge.db");
+    if (!fs.existsSync(dbPath)) {
+      console.error("knowledge.db file not found", { dbPath });
+      return NextResponse.json({ error: "База знаний еще не проиндексирована." }, { status: 500 });
+    }
+
     // 1. Rate Limiting check
     const cookiesHeader = request.headers.get("cookie") || "";
     const limitCookieName = "ai_limit_token";
@@ -411,10 +496,11 @@ export async function POST(request: Request) {
       CONSULTANT_DAILY_LIMIT,
       DAY_MS,
     );
-    const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit);
+    const cookieRateLimit = getCookieLimitStatus(token, secretKey);
+    const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit, cookieRateLimit);
 
     if (!rateLimit.allowed || limitData.count >= CONSULTANT_DAILY_LIMIT) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         {
           error: `Вы превысили лимит бесплатных вопросов на сегодня (максимум ${CONSULTANT_DAILY_LIMIT}).`,
           isLimitReached: true,
@@ -423,10 +509,13 @@ export async function POST(request: Request) {
         },
         { status: 429, headers: rateLimitHeaders(rateLimit) }
       );
+      response.headers.append("Set-Cookie", createAnonymousCookie(anonymousCookieName, anonymousId));
+      return response;
     }
 
     // Increment count
     limitData.count = Math.max(limitData.count + 1, CONSULTANT_DAILY_LIMIT - rateLimit.remaining);
+    const remainingAfterIncrement = Math.min(rateLimit.remaining, Math.max(0, CONSULTANT_DAILY_LIMIT - limitData.count));
     const nextLimitToken = signToken(limitData.count, limitData.resetTime, secretKey);
     const limitCookie = createLimitCookie(limitCookieName, nextLimitToken);
     const anonymousCookie = createAnonymousCookie(anonymousCookieName, anonymousId);
@@ -441,13 +530,6 @@ export async function POST(request: Request) {
       );
       applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
       return response;
-    }
-
-    const openrouterApiKey = process.env.OPENROUTER_API_KEY;
-
-    if (!openrouterApiKey) {
-      console.error("Missing OPENROUTER_API_KEY env variable");
-      return NextResponse.json({ error: "ИИ-ассистент временно недоступен (не настроен API ключ OpenRouter)." }, { status: 500 });
     }
 
     if (!isMigrationRelated(scopeCheckText)) {
@@ -476,12 +558,6 @@ export async function POST(request: Request) {
     }
 
     // 3. Connect to SQLite DB
-    const dbPath = process.env.KNOWLEDGE_DB_PATH || path.join(process.cwd(), "knowledge.db");
-    if (!fs.existsSync(dbPath)) {
-      console.error("knowledge.db file not found", { dbPath });
-      return NextResponse.json({ error: "База знаний еще не проиндексирована." }, { status: 500 });
-    }
-
     const db = new Database(dbPath, { readonly: true });
 
     // 4. Retrieve context using Embeddings (RAG)
@@ -570,17 +646,17 @@ ${conversationContext || "Нет предыдущих сообщений."}
     const sources = Array.from(uniqueSourcesMap.values());
 
     const answerRequestsLeadForm = answer.toLowerCase().includes("[cta_lawyer_form]");
-    const leadIntent = answerRequestsLeadForm ? "show_form" : getLeadIntent(question, rateLimit.remaining);
+    const leadIntent = answerRequestsLeadForm ? "show_form" : getLeadIntent(question, remainingAfterIncrement);
     const suggestedReplies = getSuggestedReplies(leadIntent);
 
     // 7. Send Response with cookie headers
     const response = NextResponse.json({
       text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
       sources: sources,
-      showLeadForm: answerRequestsLeadForm || rateLimit.remaining <= 2,
+      showLeadForm: answerRequestsLeadForm || remainingAfterIncrement <= 2,
       leadIntent,
       suggestedReplies,
-      remainingRequests: rateLimit.remaining
+      remainingRequests: remainingAfterIncrement
     });
 
     applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);

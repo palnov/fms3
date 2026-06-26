@@ -6,21 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Send, Bot, User, Sparkles, Shield, Bookmark, AlertCircle, Download, ExternalLink } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
-
-interface Source {
-  name: string;
-  parent_url?: string | null;
-  download_url?: string | null;
-}
-
-interface Message {
-  id: string;
-  sender: "ai" | "user";
-  text: string;
-  sources?: (string | Source)[];
-  showLeadForm?: boolean;
-  timestamp: Date;
-}
+import { useAIChat } from "@/components/chat/AIChatProvider";
 
 const LANGUAGES = [
   { code: "ru", name: "Русский" },
@@ -32,44 +18,6 @@ const LANGUAGES = [
 ];
 
 const DAILY_REQUEST_LIMIT = 10;
-const CHAT_STORAGE_KEY = "fms3_ai_consultant_page_chat";
-const CHAT_STORAGE_VERSION = 1;
-
-function getRequestHistory(messages: Message[]) {
-  return messages
-    .filter((message) => message.id !== "welcome" && message.text.trim())
-    .slice(-6)
-    .map((message) => ({
-      sender: message.sender,
-      text: message.text.slice(0, 300),
-    }));
-}
-
-function restoreStoredMessages(value: unknown): Message[] {
-  if (!Array.isArray(value)) return [];
-
-  return value
-    .map((item): Message | null => {
-      if (!item || typeof item !== "object") return null;
-      const record = item as Record<string, unknown>;
-      const sender = record.sender === "ai" || record.sender === "user" ? record.sender : null;
-      const text = typeof record.text === "string" ? record.text : "";
-      const id = typeof record.id === "string" ? record.id : crypto.randomUUID();
-      if (!sender || !text.trim()) return null;
-
-      return {
-        id,
-        sender,
-        text,
-        sources: Array.isArray(record.sources) ? record.sources as (string | Source)[] : undefined,
-        showLeadForm: Boolean(record.showLeadForm),
-        timestamp: typeof record.timestamp === "string" || typeof record.timestamp === "number"
-          ? new Date(record.timestamp)
-          : new Date(),
-      };
-    })
-    .filter((message): message is Message => Boolean(message));
-}
 
 const TRANSLATIONS: Record<string, {
   welcome: string;
@@ -189,25 +137,12 @@ const TRANSLATIONS: Record<string, {
 
 function AIConsultantChat() {
   const searchParams = useSearchParams();
-  const [language, setLanguage] = useState<string>("ru");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      sender: "ai",
-      text: TRANSLATIONS.ru.welcome,
-      timestamp: new Date()
-    }
-  ]);
+  const { messages, language, setLanguage, isTyping, errorMsg, remainingRequests, sendQuestion } = useAIChat();
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [remainingRequests, setRemainingRequests] = useState(DAILY_REQUEST_LIMIT);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  const messageIdRef = useRef(0);
   const initialQuestionSentRef = useRef(false);
-  const hasRestoredStorageRef = useRef(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -221,75 +156,13 @@ function AIConsultantChat() {
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
-  const createMessageId = useCallback(() => {
-    messageIdRef.current += 1;
-    return `message-${messageIdRef.current}`;
-  }, []);
-
-  useEffect(() => {
-    const restoreTimer = window.setTimeout(() => {
-      try {
-        const stored = window.localStorage.getItem(CHAT_STORAGE_KEY);
-        if (!stored) {
-          hasRestoredStorageRef.current = true;
-          return;
-        }
-
-        const parsed = JSON.parse(stored) as { version?: unknown; messages?: unknown; language?: unknown; remainingRequests?: unknown };
-        if (parsed.version !== CHAT_STORAGE_VERSION) {
-          window.localStorage.removeItem(CHAT_STORAGE_KEY);
-          hasRestoredStorageRef.current = true;
-          return;
-        }
-
-        const storedMessages = restoreStoredMessages(parsed.messages);
-        if (storedMessages.length > 0) {
-          setMessages(storedMessages);
-        }
-        if (typeof parsed.language === "string" && TRANSLATIONS[parsed.language]) {
-          setLanguage(parsed.language);
-        }
-        if (typeof parsed.remainingRequests === "number") {
-          setRemainingRequests(parsed.remainingRequests);
-        }
-      } catch {
-        window.localStorage.removeItem(CHAT_STORAGE_KEY);
-      } finally {
-        hasRestoredStorageRef.current = true;
-      }
-    }, 0);
-
-    return () => window.clearTimeout(restoreTimer);
-  }, []);
-
-  useEffect(() => {
-    if (!hasRestoredStorageRef.current) return;
-
-    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
-      version: CHAT_STORAGE_VERSION,
-      messages: messages.slice(-20),
-      language,
-      remainingRequests,
-    }));
-  }, [language, messages, remainingRequests]);
-
   const selectLanguage = (nextLanguage: string) => {
     setLanguage(nextLanguage);
-    const nextTranslation = TRANSLATIONS[nextLanguage] || TRANSLATIONS.ru;
-    setMessages((prev) => {
-      if (prev.length === 1 && prev[0].id === "welcome") {
-        return [{
-          ...prev[0],
-          text: nextTranslation.welcome
-        }];
-      }
-      return prev;
-    });
     setShowLangMenu(false);
   };
 
   useEffect(() => {
-    if (messages.length > 1 || isTyping) {
+    if (messages.length > 0 || isTyping) {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [messages, isTyping]);
@@ -297,91 +170,9 @@ function AIConsultantChat() {
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
-    const requestHistory = getRequestHistory(messages);
-    setErrorMsg(null);
-    const userMsg: Message = {
-      id: createMessageId(),
-      sender: "user",
-      text,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMsg]);
     setInputText("");
-    setIsTyping(true);
-
-    try {
-      const response = await fetch("/api/consultant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language, history: requestHistory }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const fullText = data.text;
-        const msgId = createMessageId();
-
-        const aiMsg: Message = {
-          id: msgId,
-          sender: "ai",
-          text: "",
-          sources: data.sources,
-          showLeadForm: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMsg]);
-
-        const words = fullText.split(" ");
-        let currentText = "";
-        let wordIndex = 0;
-
-        const interval = setInterval(() => {
-          if (wordIndex < words.length) {
-            currentText += (wordIndex === 0 ? "" : " ") + words[wordIndex];
-            setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: currentText } : m));
-            wordIndex++;
-          } else {
-            clearInterval(interval);
-            if (data.showLeadForm) {
-              setTimeout(() => {
-                setMessages(prev => prev.map(m => m.id === msgId ? { ...m, showLeadForm: true } : m));
-              }, 1000);
-            }
-          }
-        }, 30);
-
-        if (data.remainingRequests !== undefined) {
-          setRemainingRequests(data.remainingRequests);
-          localStorage.setItem("ai_requests_left", data.remainingRequests.toString());
-        }
-      } else {
-        // Handle rate limits or other issues
-        const errorText = data.error || "Произошла ошибка при получении ответа.";
-        
-        if (response.status === 429) {
-          const aiMsg: Message = {
-            id: createMessageId(),
-            sender: "ai",
-            text: data.text || errorText,
-            showLeadForm: true,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiMsg]);
-          setRemainingRequests(0);
-          localStorage.setItem("ai_requests_left", "0");
-        } else {
-          setErrorMsg(errorText);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Ошибка сети. Пожалуйста, проверьте интернет-соединение и попробуйте снова.");
-    } finally {
-      setIsTyping(false);
-    }
-  }, [createMessageId, language, messages]);
+    await sendQuestion(text);
+  }, [sendQuestion]);
 
   useEffect(() => {
     const initialQuestion = searchParams.get("q")?.trim();
@@ -469,6 +260,22 @@ function AIConsultantChat() {
 
         {/* Chat Area */}
         <div className="flex-grow overflow-y-auto p-5 space-y-6 bg-slate-50/20 dark:bg-slate-950/10">
+          {messages.length === 0 && (
+            <div data-motion-live className="flex gap-4 max-w-[90%] md:max-w-[80%]">
+              <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4" />
+              </div>
+              <div className="space-y-3 w-full">
+                <div className="p-4 rounded-2xl text-sm font-medium leading-relaxed bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/80 rounded-tl-none text-slate-800 dark:text-slate-200 shadow-sm">
+                  <SafeMessageText
+                    text={t.welcome}
+                    linkClassName="font-semibold text-blue-500 underline transition-colors hover:text-blue-600"
+                    paragraphClassName="mb-1.5 min-h-[1.25rem]"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -584,7 +391,7 @@ function AIConsultantChat() {
 
         {/* Preset suggestions & input panel */}
         <div className="p-4 sm:p-5 border-t border-slate-200/60 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 shrink-0">
-          {messages.length === 1 && (
+          {messages.length === 0 && (
             <div className="mb-4">
               <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-blue-500" /> {t.presetsLabel}

@@ -40,7 +40,9 @@ interface AIChatContextValue {
 
 const DAILY_REQUEST_LIMIT = 10;
 const CHAT_STORAGE_KEY = "fms3_shared_ai_chat";
+const LEGACY_CHAT_STORAGE_KEYS = ["fms3_ai_consultant_page_chat", "ai_requests_left"];
 const CHAT_STORAGE_VERSION = 1;
+const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
 const HOT_QUERY_PATTERN =
   /(депортац|выдворен|запрет|отказ|суд|штраф|просроч|аннулиров|реадмисс|завтра|сегодня|срочно|не пустили|не впустили|истекает|истек|обжал|жалоб)/i;
 
@@ -107,6 +109,23 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     return `shared-ai-chat-${messageIdRef.current}`;
   }, []);
 
+  const syncLimitStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/consultant", {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+      });
+      if (!response.ok) return;
+
+      const data = await response.json() as { remainingRequests?: unknown };
+      if (typeof data.remainingRequests === "number" && data.remainingRequests >= 0 && data.remainingRequests <= DAILY_REQUEST_LIMIT) {
+        setRemainingRequests(data.remainingRequests);
+      }
+    } catch (error) {
+      console.warn("Failed to sync consultant limit status", error);
+    }
+  }, []);
+
   const addAssistantMessage = useCallback((text: string, options?: { id?: string; once?: boolean }) => {
     if (options?.once) {
       const key = options.id || text;
@@ -128,6 +147,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restoreTimer = window.setTimeout(() => {
       try {
+        LEGACY_CHAT_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
         const stored = window.localStorage.getItem(CHAT_STORAGE_KEY);
         if (!stored) {
           hasRestoredStorageRef.current = true;
@@ -145,21 +165,22 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
         if (storedMessages.length > 0) {
           setMessages(storedMessages);
         }
-        if (typeof parsed.language === "string") {
+        if (typeof parsed.language === "string" && ALLOWED_LANGUAGES.has(parsed.language)) {
           setLanguage(parsed.language);
         }
-        if (typeof parsed.remainingRequests === "number") {
+        if (typeof parsed.remainingRequests === "number" && parsed.remainingRequests >= 0 && parsed.remainingRequests <= DAILY_REQUEST_LIMIT) {
           setRemainingRequests(parsed.remainingRequests);
         }
       } catch {
         window.localStorage.removeItem(CHAT_STORAGE_KEY);
       } finally {
         hasRestoredStorageRef.current = true;
+        void syncLimitStatus();
       }
     }, 0);
 
     return () => window.clearTimeout(restoreTimer);
-  }, []);
+  }, [syncLimitStatus]);
 
   useEffect(() => {
     if (!hasRestoredStorageRef.current) return;

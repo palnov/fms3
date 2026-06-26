@@ -2,7 +2,7 @@ import crypto from "crypto";
 import path from "path";
 import Database from "better-sqlite3";
 
-const RATE_LIMIT_DB_PATH = path.join(process.cwd(), "security-rate-limit.db");
+const RATE_LIMIT_DB_PATH = process.env.RATE_LIMIT_DB_PATH || path.join(process.cwd(), "security-rate-limit.db");
 const DEFAULT_JSON_LIMIT_BYTES = 16 * 1024;
 
 type RateLimitRow = {
@@ -151,6 +151,38 @@ export function checkRateLimit(key: string, limit: number, windowMs: number): Ra
     remaining: Math.max(0, limit - nextCount),
     resetAt: existing.reset_at,
     retryAfterSeconds: 0,
+  };
+}
+
+export function getRateLimitStatus(key: string, limit: number, windowMs: number): RateLimitResult {
+  const db = getRateLimitDb();
+  const now = Date.now();
+  const resetAt = now + windowMs;
+
+  db.prepare("DELETE FROM rate_limits WHERE reset_at <= ?").run(now);
+
+  const existing = db.prepare("SELECT count, reset_at FROM rate_limits WHERE key = ?").get(key) as
+    | RateLimitRow
+    | undefined;
+
+  if (!existing || existing.reset_at <= now) {
+    return {
+      allowed: true,
+      limit,
+      remaining: limit,
+      resetAt,
+      retryAfterSeconds: 0,
+    };
+  }
+
+  const remaining = Math.max(0, limit - existing.count);
+
+  return {
+    allowed: existing.count < limit,
+    limit,
+    remaining,
+    resetAt: existing.reset_at,
+    retryAfterSeconds: remaining > 0 ? 0 : Math.max(1, Math.ceil((existing.reset_at - now) / 1000)),
   };
 }
 
