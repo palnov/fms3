@@ -33,6 +33,16 @@ const LANGUAGES = [
 
 const DAILY_REQUEST_LIMIT = 10;
 
+function getRequestHistory(messages: Message[]) {
+  return messages
+    .filter((message) => message.id !== "welcome" && message.text.trim())
+    .slice(-6)
+    .map((message) => ({
+      sender: message.sender,
+      text: message.text.slice(0, 300),
+    }));
+}
+
 const TRANSLATIONS: Record<string, {
   welcome: string;
   placeholder: string;
@@ -211,6 +221,7 @@ function AIConsultantChat() {
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
+    const requestHistory = getRequestHistory(messages);
     setErrorMsg(null);
     const userMsg: Message = {
       id: createMessageId(),
@@ -227,7 +238,7 @@ function AIConsultantChat() {
       const response = await fetch("/api/consultant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language }),
+        body: JSON.stringify({ question: text, language, history: requestHistory }),
       });
 
       const data = await response.json();
@@ -294,7 +305,7 @@ function AIConsultantChat() {
     } finally {
       setIsTyping(false);
     }
-  }, [createMessageId, language]);
+  }, [createMessageId, language, messages]);
 
   useEffect(() => {
     const initialQuestion = searchParams.get("q")?.trim();

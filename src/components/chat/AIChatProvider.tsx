@@ -48,6 +48,16 @@ function isHotQuestion(question: string) {
   return HOT_QUERY_PATTERN.test(question);
 }
 
+function getRequestHistory(messages: ChatMessage[]) {
+  return messages
+    .filter((message) => message.text.trim())
+    .slice(-6)
+    .map((message) => ({
+      sender: message.sender,
+      text: message.text.slice(0, 300),
+    }));
+}
+
 export function AIChatProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [language, setLanguage] = useState("ru");
@@ -85,6 +95,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     if (!text || isTyping) return;
 
     const hotQuestion = isHotQuestion(text);
+    const requestHistory = getRequestHistory(messages);
     setErrorMsg(null);
     setMessages((prev) => [
       ...prev,
@@ -101,7 +112,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch("/api/consultant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language, context: options?.context }),
+        body: JSON.stringify({ question: text, language, context: options?.context, history: requestHistory }),
       });
       const data = await response.json();
 
@@ -181,7 +192,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsTyping(false);
     }
-  }, [createMessageId, isTyping, language]);
+  }, [createMessageId, isTyping, language, messages]);
 
   const value = useMemo<AIChatContextValue>(() => ({
     messages,
