@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Download, Printer, RefreshCw, ClipboardList, HelpCircle } from "lucide-react";
+import { ArrowLeft, Printer, RefreshCw, ClipboardList } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 
 interface ChecklistItem {
@@ -238,25 +238,35 @@ const CHECKLISTS: Record<string, {
   }
 };
 
-export default function ChecklistGeneratorPage() {
-  const [selectedType, setSelectedType] = useState<string>("rvp-marriage");
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+const DEFAULT_CHECKLIST_TYPE = "rvp-marriage";
 
-  // Load checklist checks from localStorage on mount/type change
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(`fms3_checklist_${selectedType}`);
-      if (stored) {
-        try {
-          setCheckedItems(JSON.parse(stored));
-        } catch {
-          setCheckedItems({});
-        }
-      } else {
-        setCheckedItems({});
-      }
-    }
-  }, [selectedType]);
+function readStoredChecklist(type: string): Record<string, boolean> {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  const stored = localStorage.getItem(`fms3_checklist_${type}`);
+  if (!stored) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return {};
+  }
+}
+
+export default function ChecklistGeneratorPage() {
+  const [selectedType, setSelectedType] = useState<string>(DEFAULT_CHECKLIST_TYPE);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() =>
+    readStoredChecklist(DEFAULT_CHECKLIST_TYPE),
+  );
+
+  const handleTypeChange = (type: string) => {
+    setSelectedType(type);
+    setCheckedItems(readStoredChecklist(type));
+  };
 
   const handleToggle = (id: string) => {
     setCheckedItems((prev) => {
@@ -275,7 +285,7 @@ export default function ChecklistGeneratorPage() {
     }
   };
 
-  const currentChecklist = CHECKLISTS[selectedType] || CHECKLISTS["rvp-marriage"];
+  const currentChecklist = CHECKLISTS[selectedType] || CHECKLISTS[DEFAULT_CHECKLIST_TYPE];
 
   // Calculate progress
   const allItems = currentChecklist.groups.flatMap(g => g.items);
@@ -331,7 +341,7 @@ export default function ChecklistGeneratorPage() {
           <label className="block text-xs font-bold text-slate-500 mb-2.5 uppercase">Выберите ваш статус:</label>
           <select
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
+            onChange={(e) => handleTypeChange(e.target.value)}
             className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900 focus:outline-none focus:border-[#02629f] transition-colors font-bold text-sm text-[#02629f]"
           >
             <option value="rvp-marriage">РВП по браку</option>

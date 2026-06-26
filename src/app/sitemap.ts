@@ -4,6 +4,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru").replace
 
 const ROUTES = [
   ["", "weekly", 1],
+  ["/po-voprosam-migracii", "weekly", 0.9],
   ["/pathways", "weekly", 0.9],
   ["/pathways/vnzh", "weekly", 0.9],
   ["/pathways/vnzh/by-marriage", "monthly", 0.8],
