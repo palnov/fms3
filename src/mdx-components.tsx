@@ -5,6 +5,7 @@ import {
   ArticleMeta,
   FaqAccordion,
   LegalSource,
+  LinkCardGrid,
   Notice,
   QuickAnswer,
   RelatedGuide,
@@ -17,6 +18,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ConsultationBanner,
     FaqAccordion,
     LegalSource,
+    LinkCardGrid,
     Notice,
     QuickAnswer,
     RelatedGuide,
@@ -39,4 +41,3 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ...components,
   }
 }
-

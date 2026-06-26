@@ -126,3 +126,24 @@ export function RelatedGuide({
     </Link>
   );
 }
+
+export function LinkCardGrid({
+  items,
+}: {
+  items: Array<{ href: string; title: string; description: string; label?: string }>;
+}) {
+  return (
+    <div className="link-card-grid" data-toc-exclude>
+      {items.map((item) => (
+        <Link key={item.href} href={item.href} data-motion-card className="link-card">
+          {item.label ? <span>{item.label}</span> : null}
+          <strong>{item.title}</strong>
+          <p>{item.description}</p>
+          <small>
+            Перейти <ArrowRight aria-hidden="true" />
+          </small>
+        </Link>
+      ))}
+    </div>
+  );
+}

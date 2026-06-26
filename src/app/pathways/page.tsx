@@ -86,10 +86,10 @@ export default function PathwaysHub() {
               </span>
               <ArrowRight className={`h-5 w-5 transition-transform group-hover:translate-x-1 ${path.featured ? "text-[#ff8588]" : "text-[#ff2e32]"}`} />
             </div>
-            <span className={`mt-auto text-xs font-extrabold uppercase tracking-[0.08em] ${path.featured ? "text-white/55" : "text-[#ff2e32]"}`}>{path.eyebrow}</span>
+            <span className={`mt-8 text-xs font-extrabold uppercase tracking-[0.08em] ${path.featured ? "text-white/55" : "text-[#ff2e32]"}`}>{path.eyebrow}</span>
             <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em]">{path.title}</h2>
-            <p className={`mt-3 max-w-xl text-sm leading-6 ${path.featured ? "text-white/70" : "text-[#667287]"}`}>{path.text}</p>
-            <div className="mt-5 flex flex-wrap gap-2">
+            <p className={`mt-3 min-h-12 max-w-xl text-sm leading-6 ${path.featured ? "text-white/70" : "text-[#667287]"}`}>{path.text}</p>
+            <div className="mt-auto flex flex-wrap gap-2 pt-5">
               {path.links.map((item) => (
                 <span key={item} className={`rounded-lg px-3 py-2 text-xs font-bold ${path.featured ? "bg-white/12" : "bg-[#f4f6fa] text-[#4f5c70]"}`}>{item}</span>
               ))}
