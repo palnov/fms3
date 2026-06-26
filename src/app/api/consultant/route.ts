@@ -35,8 +35,7 @@ const CONSULTANT_DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REQUEST_BODY_LIMIT_BYTES = 6 * 1024;
 const OPENROUTER_TIMEOUT_MS = 25_000;
-const DEFAULT_OPENROUTER_MODEL = "openrouter/free";
-const DEFAULT_OPENROUTER_FALLBACK_MODEL = "deepseek/deepseek-v4-flash";
+const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash";
 const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
 type LeadIntent = "none" | "soft_prompt" | "qualify" | "show_form";
 type ScopeClassification = "in_scope" | "out_of_scope" | "unsafe";
@@ -54,10 +53,6 @@ const SOFT_LEAD_PATTERN =
 function normalizeOpenRouterModel(model: string): string {
   const normalizedModel = model.toLowerCase();
   const aliases: Record<string, string> = {
-    free: "openrouter/free",
-    "openrouter free": "openrouter/free",
-    "free router": "openrouter/free",
-    "free models router": "openrouter/free",
     "gpt-4o": "openai/gpt-4o",
     "gpt 4o": "openai/gpt-4o",
     "gpt-4 omni": "openai/gpt-4o",
@@ -66,9 +61,9 @@ function normalizeOpenRouterModel(model: string): string {
     "openai gpt 4o": "openai/gpt-4o",
     "openai gpt-4 omni": "openai/gpt-4o",
     "openai gpt 4 omni": "openai/gpt-4o",
-    deepseek: DEFAULT_OPENROUTER_FALLBACK_MODEL,
-    "deepseek flash": DEFAULT_OPENROUTER_FALLBACK_MODEL,
-    "deepseek v4 flash": DEFAULT_OPENROUTER_FALLBACK_MODEL,
+    deepseek: DEFAULT_OPENROUTER_MODEL,
+    "deepseek flash": DEFAULT_OPENROUTER_MODEL,
+    "deepseek v4 flash": DEFAULT_OPENROUTER_MODEL,
   };
 
   return aliases[normalizedModel] || model;
@@ -76,11 +71,9 @@ function normalizeOpenRouterModel(model: string): string {
 
 function getOpenRouterModels(): string[] {
   const configuredModel = process.env.OPENROUTER_MODEL?.trim();
-  const configuredFallbackModel = process.env.OPENROUTER_FALLBACK_MODEL?.trim();
   const primaryModel = normalizeOpenRouterModel(configuredModel || DEFAULT_OPENROUTER_MODEL);
-  const fallbackModel = normalizeOpenRouterModel(configuredFallbackModel || DEFAULT_OPENROUTER_FALLBACK_MODEL);
 
-  return Array.from(new Set([primaryModel, fallbackModel].filter(Boolean)));
+  return [primaryModel];
 }
 
 function getAvailableLocalDownloadUrl(downloadUrl?: string | null): string | null {
@@ -119,45 +112,78 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
   }
 }
 
+function isSafetyOnlyAnswer(text: string): boolean {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) return true;
+
+  const safetyOnlyPatterns = [
+    /^user safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
+    /^safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
+    /^content safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
+    /^safe\.?$/i,
+  ];
+
+  return safetyOnlyPatterns.some((pattern) => pattern.test(text.trim()));
+}
+
 // Generate text with OpenRouter API
 async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
   const models = getOpenRouterModels();
-  const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru",
-      "X-Title": "FMS3 Migration Assistant"
-    },
-    body: JSON.stringify({
-      model: models[0],
-      models,
-      messages: [
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 1200,
-    }),
-  }, OPENROUTER_TIMEOUT_MS);
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    console.warn("OpenRouter chat request failed", { status: response.status, models });
-    throw new Error(`OpenRouter chat request failed with status ${response.status}`);
+  for (const model of models) {
+    try {
+      const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru",
+          "X-Title": "FMS3 Migration Assistant"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "user", content: prompt }
+          ],
+          temperature: 0.3,
+          max_tokens: 1200,
+        }),
+      }, OPENROUTER_TIMEOUT_MS);
+
+      if (!response.ok) {
+        console.warn("OpenRouter chat request failed", { status: response.status, model });
+        lastError = new Error(`OpenRouter chat request failed with status ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        console.warn("OpenRouter chat returned an error", { model });
+        lastError = new Error("OpenRouter chat returned an error.");
+        continue;
+      }
+
+      const text = data.choices?.[0]?.message?.content;
+      if (!text || typeof text !== "string") {
+        lastError = new Error("Invalid response structure from OpenRouter chat.");
+        continue;
+      }
+
+      if (isSafetyOnlyAnswer(text)) {
+        console.warn("OpenRouter chat returned safety-only text", { model });
+        lastError = new Error("OpenRouter chat returned safety-only text.");
+        continue;
+      }
+
+      return text;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("OpenRouter chat request failed.");
+      console.warn("OpenRouter chat request threw", { model });
+    }
   }
 
-  const data = await response.json();
-  if (data.error) {
-    console.warn("OpenRouter chat returned an error", { models });
-    throw new Error("OpenRouter chat returned an error.");
-  }
-
-  const text = data.choices?.[0]?.message?.content;
-  if (!text || typeof text !== "string") {
-    throw new Error("Invalid response structure from OpenRouter chat.");
-  }
-
-  return text;
+  throw lastError || new Error("OpenRouter chat failed for all configured models.");
 }
 
 async function classifyQueryScope(question: string, conversationContext: string, apiKey: string): Promise<ScopeClassification> {
@@ -267,8 +293,7 @@ function buildRetrievalQuery(question: string, history: ConversationMessage[], p
 
 function getLeadIntent(question: string, remainingRequests: number): LeadIntent {
   if (remainingRequests <= 0) return "show_form";
-  if (HOT_LEAD_PATTERN.test(question)) return "show_form";
-  if (SOFT_LEAD_PATTERN.test(question)) return "qualify";
+  if (HOT_LEAD_PATTERN.test(question) || SOFT_LEAD_PATTERN.test(question)) return "qualify";
   return "soft_prompt";
 }
 
@@ -609,9 +634,9 @@ export async function POST(request: Request) {
    - [Скачать бланк заявления на РВП по браку](/templates/rvp-brak-blank.docx)
    - [Скачать образец заполнения](/templates/rvp-brak-sample.pdf)"
    (Формат ссылок и путей оставь без изменений, но текст вокруг них переведи на язык ответа).
-4. В самом конце ответа ОБЯЗАТЕЛЬНО ненавязчиво предложи бесплатную помощь юриста на языке: ${targetLang}, так как законы сложны, а инспекторы часто придираются к деталям.
-5. Не показывай форму заявки автоматически после каждого ответа. Сначала дай полезный ответ. Затем мягко предложи уточнить ситуацию с юристом только если есть риск ошибки, сроки, отказ, запрет, выдворение, суд, сложный комплект документов или пользователь явно просит индивидуальную помощь.
-6. Если вопрос явно срочный или рискованный, в конце ответа добавь короткую подводку к консультации и закончи ответ служебным тегом [CTA_LAWYER_FORM] на новой строке. В обычных вопросах НЕ добавляй этот тег.
+4. Не продавай юридическую помощь в каждом ответе. В обычных справочных вопросах дай ответ и задай 1 уточняющий вопрос, если без него нельзя продолжить.
+5. Форму заявки нельзя показывать автоматически после обычных вопросов. Мягко предложи юриста только если пользователь описал личную проблему с высоким риском: уже есть отказ, запрет, выдворение, суд, протокол, просрочка, срочный срок, задержание, аннулирование документа или пользователь прямо просит индивидуальную помощь.
+6. Служебный тег [CTA_LAWYER_FORM] добавляй только при реальном высоком риске из пункта 5 или при прямой просьбе связать с юристом. В обычных вопросах о том, как проверить запрет, какие документы нужны, сколько стоит патент и т.п. НЕ добавляй этот тег.
 7. Учитывай "ИСТОРИЮ ДИАЛОГА": короткие сообщения пользователя могут быть уточнениями к предыдущему вопросу. Если пользователь уточняет гражданство, регион, цель пребывания, работу, семью, документы или сроки, продолжай консультацию по предыдущей миграционной теме, а не отказывай как по нецелевому вопросу.
 
 БАЗА ЗНАНИЙ:
@@ -653,7 +678,7 @@ ${conversationContext || "Нет предыдущих сообщений."}
     const response = NextResponse.json({
       text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
       sources: sources,
-      showLeadForm: answerRequestsLeadForm || remainingAfterIncrement <= 2,
+      showLeadForm: answerRequestsLeadForm,
       leadIntent,
       suggestedReplies,
       remainingRequests: remainingAfterIncrement

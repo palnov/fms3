@@ -320,6 +320,7 @@ function AIConsultantChat() {
                     <LeadForm 
                       sourceContext="AI Чат-бот" 
                       defaultQuestion={messages[messages.length - 2]?.text || ""}
+                      variant="dark"
                     />
                   </div>
                 )}

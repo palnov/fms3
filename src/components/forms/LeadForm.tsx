@@ -7,12 +7,14 @@ interface LeadFormProps {
   defaultQuestion?: string;
   sourceContext?: string;
   onSuccess?: () => void;
+  variant?: "light" | "dark";
 }
 
 export default function LeadForm({
   defaultQuestion = "",
   sourceContext = "Прямое обращение",
   onSuccess,
+  variant = "light",
 }: LeadFormProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -56,7 +58,12 @@ export default function LeadForm({
     );
   }
 
-  const fieldClass = "mt-1.5 w-full rounded-xl border border-[#d8dee7] bg-[#f4f6fa] px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] focus:bg-white";
+  const isDark = variant === "dark";
+  const labelClass = isDark ? "text-sm font-bold text-slate-200" : "text-sm font-bold text-[#1f2c41]";
+  const consentClass = isDark ? "!m-0 !text-xs !leading-5 !text-slate-400" : "!m-0 !text-xs !leading-5 !text-[#7b8799]";
+  const fieldClass = isDark
+    ? "mt-1.5 w-full rounded-xl border border-slate-600 bg-white px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#7db7ff] focus:bg-white"
+    : "mt-1.5 w-full rounded-xl border border-[#d8dee7] bg-[#f4f6fa] px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] focus:bg-white";
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
@@ -71,16 +78,16 @@ export default function LeadForm({
         aria-hidden="true"
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-sm font-bold text-[#1f2c41]">
+        <label className={labelClass}>
           Имя
           <input className={fieldClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Как к вам обращаться" />
         </label>
-        <label className="text-sm font-bold text-[#1f2c41]">
+        <label className={labelClass}>
           Телефон
           <input className={fieldClass} type="tel" required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+7 999 123-45-67" />
         </label>
       </div>
-      <label className="text-sm font-bold text-[#1f2c41]">
+      <label className={labelClass}>
         Вопрос
         <textarea className={`${fieldClass} min-h-28 resize-y`} required value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Кратко опишите ситуацию" />
       </label>
@@ -96,7 +103,7 @@ export default function LeadForm({
         {status === "loading" && <Loader2 className="h-5 w-5 animate-spin" />}
         Отправить вопрос специалисту
       </button>
-      <p className="!m-0 !text-xs !leading-5 !text-[#7b8799]">
+      <p className={consentClass}>
         Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.
       </p>
     </form>

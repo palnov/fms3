@@ -43,14 +43,7 @@ const CHAT_STORAGE_KEY = "fms3_shared_ai_chat";
 const LEGACY_CHAT_STORAGE_KEYS = ["fms3_ai_consultant_page_chat", "ai_requests_left"];
 const CHAT_STORAGE_VERSION = 1;
 const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
-const HOT_QUERY_PATTERN =
-  /(депортац|выдворен|запрет|отказ|суд|штраф|просроч|аннулиров|реадмисс|завтра|сегодня|срочно|не пустили|не впустили|истекает|истек|обжал|жалоб)/i;
-
 const AIChatContext = createContext<AIChatContextValue | null>(null);
-
-function isHotQuestion(question: string) {
-  return HOT_QUERY_PATTERN.test(question);
-}
 
 function getRequestHistory(messages: ChatMessage[]) {
   return messages
@@ -197,7 +190,6 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     const text = question.trim();
     if (!text || isTyping) return;
 
-    const hotQuestion = isHotQuestion(text);
     const requestHistory = getRequestHistory(messages);
     setErrorMsg(null);
     setMessages((prev) => [
@@ -243,9 +235,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       const leadIntent = (data.leadIntent || "none") as LeadIntent;
       const shouldShowLeadForm =
         options?.forceLeadForm ||
-        data.showLeadForm ||
-        leadIntent === "show_form" ||
-        hotQuestion;
+        data.showLeadForm;
       const msgId = createMessageId();
 
       setMessages((prev) => [
