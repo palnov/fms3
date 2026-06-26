@@ -121,50 +121,6 @@ summary:focus-visible {
   transform-origin: top right;
 }
 
-.header-search-morph {
-  position: relative;
-  width: 9.65rem;
-  height: 2.75rem;
-  transition: width 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.header-search-morph.is-open {
-  width: min(34vw, 25rem);
-  min-width: 18rem;
-}
-
-.header-search-trigger,
-.header-search-form {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  transition:
-    opacity 180ms ease,
-    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 180ms ease,
-    color 180ms ease;
-}
-
-.header-search-form {
-  opacity: 0;
-  pointer-events: none;
-  transform: scaleX(0.92);
-  transform-origin: right center;
-}
-
-.header-search-morph.is-open .header-search-form {
-  opacity: 1;
-  pointer-events: auto;
-  transform: scaleX(1);
-  transition-delay: 70ms;
-}
-
-.header-search-morph.is-open .header-search-trigger {
-  opacity: 0;
-  pointer-events: none;
-  transform: scaleX(0.92);
-}
-
 .skip-link {
   position: fixed;
   top: 0.75rem;

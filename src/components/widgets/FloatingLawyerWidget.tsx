@@ -5,8 +5,7 @@ import { MessageSquare, X, Send, Bot, User, Phone, Sparkles } from "lucide-react
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
 import { useAIChat } from "@/components/chat/AIChatProvider";
-
-const PARTNER_PHONE = process.env.NEXT_PUBLIC_PARTNER_PHONE || "8 (800) 350-84-13";
+import { getPhoneHref, PARTNER_PHONE } from "@/lib/contact";
 
 const LANGUAGES = [
   { code: "ru", name: "Русский" },
@@ -215,7 +214,7 @@ export default function FloatingLawyerWidget() {
               <div className="flex items-center gap-1.5 rounded-lg bg-[#f4f6fa] px-2.5 py-2 text-[10px] font-semibold text-[#667287] sm:text-xs">
                 <Phone className="w-3.5 h-3.5 text-[#02629f] shrink-0" />
                 <span>{t.hotline}</span>
-                <a href={`tel:${PARTNER_PHONE.replace(/\D/g, "")}`} className="ml-auto font-bold text-[#02629f] underline">
+                <a href={getPhoneHref(PARTNER_PHONE)} className="ml-auto font-bold text-[#02629f] underline">
                   {PARTNER_PHONE}
                 </a>
               </div>

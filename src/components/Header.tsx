@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Phone, Search, X } from "lucide-react";
+import { getPhoneHref, PARTNER_PHONE } from "@/lib/contact";
 
 const links = [
   { href: "/pathways/vnzh", label: "ВНЖ" },
@@ -117,22 +118,35 @@ export default function Header() {
           })}
         </nav>
 
+        <a
+          href={getPhoneHref(PARTNER_PHONE)}
+          className="hidden min-h-11 items-center gap-2 rounded-xl border border-[#d8dee7] bg-white px-3 text-left text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:flex"
+          aria-label={`Горячая линия ${PARTNER_PHONE}`}
+        >
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#fff1f1] text-[#ff2e32]">
+            <Phone className="h-4 w-4" />
+          </span>
+          <span className="leading-none">
+            <span className="block text-[10px] font-extrabold uppercase text-[#667287]">Горячая линия</span>
+            <span className="mt-1 block text-sm font-extrabold">{PARTNER_PHONE}</span>
+          </span>
+        </a>
+
         <div className="hidden items-center sm:flex">
-          <div className={`header-search-morph ${searchOpen ? "is-open" : ""}`}>
+          <div className="relative h-11 w-11">
             <button
               type="button"
-              onClick={openSearch}
-              className="header-search-trigger min-h-11 items-center gap-2 whitespace-nowrap rounded-xl border border-[#d8dee7] bg-white px-4 text-sm font-bold text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] sm:inline-flex"
-              aria-hidden={searchOpen}
-              tabIndex={searchOpen ? -1 : 0}
+              onClick={searchOpen ? closeSearch : openSearch}
+              className="grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f]"
+              aria-label="Найти ответ"
+              aria-expanded={searchOpen}
             >
-              <Search className="h-4 w-4" />
-              Найти ответ
+              <Search className="h-5 w-5" />
             </button>
             {searchMounted && (
             <form
               onSubmit={submitSearch}
-              className="header-search-form flex h-11 items-center gap-2 rounded-xl border border-[#d8dee7] bg-white px-3 shadow-sm"
+              className={`motion-search-panel absolute right-0 top-full z-50 mt-3 flex h-12 w-[min(22rem,calc(100vw-2rem))] items-center gap-2 rounded-xl border border-[#d8dee7] bg-white px-3 shadow-[0_18px_48px_rgba(31,44,65,.14)] transition-opacity duration-150 ${searchOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}
             >
               <Search className="h-4 w-4 shrink-0 text-[#02629f]" />
               <input
@@ -165,6 +179,14 @@ export default function Header() {
           </div>
         </div>
 
+        <a
+          href={getPhoneHref(PARTNER_PHONE)}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
+          aria-label={`Горячая линия ${PARTNER_PHONE}`}
+        >
+          <Phone className="h-5 w-5" />
+        </a>
+
         <button
           type="button"
           className="grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white lg:hidden"
@@ -178,6 +200,20 @@ export default function Header() {
 
       {open && (
         <nav aria-label="Мобильная навигация" className="motion-mobile-menu site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
+          <a
+            href={getPhoneHref(PARTNER_PHONE)}
+            onClick={() => setOpen(false)}
+            className="mb-2 flex items-center gap-3 rounded-xl border border-[#d8dee7] bg-white px-3 py-3 text-[#1f2c41] shadow-sm"
+            aria-label={`Горячая линия ${PARTNER_PHONE}`}
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#fff1f1] text-[#ff2e32]">
+              <Phone className="h-4 w-4" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-[11px] font-extrabold uppercase text-[#667287]">Горячая линия</span>
+              <span className="block text-sm font-extrabold text-[#02629f]">{PARTNER_PHONE}</span>
+            </span>
+          </a>
           {links.map((link) => (
             <Link
               key={link.href}
