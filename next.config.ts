@@ -7,6 +7,60 @@ const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   serverExternalPackages: ["pdf-parse"],
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: "/gotovnost-rvp",
+        destination: "/tools/check-rvp",
+        permanent: true,
+      },
+      {
+        source: "/gotovnost-grazhdanstva",
+        destination: "/tools/check-citizenship",
+        permanent: true,
+      },
+      {
+        source: "/gotovnost-vnzh",
+        destination: "/pathways/vnzh/status-check",
+        permanent: true,
+      },
+      {
+        source: "/saharovo",
+        destination: "/mmc-saharovo",
+        permanent: true,
+      },
+      {
+        source: "/blanki-i-obrazczy",
+        destination: "/pathways/rvp/application-form",
+        permanent: true,
+      },
+      {
+        source: "/goryachaya-liniya-ufms",
+        destination: "/po-voprosam-migracii",
+        permanent: true,
+      },
+      {
+        source: "/uchet/bank-ogranichil-:slug",
+        destination: "/legal/check-ban",
+        permanent: true,
+      },
+      {
+        source: "/uchet/iskluchenie-iz-rkl",
+        destination: "/legal/lift-ban",
+        permanent: true,
+      },
+      {
+        source: "/uvm-mvd-rf",
+        destination: "/po-voprosam-migracii",
+        permanent: true,
+      },
+      {
+        source: "/vid-na-zhitelstvo/:slug*",
+        destination: "/pathways/vnzh",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
