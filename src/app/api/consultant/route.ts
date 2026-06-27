@@ -5,6 +5,15 @@ import Database from "better-sqlite3";
 import crypto from "crypto";
 import { getQueryEmbedding } from "@/lib/query-embedding";
 import {
+  AI_CONVERSATION_COOKIE,
+  createConversationCookie,
+  getOrCreateConversationId,
+  logAiAssistantMessage,
+  logAiError,
+  logAiSystemMessage,
+  logAiUserMessage,
+} from "@/lib/ai-chat-log";
+import {
   asTrimmedString,
   checkRateLimit,
   getClientIp,
@@ -369,9 +378,18 @@ function getCookieValue(cookiesHeader: string, name: string): string | null {
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-function applyLimitHeaders(response: NextResponse, limitCookie: string, anonymousCookie: string, rateLimit: ReturnType<typeof checkRateLimit>) {
+function applyLimitHeaders(
+  response: NextResponse,
+  limitCookie: string,
+  anonymousCookie: string,
+  rateLimit: ReturnType<typeof checkRateLimit>,
+  conversationCookie?: string,
+) {
   response.headers.set("Set-Cookie", limitCookie);
   response.headers.append("Set-Cookie", anonymousCookie);
+  if (conversationCookie) {
+    response.headers.append("Set-Cookie", conversationCookie);
+  }
   Object.entries(rateLimitHeaders(rateLimit)).forEach(([key, value]) => response.headers.set(key, value));
 }
 
@@ -449,6 +467,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  let errorLogContext: {
+    conversationId: string;
+    anonymousId: string;
+    question?: string;
+    language: string;
+    pageContext: string;
+  } | null = null;
+
   try {
     const secretKey = getSecretKey();
     const body = await readJsonBody<{ question?: unknown; language?: unknown; context?: unknown; history?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
@@ -499,6 +525,9 @@ export async function POST(request: Request) {
     const anonymousCookieName = "ai_client_id";
     const token = getCookieValue(cookiesHeader, limitCookieName);
     const anonymousId = getCookieValue(cookiesHeader, anonymousCookieName) || crypto.randomUUID();
+    const conversationId = getOrCreateConversationId(getCookieValue(cookiesHeader, AI_CONVERSATION_COOKIE));
+    const conversationCookie = createConversationCookie(AI_CONVERSATION_COOKIE, conversationId);
+    errorLogContext = { conversationId, anonymousId, question, language, pageContext };
 
     const now = Date.now();
     let limitData = token ? verifyToken(token, secretKey) : null;
@@ -535,6 +564,7 @@ export async function POST(request: Request) {
         { status: 429, headers: rateLimitHeaders(rateLimit) }
       );
       response.headers.append("Set-Cookie", createAnonymousCookie(anonymousCookieName, anonymousId));
+      response.headers.append("Set-Cookie", conversationCookie);
       return response;
     }
 
@@ -545,6 +575,14 @@ export async function POST(request: Request) {
     const limitCookie = createLimitCookie(limitCookieName, nextLimitToken);
     const anonymousCookie = createAnonymousCookie(anonymousCookieName, anonymousId);
 
+    logAiUserMessage({
+      conversationId,
+      anonymousId,
+      question,
+      language,
+      pageContext,
+    });
+
     // 2. Security Checks
     if (isUnsafeQuery(question)) {
       const response = NextResponse.json(
@@ -553,7 +591,15 @@ export async function POST(request: Request) {
           sources: []
         }
       );
-      applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
+      logAiSystemMessage({
+        conversationId,
+        anonymousId,
+        content: "Запрос отклонен локальной защитой как потенциально небезопасный.",
+        language,
+        pageContext,
+        metadata: { type: "unsafe_local" },
+      });
+      applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit, conversationCookie);
       return response;
     }
 
@@ -566,18 +612,35 @@ export async function POST(request: Request) {
             sources: []
           }
         );
-        applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
+        logAiSystemMessage({
+          conversationId,
+          anonymousId,
+          content: "Запрос отклонен LLM-классификатором как потенциально небезопасный.",
+          language,
+          pageContext,
+          metadata: { type: "unsafe_classifier" },
+        });
+        applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit, conversationCookie);
         return response;
       }
 
       if (scopeClassification !== "in_scope") {
+        const refusalText = "Я — специализированный ИИ-консультант по вопросам миграции в РФ. К сожалению, я не могу помочь с темами, не связанными с миграционным правом (РВП, ВНЖ, гражданство, патенты и т.д.). Пожалуйста, задайте вопрос по теме миграции.";
         const response = NextResponse.json(
           {
-            text: "Я — специализированный ИИ-консультант по вопросам миграции в РФ. К сожалению, я не могу помочь с темами, не связанными с миграционным правом (РВП, ВНЖ, гражданство, патенты и т.д.). Пожалуйста, задайте вопрос по теме миграции.",
+            text: refusalText,
             sources: []
           }
         );
-        applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
+        logAiSystemMessage({
+          conversationId,
+          anonymousId,
+          content: refusalText,
+          language,
+          pageContext,
+          metadata: { type: "out_of_scope_classifier" },
+        });
+        applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit, conversationCookie);
         return response;
       }
     }
@@ -673,10 +736,24 @@ ${conversationContext || "Нет предыдущих сообщений."}
     const answerRequestsLeadForm = answer.toLowerCase().includes("[cta_lawyer_form]");
     const leadIntent = answerRequestsLeadForm ? "show_form" : getLeadIntent(question, remainingAfterIncrement);
     const suggestedReplies = getSuggestedReplies(leadIntent);
+    const cleanAnswer = answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim();
+
+    logAiAssistantMessage({
+      conversationId,
+      anonymousId,
+      answer: cleanAnswer,
+      language,
+      pageContext,
+      sources,
+      leadIntent,
+      showLeadForm: answerRequestsLeadForm,
+      remainingRequests: remainingAfterIncrement,
+      model: getOpenRouterModels()[0],
+    });
 
     // 7. Send Response with cookie headers
     const response = NextResponse.json({
-      text: answer.replace(/\[CTA_LAWYER_FORM\]/gi, "").trim(),
+      text: cleanAnswer,
       sources: sources,
       showLeadForm: answerRequestsLeadForm,
       leadIntent,
@@ -684,11 +761,21 @@ ${conversationContext || "Нет предыдущих сообщений."}
       remainingRequests: remainingAfterIncrement
     });
 
-    applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit);
+    applyLimitHeaders(response, limitCookie, anonymousCookie, rateLimit, conversationCookie);
     return response;
 
   } catch (error: unknown) {
     console.error("Consultant API Error:", error);
+    if (errorLogContext) {
+      try {
+        logAiError({
+          ...errorLogContext,
+          errorMessage: error instanceof Error ? error.message : "Unknown consultant API error",
+        });
+      } catch (logError) {
+        console.error("Consultant AI chat log error:", logError);
+      }
+    }
     return NextResponse.json(
       { error: "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже." },
       { status: 500 }
