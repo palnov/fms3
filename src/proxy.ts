@@ -50,6 +50,7 @@ export function proxy(request: NextRequest) {
 
   if (
     routes.has(pathname) ||
+    pathname.startsWith("/admin/") ||
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.includes(".")
