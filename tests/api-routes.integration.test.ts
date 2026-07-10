@@ -9,7 +9,7 @@ import { closeRedisClient } from "@/lib/redis";
 
 describe("API validation", () => {
   it("rejects malformed lead payloads before external work", async () => {
-    const response = await submitLead(new Request("https://fms3.ru/api/leads", {
+    const response = await submitLead(new Request("https://ufms-help.ru/api/leads", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "", phone: "", question: "" }),

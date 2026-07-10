@@ -35,7 +35,7 @@ export function getRequiredSecret(name: "JWT_SECRET" | "RATE_LIMIT_SECRET" | "AD
 }
 
 export function getSiteOrigin() {
-  const url = new URL(cleanEnv("NEXT_PUBLIC_SITE_URL") || "https://fms3.ru");
+  const url = new URL(cleanEnv("NEXT_PUBLIC_SITE_URL") || "https://ufms-help.ru");
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error("NEXT_PUBLIC_SITE_URL must use http or https.");
   }

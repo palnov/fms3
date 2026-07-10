@@ -19,7 +19,7 @@ const golos = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ufms-help.ru"),
   title: {
     default: "Миграционный справочник | ВНЖ, РВП и гражданство России",
     template: "%s | Миграционный справочник",

@@ -1,8 +1,8 @@
 import type { MDXComponents } from 'mdx/types'
 import Link from 'next/link'
 import ConsultationBanner from '@/components/mdx/ConsultationBanner'
+import ArticleMeta from '@/components/mdx/ArticleMeta'
 import {
-  ArticleMeta,
   FaqAccordion,
   LegalSource,
   LinkCardGrid,

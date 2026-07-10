@@ -37,7 +37,7 @@ ESLint excludes `.agents`, which contains external agent skill implementation fi
 
 The root metadata receives a title template, metadata base, canonical URL, Open Graph data, and Twitter data. `robots.ts` and `sitemap.ts` expose crawl rules and the currently implemented public routes.
 
-The public site origin is configured by `NEXT_PUBLIC_SITE_URL`, with `https://fms3.ru` as the production default.
+The public site origin is configured by `NEXT_PUBLIC_SITE_URL`, with `https://ufms-help.ru` as the production default.
 
 The production build uses webpack because Turbopack compilation hangs in the current Next.js 16.2.4 project. Google Fonts are not downloaded during build; the UI uses a system font stack so isolated VPS/container builds remain deterministic.
 

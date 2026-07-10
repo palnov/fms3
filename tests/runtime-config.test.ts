@@ -24,7 +24,7 @@ describe("runtime configuration", () => {
   });
 
   it("normalizes the configured site origin", () => {
-    process.env.NEXT_PUBLIC_SITE_URL = "https://fms3.ru/path";
-    expect(getSiteOrigin()).toBe("https://fms3.ru");
+    process.env.NEXT_PUBLIC_SITE_URL = "https://ufms-help.ru/path";
+    expect(getSiteOrigin()).toBe("https://ufms-help.ru");
   });
 });

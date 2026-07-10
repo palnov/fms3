@@ -6,26 +6,10 @@ import {
   AlertTriangle,
   ArrowRight,
   BookOpenCheck,
-  CalendarCheck,
   CheckCircle2,
   Info,
   ChevronDown,
 } from "lucide-react";
-
-export function ArticleMeta({
-  reviewed = "12 июня 2026 года",
-  readingTime,
-}: {
-  reviewed?: string;
-  readingTime: string;
-}) {
-  return (
-    <div className="article-meta" aria-label="Информация о материале">
-      <span><CalendarCheck aria-hidden="true" /> Проверено: <time>{reviewed}</time></span>
-      <span><BookOpenCheck aria-hidden="true" /> {readingTime}</span>
-    </div>
-  );
-}
 
 export function QuickAnswer({ children }: { children: React.ReactNode }) {
   return (

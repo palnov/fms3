@@ -21,6 +21,7 @@ import HomeFaqAccordion from "@/components/HomeFaqAccordion";
 export const metadata: Metadata = {
   title: "Как переехать и легализоваться в России в 2026 году",
   description: "Подберите путь к РВП, ВНЖ или гражданству России по своей ситуации. Пошаговые инструкции, документы, сроки, изменения законодательства и онлайн-инструменты.",
+  alternates: { canonical: "/" },
 };
 
 const situations = [
@@ -43,13 +44,13 @@ const jsonLd = {
     {
       "@type": "WebSite",
       name: "Миграционный справочник",
-      url: "https://fms3.ru",
+      url: "https://ufms-help.ru",
       description: "Инструкции и сервисы по миграционному праву России.",
     },
     {
       "@type": "Organization",
       name: "Миграционный справочник",
-      url: "https://fms3.ru",
+      url: "https://ufms-help.ru",
     },
   ],
 };

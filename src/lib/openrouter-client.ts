@@ -41,7 +41,7 @@ export async function generateOpenRouterAnswer(prompt: string, apiKey: string) {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru",
+        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://ufms-help.ru",
         "X-Title": "FMS3 Migration Assistant",
       },
       body: JSON.stringify({

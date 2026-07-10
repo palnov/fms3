@@ -75,7 +75,7 @@ npm run check     # lint + types + tests + build
 
 ```env
 NODE_ENV=production
-NEXT_PUBLIC_SITE_URL=https://fms3.ru
+NEXT_PUBLIC_SITE_URL=https://ufms-help.ru
 NEXT_PUBLIC_PARTNER_PHONE=8 (800) 350-84-13
 
 DATA_DIR=/data

@@ -4,6 +4,7 @@ import { ArrowRight, BriefcaseBusiness, FileText, Globe2, House, MapPinned, Shie
 export const metadata = {
   title: "Все пути легализации в России",
   description: "Сравните РВП, ВНЖ, гражданство, патент и программу переселения. Выберите подходящий маршрут и перейдите к пошаговой инструкции.",
+  alternates: { canonical: "/pathways" },
 };
 
 const paths = [

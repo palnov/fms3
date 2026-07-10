@@ -29,7 +29,7 @@ describe("security helpers", () => {
   });
 
   it("rejects oversized JSON bodies", async () => {
-    const request = new Request("https://fms3.ru/api/test", {
+    const request = new Request("https://ufms-help.ru/api/test", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ value: "too long" }),
@@ -39,8 +39,8 @@ describe("security helpers", () => {
 
   it("accepts only the canonical mutation origin in production", () => {
     vi.stubEnv("NODE_ENV", "production");
-    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://fms3.ru");
-    expect(isTrustedMutationOrigin(new Request("https://internal/admin", { headers: { origin: "https://fms3.ru" } }))).toBe(true);
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://ufms-help.ru");
+    expect(isTrustedMutationOrigin(new Request("https://internal/admin", { headers: { origin: "https://ufms-help.ru" } }))).toBe(true);
     expect(isTrustedMutationOrigin(new Request("https://internal/admin", { headers: { origin: "https://evil.example" } }))).toBe(false);
   });
 });
