@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 const situations = [
   { icon: Users, title: "Семья в России", text: "Супруг, дети или родители — граждане РФ", href: "/pathways/vnzh/by-marriage" },
   { icon: BriefcaseBusiness, title: "Работа и профессия", text: "Патент, квалификация и востребованная специальность", href: "/pathways/work/patent" },
-  { icon: GraduationCap, title: "Учёба в России", text: "РВПО, российский диплом и путь выпускника", href: "/pathways/rvp" },
+  { icon: GraduationCap, title: "Учёба в России", text: "РВПО, российский диплом и путь выпускника", href: "/pathways/rvpo" },
   { icon: House, title: "Соотечественники", text: "Переселение, репатриация и ускоренный путь", href: "/pathways/repatriation" },
   { icon: MapPinned, title: "Нет особых оснований", text: "Квота, РВП и легализация с нуля", href: "/pathways/rvp/quota" },
 ];
@@ -35,7 +35,7 @@ const situations = [
 const updates = [
   { date: "11 июня 2026", title: "Формы заявлений и порядок подачи", text: "Перед обращением проверяйте действующую форму и требования подразделения МВД.", href: "/pathways/vnzh/documents" },
   { date: "2026 год", title: "Срок временного пребывания", text: "Разбираем, как считать разрешённые дни и какие статусы меняют общий порядок.", href: "/tools/calculators" },
-  { date: "Актуальный разбор", title: "Реестр контролируемых лиц", text: "Что означает включение в реестр и где проверять официальную информацию.", href: "/legal/check-ban" },
+  { date: "Актуальный разбор", title: "Реестр контролируемых лиц", text: "Что означает включение в реестр и где проверять официальную информацию.", href: "/legal/controlled-persons-register" },
 ];
 
 const jsonLd = {
