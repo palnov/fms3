@@ -137,12 +137,16 @@ const TRANSLATIONS: Record<string, {
 
 function AIConsultantChat() {
   const searchParams = useSearchParams();
-  const { messages, language, setLanguage, isTyping, errorMsg, remainingRequests, sendQuestion } = useAIChat();
+  const { messages, language, setLanguage, isTyping, errorMsg, remainingRequests, sendQuestion, syncLimitStatus } = useAIChat();
   const [inputText, setInputText] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const initialQuestionSentRef = useRef(false);
+
+  useEffect(() => {
+    void syncLimitStatus();
+  }, [syncLimitStatus]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -185,7 +189,7 @@ function AIConsultantChat() {
   }, [handleSend, searchParams]);
 
   return (
-    <div data-motion="section" className="flex-grow w-full max-w-5xl mx-auto px-4 py-6 md:py-10 flex flex-col h-[90vh]">
+    <div data-motion="section" className="ym-hide-content flex-grow w-full max-w-5xl mx-auto px-4 py-6 md:py-10 flex flex-col h-[90vh]">
       <div className="mb-4 shrink-0 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-500 transition-colors">
           <ArrowLeft className="w-4 h-4" /> {t.backToHome}
@@ -384,7 +388,7 @@ function AIConsultantChat() {
 
         {/* Error panel */}
         {errorMsg && (
-          <div className="px-5 py-3 bg-red-500/10 border-t border-red-500/20 text-red-500 text-xs font-bold flex items-center gap-2 shrink-0">
+          <div role="alert" aria-live="assertive" className="px-5 py-3 bg-red-500/10 border-t border-red-500/20 text-red-500 text-xs font-bold flex items-center gap-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -416,7 +420,7 @@ function AIConsultantChat() {
               e.preventDefault();
               handleSend(inputText);
             }}
-            className="flex gap-2"
+            className="ym-disable-submit flex gap-2"
           >
             <input
               type="text"
@@ -424,7 +428,7 @@ function AIConsultantChat() {
               onChange={(e) => setInputText(e.target.value)}
               placeholder={remainingRequests === 0 ? t.inputPlaceholderLimit : t.placeholder}
               disabled={remainingRequests === 0 || isTyping}
-              className="flex-grow px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-slate-800 dark:text-slate-100 shadow-inner"
+              className="ym-disable-keys flex-grow px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none focus:border-blue-500 disabled:opacity-50 transition-colors font-medium text-sm text-slate-800 dark:text-slate-100 shadow-inner"
             />
             <button
               type="submit"
@@ -434,6 +438,9 @@ function AIConsultantChat() {
               <Send className="w-4 h-4" />
             </button>
           </form>
+          <p className="mt-2 text-center text-[11px] text-slate-500">
+            Отправляя сообщение, вы принимаете <Link href="/privacy" className="font-bold underline">условия обработки данных</Link>.
+          </p>
         </div>
       </div>
     </div>

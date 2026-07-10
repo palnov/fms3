@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* The current product is light-only. Dark utilities activate only when a future theme switch adds .dark. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary-50: #edf2fd;
   --color-primary-100: #dce8f6;

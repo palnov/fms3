@@ -1,11 +1,10 @@
 import crypto from "crypto";
-import path from "path";
 import Database from "better-sqlite3";
+import { getAiChatLogDbPath } from "@/lib/runtime-config";
 
 const DEFAULT_RETENTION_DAYS = 60;
 const MAX_MESSAGE_LENGTH = 8_000;
 const MAX_METADATA_LENGTH = 8_000;
-const AI_CHAT_LOG_DB_PATH = process.env.AI_CHAT_LOG_DB_PATH || path.join(process.cwd(), "ai-chat-log.db");
 
 export const AI_CONVERSATION_COOKIE = "ai_conversation_id";
 
@@ -65,7 +64,7 @@ let db: Database.Database | null = null;
 
 function getDb() {
   if (!db) {
-    db = new Database(AI_CHAT_LOG_DB_PATH);
+    db = new Database(getAiChatLogDbPath());
     db.pragma("journal_mode = WAL");
     db.pragma("foreign_keys = ON");
     db

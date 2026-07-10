@@ -2,6 +2,23 @@ import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 import remarkGfm from "remark-gfm";
 
+const isDev = process.env.NODE_ENV === "development";
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://mc.yandex.ru https://mc.yandex.com https://yastatic.net`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com https://*.webvisor.com wss://*.webvisor.com",
+  "frame-src 'self' https://*.webvisor.com https://mc.yandex.ru https://mc.yandex.com",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+].join("; ");
+
 const nextConfig: NextConfig = {
   output: "standalone",
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
@@ -68,7 +85,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+            value: contentSecurityPolicy,
           },
           {
             key: "X-Content-Type-Options",

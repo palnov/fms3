@@ -85,22 +85,22 @@ export default function CheckCitizenshipPage() {
         {status === "idle" && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">ФИО заявителя (как в заявлении)</label>
-              <input
+              <label htmlFor="citizenship-name" className="block text-xs font-bold text-slate-500 mb-2 uppercase">ФИО заявителя (как в заявлении)</label>
+              <input id="citizenship-name" name="fullName" autoComplete="name"
                 type="text"
                 required
                 placeholder="Иванов Иван Иванович"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи</label>
+                <label htmlFor="citizenship-region" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи</label>
                 <div className="relative">
-                  <select
+                  <select id="citizenship-region" name="region"
                     required
                     value={formData.region}
                     onChange={(e) => setFormData({ ...formData, region: e.target.value })}
@@ -119,25 +119,25 @@ export default function CheckCitizenshipPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Дата подачи заявления (приблизительно)</label>
-                <input
+                <label htmlFor="citizenship-submit-date" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Дата подачи заявления (приблизительно)</label>
+                <input id="citizenship-submit-date" name="submitDate"
                   type="date"
                   value={formData.submitDate}
                   onChange={(e) => setFormData({ ...formData, submitDate: e.target.value })}
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                  className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер документа (ВНЖ / паспорта)</label>
-              <input
+              <label htmlFor="citizenship-document" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер документа (ВНЖ / паспорта)</label>
+              <input id="citizenship-document" name="documentNumber"
                 type="text"
                 required
                 placeholder="Серия и номер документа, удостоверяющего личность"
                 value={formData.docNumber}
                 onChange={(e) => setFormData({ ...formData, docNumber: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
               />
             </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { MessageSquare, X, Send, Bot, User, Phone, Sparkles } from "lucide-react";
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
@@ -81,13 +82,13 @@ const TRANSLATIONS: Record<string, {
   }
 };
 
-export default function FloatingLawyerWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+export default function FloatingLawyerWidget({ initiallyOpen = false }: { initiallyOpen?: boolean }) {
+  const [isOpen, setIsOpen] = useState(initiallyOpen);
   const [inputVal, setInputVal] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  const { messages, language, setLanguage, isTyping, sendQuestion } = useAIChat();
+  const { messages, language, setLanguage, isTyping, errorMsg, sendQuestion, syncLimitStatus } = useAIChat();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -130,7 +131,10 @@ export default function FloatingLawyerWidget() {
     <>
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          void syncLimitStatus();
+        }}
         className={`fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center gap-2 rounded-xl bg-[#ff2e32] px-0 text-white shadow-[0_14px_36px_rgba(31,44,65,.18)] transition-all hover:bg-[#d92327] sm:w-auto sm:px-4 ${
           isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
         }`}
@@ -142,8 +146,8 @@ export default function FloatingLawyerWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#1f2c41]/35 sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:items-end sm:justify-end sm:bg-transparent">
-          <div data-motion-live className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#d8dee7] bg-white shadow-2xl sm:h-[590px] sm:w-[400px] sm:rounded-2xl">
+        <div className="ym-hide-content fixed inset-0 z-50 flex items-end justify-center bg-[#1f2c41]/35 sm:bottom-5 sm:right-5 sm:left-auto sm:top-auto sm:items-end sm:justify-end sm:bg-transparent">
+          <div data-motion-live role="dialog" aria-modal="true" aria-labelledby="widget-chat-title" className="flex h-[85vh] w-full flex-col overflow-hidden rounded-t-2xl border border-[#d8dee7] bg-white shadow-2xl sm:h-[590px] sm:w-[400px] sm:rounded-2xl">
             {/* Header */}
             <div className="relative flex shrink-0 flex-col gap-2 border-b border-[#d8dee7] bg-white p-4">
               <div className="flex items-center justify-between">
@@ -153,7 +157,7 @@ export default function FloatingLawyerWidget() {
                     <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500"></span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-extrabold text-[#1f2c41]">{t.assistantTitle}</h3>
+                    <h3 id="widget-chat-title" className="text-sm font-extrabold text-[#1f2c41]">{t.assistantTitle}</h3>
                     <p className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> {t.online}
                     </p>
@@ -163,6 +167,7 @@ export default function FloatingLawyerWidget() {
                   <div className="relative" ref={langMenuRef}>
                     <button
                       type="button"
+                      aria-label="Выбрать язык"
                       onClick={() => setShowLangMenu(!showLangMenu)}
                       className="flex min-h-9 items-center gap-1 rounded-lg border border-[#d8dee7] bg-[#f4f6fa] px-2.5 text-[11px] font-extrabold text-[#1f2c41]"
                     >
@@ -203,6 +208,7 @@ export default function FloatingLawyerWidget() {
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
+                    aria-label="Закрыть чат"
                     className="rounded-lg p-2 text-[#667287] hover:bg-[#f4f6fa] hover:text-[#1f2c41]"
                   >
                     <X className="w-5 h-5" />
@@ -297,15 +303,18 @@ export default function FloatingLawyerWidget() {
               <div ref={messagesEndRef} />
             </div>
 
+            {errorMsg ? <p role="alert" aria-live="assertive" className="border-t border-[#ffd0d1] bg-[#fff0f0] px-3 py-2 text-xs font-semibold text-[#9b272a]">{errorMsg}</p> : null}
+
             {/* Input Bar */}
-            <form onSubmit={handleSend} className="flex shrink-0 gap-2 border-t border-[#d8dee7] bg-white p-3">
+            <form onSubmit={handleSend} className="ym-disable-submit flex shrink-0 gap-2 border-t border-[#d8dee7] bg-white p-3">
               <input
                 type="text"
+                aria-label={t.placeholder}
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 placeholder={t.placeholder}
                 disabled={isTyping}
-                className="flex-grow rounded-lg border border-[#d8dee7] bg-[#f4f6fa] px-3 py-2 text-xs text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] disabled:opacity-50"
+                className="ym-disable-keys flex-grow rounded-lg border border-[#d8dee7] bg-[#f4f6fa] px-3 py-2 text-xs text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] disabled:opacity-50"
               />
               <button
                 type="submit"
@@ -315,6 +324,9 @@ export default function FloatingLawyerWidget() {
                 <Send className="w-4 h-4" />
               </button>
             </form>
+            <p className="border-t border-[#d8dee7] bg-white px-3 pb-2 pt-1 text-[10px] text-[#667287]">
+              Сообщения обрабатываются по <Link href="/privacy" className="font-bold underline">правилам конфиденциальности</Link>.
+            </p>
           </div>
         </div>
       )}

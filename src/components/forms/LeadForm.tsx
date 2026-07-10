@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useId, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 interface LeadFormProps {
@@ -22,6 +23,7 @@ export default function LeadForm({
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const fieldId = useId();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -32,7 +34,7 @@ export default function LeadForm({
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, question: `[${sourceContext}] ${question}`, company }),
+        body: JSON.stringify({ name, phone, question: `[${sourceContext}] ${question}`, company, privacyConsent: true }),
       });
       const data = await response.json();
 
@@ -66,7 +68,7 @@ export default function LeadForm({
     : "mt-1.5 w-full rounded-xl border border-[#d8dee7] bg-[#f4f6fa] px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] focus:bg-white";
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4">
+    <form onSubmit={handleSubmit} className="ym-disable-submit grid gap-4">
       <input
         type="text"
         name="company"
@@ -74,26 +76,31 @@ export default function LeadForm({
         autoComplete="off"
         value={company}
         onChange={(event) => setCompany(event.target.value)}
-        className="hidden"
+        className="ym-disable-keys hidden"
         aria-hidden="true"
       />
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={labelClass}>
+        <label className={labelClass} htmlFor={`${fieldId}-name`}>
           Имя
-          <input className={fieldClass} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Как к вам обращаться" />
+          <input id={`${fieldId}-name`} name="name" autoComplete="name" className={`ym-disable-keys ${fieldClass}`} required value={name} onChange={(event) => setName(event.target.value)} placeholder="Как к вам обращаться" />
         </label>
-        <label className={labelClass}>
+        <label className={labelClass} htmlFor={`${fieldId}-phone`}>
           Телефон
-          <input className={fieldClass} type="tel" required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+7 999 123-45-67" />
+          <input id={`${fieldId}-phone`} name="phone" autoComplete="tel" className={`ym-disable-keys ${fieldClass}`} type="tel" required value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="+7 999 123-45-67" />
         </label>
       </div>
-      <label className={labelClass}>
+      <label className={labelClass} htmlFor={`${fieldId}-question`}>
         Вопрос
-        <textarea className={`${fieldClass} min-h-28 resize-y`} required value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Кратко опишите ситуацию" />
+        <textarea id={`${fieldId}-question`} name="question" className={`ym-disable-keys ${fieldClass} min-h-28 resize-y`} required value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Кратко опишите ситуацию" />
+      </label>
+
+      <label className={`flex items-start gap-2 ${consentClass}`}>
+        <input type="checkbox" name="privacyConsent" required className="mt-1 h-4 w-4 shrink-0 accent-[#02629f]" />
+        <span>Я согласен с обработкой данных на условиях <Link href="/privacy" className="font-bold underline">политики конфиденциальности</Link>.</span>
       </label>
 
       {status === "error" && (
-        <div className="flex gap-2 rounded-xl bg-[#fff0f0] p-3 text-sm text-[#9b272a]">
+        <div role="alert" aria-live="assertive" className="flex gap-2 rounded-xl bg-[#fff0f0] p-3 text-sm text-[#9b272a]">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <span>{errorMessage}</span>
         </div>
@@ -103,9 +110,6 @@ export default function LeadForm({
         {status === "loading" && <Loader2 className="h-5 w-5 animate-spin" />}
         Отправить вопрос специалисту
       </button>
-      <p className={consentClass}>
-        Нажимая кнопку, вы соглашаетесь с обработкой персональных данных.
-      </p>
     </form>
   );
 }

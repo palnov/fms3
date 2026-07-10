@@ -86,9 +86,9 @@ export default function CheckRvpPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи документов</label>
+                <label htmlFor="rvp-region" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи документов</label>
                 <div className="relative">
-                  <select
+                  <select id="rvp-region" name="region"
                     required
                     value={formData.region}
                     onChange={(e) => setFormData({ ...formData, region: e.target.value })}
@@ -110,26 +110,26 @@ export default function CheckRvpPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Дата рождения</label>
-                <input
+                <label htmlFor="rvp-birth-date" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Дата рождения</label>
+                <input id="rvp-birth-date" name="birthDate"
                   type="date"
                   required
                   value={formData.birthDate}
                   onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                  className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер документа (паспорта)</label>
-              <input
+              <label htmlFor="rvp-document" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер документа (паспорта)</label>
+              <input id="rvp-document" name="documentNumber"
                 type="text"
                 required
                 placeholder="Только цифры паспорта, по которому подавали заявление"
                 value={formData.docNumber}
                 onChange={(e) => setFormData({ ...formData, docNumber: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
               />
               <p className="text-xs text-slate-400 mt-1">
                 Для иностранных граждан указывается номер загранпаспорта без серии и знака №.

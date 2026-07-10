@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
-import Database from "better-sqlite3";
 import crypto from "crypto";
 import { getQueryEmbedding } from "@/lib/query-embedding";
 import {
@@ -21,30 +20,15 @@ import {
   hashRateLimitKey,
   rateLimitHeaders,
   readJsonBody,
+  type RateLimitResult,
 } from "@/lib/security";
-
-interface ChunkRow {
-  id: number;
-  content: string;
-  source_file: string;
-  embedding: string; // JSON string of number[]
-  source_url?: string | null;
-  local_download_url?: string | null;
-}
-
-interface TemplateRow {
-  id: string;
-  title: string;
-  file_path: string;
-  sample_path: string;
-  keywords: string;
-}
+import { getKnowledgeDbPath, getRequiredSecret } from "@/lib/runtime-config";
+import { retrieveKnowledge } from "@/lib/knowledge-repository";
+import { generateOpenRouterAnswer, getOpenRouterModel } from "@/lib/openrouter-client";
 
 const CONSULTANT_DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const REQUEST_BODY_LIMIT_BYTES = 6 * 1024;
-const OPENROUTER_TIMEOUT_MS = 25_000;
-const DEFAULT_OPENROUTER_MODEL = "deepseek/deepseek-v4-flash";
 const ALLOWED_LANGUAGES = new Set(["ru", "en", "tg", "uz", "ro", "kk"]);
 type LeadIntent = "none" | "soft_prompt" | "qualify" | "show_form";
 type ScopeClassification = "in_scope" | "out_of_scope" | "unsafe";
@@ -59,32 +43,6 @@ const HOT_LEAD_PATTERN =
 const SOFT_LEAD_PATTERN =
   /(документ|заявлен|бланк|образец|провер|срок|основан|можно ли|как получить|что делать|куда подать)/i;
 
-function normalizeOpenRouterModel(model: string): string {
-  const normalizedModel = model.toLowerCase();
-  const aliases: Record<string, string> = {
-    "gpt-4o": "openai/gpt-4o",
-    "gpt 4o": "openai/gpt-4o",
-    "gpt-4 omni": "openai/gpt-4o",
-    "gpt 4 omni": "openai/gpt-4o",
-    "openai gpt-4o": "openai/gpt-4o",
-    "openai gpt 4o": "openai/gpt-4o",
-    "openai gpt-4 omni": "openai/gpt-4o",
-    "openai gpt 4 omni": "openai/gpt-4o",
-    deepseek: DEFAULT_OPENROUTER_MODEL,
-    "deepseek flash": DEFAULT_OPENROUTER_MODEL,
-    "deepseek v4 flash": DEFAULT_OPENROUTER_MODEL,
-  };
-
-  return aliases[normalizedModel] || model;
-}
-
-function getOpenRouterModels(): string[] {
-  const configuredModel = process.env.OPENROUTER_MODEL?.trim();
-  const primaryModel = normalizeOpenRouterModel(configuredModel || DEFAULT_OPENROUTER_MODEL);
-
-  return [primaryModel];
-}
-
 function getAvailableLocalDownloadUrl(downloadUrl?: string | null): string | null {
   if (!downloadUrl || !downloadUrl.startsWith("/")) return null;
 
@@ -93,106 +51,6 @@ function getAvailableLocalDownloadUrl(downloadUrl?: string | null): string | nul
   if (!filePath.startsWith(publicRoot + path.sep)) return null;
 
   return fs.existsSync(filePath) ? downloadUrl : null;
-}
-
-// Cosine similarity between two vectors
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  let dotProduct = 0.0;
-  let normA = 0.0;
-  let normB = 0.0;
-  if (vecA.length !== vecB.length) return 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-}
-
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-function isSafetyOnlyAnswer(text: string): boolean {
-  const normalized = text.trim().toLowerCase();
-  if (!normalized) return true;
-
-  const safetyOnlyPatterns = [
-    /^user safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
-    /^safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
-    /^content safety\s*:\s*(safe|unsafe|unknown)\.?$/i,
-    /^safe\.?$/i,
-  ];
-
-  return safetyOnlyPatterns.some((pattern) => pattern.test(text.trim()));
-}
-
-// Generate text with OpenRouter API
-async function generateAnswer(prompt: string, apiKey: string): Promise<string> {
-  const models = getOpenRouterModels();
-  let lastError: Error | null = null;
-
-  for (const model of models) {
-    try {
-      const response = await fetchWithTimeout("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-          "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://fms3.ru",
-          "X-Title": "FMS3 Migration Assistant"
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "user", content: prompt }
-          ],
-          temperature: 0.3,
-          max_tokens: 1200,
-        }),
-      }, OPENROUTER_TIMEOUT_MS);
-
-      if (!response.ok) {
-        console.warn("OpenRouter chat request failed", { status: response.status, model });
-        lastError = new Error(`OpenRouter chat request failed with status ${response.status}`);
-        continue;
-      }
-
-      const data = await response.json();
-      if (data.error) {
-        console.warn("OpenRouter chat returned an error", { model });
-        lastError = new Error("OpenRouter chat returned an error.");
-        continue;
-      }
-
-      const text = data.choices?.[0]?.message?.content;
-      if (!text || typeof text !== "string") {
-        lastError = new Error("Invalid response structure from OpenRouter chat.");
-        continue;
-      }
-
-      if (isSafetyOnlyAnswer(text)) {
-        console.warn("OpenRouter chat returned safety-only text", { model });
-        lastError = new Error("OpenRouter chat returned safety-only text.");
-        continue;
-      }
-
-      return text;
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error("OpenRouter chat request failed.");
-      console.warn("OpenRouter chat request threw", { model });
-    }
-  }
-
-  throw lastError || new Error("OpenRouter chat failed for all configured models.");
 }
 
 async function classifyQueryScope(question: string, conversationContext: string, apiKey: string): Promise<ScopeClassification> {
@@ -215,7 +73,7 @@ ${conversationContext || "Нет"}
 НОВОЕ СООБЩЕНИЕ:
 ${question}`;
 
-  const raw = (await generateAnswer(prompt, apiKey)).trim().toLowerCase();
+  const raw = (await generateOpenRouterAnswer(prompt, apiKey)).trim().toLowerCase();
   if (raw.includes("unsafe")) return "unsafe";
   if (raw.includes("in_scope")) return "in_scope";
   return "out_of_scope";
@@ -320,16 +178,10 @@ function getSuggestedReplies(leadIntent: LeadIntent): string[] {
 
 // Cookie limits helpers
 function getSecretKey(): string {
-  const secretKey = process.env.JWT_SECRET;
-  if (secretKey) {
-    return secretKey;
+  if (process.env.NODE_ENV !== "production" && !process.env.JWT_SECRET) {
+    return "development-consultant-limit-secret";
   }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("JWT_SECRET is not configured.");
-  }
-
-  return "development-consultant-limit-secret";
+  return getRequiredSecret("JWT_SECRET");
 }
 
 function signToken(count: number, resetTime: number, secretKey: string): string {
@@ -382,7 +234,7 @@ function applyLimitHeaders(
   response: NextResponse,
   limitCookie: string,
   anonymousCookie: string,
-  rateLimit: ReturnType<typeof checkRateLimit>,
+  rateLimit: RateLimitResult,
   conversationCookie?: string,
 ) {
   response.headers.set("Set-Cookie", limitCookie);
@@ -393,7 +245,7 @@ function applyLimitHeaders(
   Object.entries(rateLimitHeaders(rateLimit)).forEach(([key, value]) => response.headers.set(key, value));
 }
 
-function getStrictestRateLimit(...limits: Array<ReturnType<typeof checkRateLimit>>) {
+function getStrictestRateLimit(...limits: RateLimitResult[]) {
   return limits.reduce((strictest, current) => {
     if (!current.allowed) return current;
     return current.remaining < strictest.remaining ? current : strictest;
@@ -434,16 +286,10 @@ export async function GET(request: Request) {
     const token = getCookieValue(cookiesHeader, limitCookieName);
     const anonymousId = getCookieValue(cookiesHeader, anonymousCookieName) || crypto.randomUUID();
 
-    const ipRateLimit = getRateLimitStatus(
-      hashRateLimitKey(["consultant", "ip", getClientIp(request)]),
-      CONSULTANT_DAILY_LIMIT,
-      DAY_MS,
-    );
-    const anonymousRateLimit = getRateLimitStatus(
-      hashRateLimitKey(["consultant", "anonymous", anonymousId]),
-      CONSULTANT_DAILY_LIMIT,
-      DAY_MS,
-    );
+    const [ipRateLimit, anonymousRateLimit] = await Promise.all([
+      getRateLimitStatus(hashRateLimitKey(["consultant", "ip", getClientIp(request)]), CONSULTANT_DAILY_LIMIT, DAY_MS),
+      getRateLimitStatus(hashRateLimitKey(["consultant", "anonymous", anonymousId]), CONSULTANT_DAILY_LIMIT, DAY_MS),
+    ]);
     const cookieRateLimit = getCookieLimitStatus(token, secretKey);
     const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit, cookieRateLimit);
 
@@ -459,9 +305,14 @@ export async function GET(request: Request) {
     return response;
   } catch (error: unknown) {
     console.error("Consultant limit status error:", error);
+    const unavailable = error instanceof Error && (
+      error.message.includes("REDIS_URL") ||
+      error.message.includes("ECONNREFUSED") ||
+      error.message.includes("connect")
+    );
     return NextResponse.json(
       { error: "Не удалось проверить лимит запросов." },
-      { status: 500 }
+      { status: unavailable ? 503 : 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }
@@ -510,13 +361,13 @@ export async function POST(request: Request) {
 
     if (!openrouterApiKey) {
       console.error("Missing OPENROUTER_API_KEY env variable");
-      return NextResponse.json({ error: "ИИ-ассистент временно недоступен (не настроен API ключ OpenRouter)." }, { status: 500 });
+      return NextResponse.json({ error: "ИИ-ассистент временно недоступен." }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
 
-    const dbPath = process.env.KNOWLEDGE_DB_PATH || path.join(process.cwd(), "knowledge.db");
+    const dbPath = getKnowledgeDbPath();
     if (!fs.existsSync(dbPath)) {
       console.error("knowledge.db file not found", { dbPath });
-      return NextResponse.json({ error: "База знаний еще не проиндексирована." }, { status: 500 });
+      return NextResponse.json({ error: "База знаний временно недоступна." }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
 
     // 1. Rate Limiting check
@@ -540,16 +391,10 @@ export async function POST(request: Request) {
       };
     }
 
-    const ipRateLimit = checkRateLimit(
-      hashRateLimitKey(["consultant", "ip", getClientIp(request)]),
-      CONSULTANT_DAILY_LIMIT,
-      DAY_MS,
-    );
-    const anonymousRateLimit = checkRateLimit(
-      hashRateLimitKey(["consultant", "anonymous", anonymousId]),
-      CONSULTANT_DAILY_LIMIT,
-      DAY_MS,
-    );
+    const [ipRateLimit, anonymousRateLimit] = await Promise.all([
+      checkRateLimit(hashRateLimitKey(["consultant", "ip", getClientIp(request)]), CONSULTANT_DAILY_LIMIT, DAY_MS),
+      checkRateLimit(hashRateLimitKey(["consultant", "anonymous", anonymousId]), CONSULTANT_DAILY_LIMIT, DAY_MS),
+    ]);
     const cookieRateLimit = getCookieLimitStatus(token, secretKey);
     const rateLimit = getStrictestRateLimit(ipRateLimit, anonymousRateLimit, cookieRateLimit);
 
@@ -645,41 +490,11 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Connect to SQLite DB
-    const db = new Database(dbPath, { readonly: true });
-
-    // 4. Retrieve context using Embeddings (RAG)
+    // 3. Retrieve context using cached embeddings (RAG)
     const queryVector = await getQueryEmbedding(retrievalQuery, openrouterApiKey);
+    const { chunks: topChunks, templates: matchedTemplates } = retrieveKnowledge(queryVector, retrievalQuery);
 
-    // Fetch all chunks to compute similarity
-    const allChunks = db.prepare("SELECT id, content, source_file, embedding, source_url, local_download_url FROM chunks").all() as ChunkRow[];
-
-    const scoredChunks = allChunks.map((chunk) => {
-      const embedding = JSON.parse(chunk.embedding) as number[];
-      const similarity = cosineSimilarity(queryVector, embedding);
-      return { ...chunk, similarity };
-    });
-
-    // Sort and pick top 4
-    scoredChunks.sort((a, b) => b.similarity - a.similarity);
-    const topChunks = scoredChunks.slice(0, 4).filter(c => c.similarity > 0.40); // only keep relevant chunks
-
-    // 5. Keyword search for downloadable templates
-    const allTemplates = db.prepare("SELECT id, title, file_path, sample_path, keywords FROM templates").all() as TemplateRow[];
-    const matchedTemplates: TemplateRow[] = [];
-
-    const questionWords = retrievalQuery.toLowerCase().split(/\s+/);
-    for (const temp of allTemplates) {
-      const keywordsList = temp.keywords.toLowerCase().split(/,\s*/);
-      const hasMatch = keywordsList.some((kw: string) => questionWords.some((qw: string) => qw.includes(kw) || kw.includes(qw)));
-      if (hasMatch) {
-        matchedTemplates.push(temp);
-      }
-    }
-
-    db.close();
-
-    // 6. Build prompt for Gemini
+    // 4. Build the grounded prompt
     const contextText = topChunks.map(c => `[Файл: ${c.source_file}]\n${c.content}`).join("\n\n");
     const templatesText = matchedTemplates.map(t => `- **${t.title}**: Бланк: [Скачать](${t.file_path}), Образец заполнения: [Скачать](${t.sample_path})`).join("\n");
 
@@ -718,7 +533,7 @@ ${conversationContext || "Нет предыдущих сообщений."}
 
 Ответ:`;
 
-    const answer = await generateAnswer(systemPrompt, openrouterApiKey);
+    const answer = await generateOpenRouterAnswer(systemPrompt, openrouterApiKey);
 
     // Dedup by source_file and build the array of source info
     const uniqueSourcesMap = new Map<string, { name: string; parent_url?: string | null; download_url?: string | null }>();
@@ -748,10 +563,10 @@ ${conversationContext || "Нет предыдущих сообщений."}
       leadIntent,
       showLeadForm: answerRequestsLeadForm,
       remainingRequests: remainingAfterIncrement,
-      model: getOpenRouterModels()[0],
+      model: getOpenRouterModel(),
     });
 
-    // 7. Send Response with cookie headers
+    // 5. Send response with cookie headers
     const response = NextResponse.json({
       text: cleanAnswer,
       sources: sources,
@@ -776,9 +591,15 @@ ${conversationContext || "Нет предыдущих сообщений."}
         console.error("Consultant AI chat log error:", logError);
       }
     }
+    const unavailable = error instanceof Error && (
+      error.message.includes("REDIS_URL") ||
+      error.message.includes("ECONNREFUSED") ||
+      error.message.includes("knowledge.db") ||
+      error.name === "TimeoutError"
+    );
     return NextResponse.json(
-      { error: "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже." },
-      { status: 500 }
+      { error: unavailable ? "Сервис временно недоступен. Пожалуйста, попробуйте позже." : "Произошла внутренняя ошибка сервера. Пожалуйста, попробуйте позже." },
+      { status: unavailable ? 503 : 500, headers: { "Cache-Control": "no-store" } },
     );
   }
 }

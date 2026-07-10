@@ -85,9 +85,9 @@ export default function CheckPatentPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи</label>
+                <label htmlFor="patent-region" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Регион подачи</label>
                 <div className="relative">
-                  <select
+                  <select id="patent-region" name="region"
                     required
                     value={formData.region}
                     onChange={(e) => setFormData({ ...formData, region: e.target.value })}
@@ -105,26 +105,26 @@ export default function CheckPatentPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер паспорта</label>
-                <input
+                <label htmlFor="patent-document" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер паспорта</label>
+                <input id="patent-document" name="documentNumber"
                   type="text"
                   required
                   placeholder="Серия и номер документа"
                   value={formData.docNumber}
                   onChange={(e) => setFormData({ ...formData, docNumber: e.target.value })}
-                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                  className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер заявления / штрих-кода (при наличии)</label>
-              <input
+              <label htmlFor="patent-application" className="block text-xs font-bold text-slate-500 mb-2 uppercase">Номер заявления / штрих-кода (при наличии)</label>
+              <input id="patent-application" name="applicationNumber"
                 type="text"
                 placeholder="Например: 23000012345 (необязательно)"
                 value={formData.appNumber}
                 onChange={(e) => setFormData({ ...formData, appNumber: e.target.value })}
-                className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
+                className="ym-disable-keys w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:outline-none focus:border-primary-500 transition-colors font-medium text-sm text-[#1f2c41] dark:text-white"
               />
             </div>
 

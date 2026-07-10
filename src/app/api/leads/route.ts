@@ -21,6 +21,7 @@ export async function POST(request: Request) {
       phone?: unknown;
       question?: unknown;
       company?: unknown;
+      privacyConsent?: unknown;
     }>(request, LEAD_BODY_LIMIT_BYTES);
 
     if (!body) {
@@ -39,9 +40,9 @@ export async function POST(request: Request) {
     const question = asTrimmedString(body.question, 1000);
 
     // Validate required fields
-    if (!name || !phone || !question) {
+    if (!name || !phone || !question || body.privacyConsent !== true) {
       return NextResponse.json(
-        { error: "Имя, телефон и вопрос обязательны." },
+        { error: "Имя, телефон, вопрос и согласие на обработку данных обязательны." },
         { status: 400 }
       );
     }
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const ipLimit = checkRateLimit(
+    const ipLimit = await checkRateLimit(
       hashRateLimitKey(["lead", "ip", getClientIp(request)]),
       LEAD_IP_HOURLY_LIMIT,
       HOUR_MS,
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const phoneLimit = checkRateLimit(
+    const phoneLimit = await checkRateLimit(
       hashRateLimitKey(["lead", "phone", phoneClean]),
       LEAD_PHONE_DAILY_LIMIT,
       DAY_MS,
@@ -104,11 +105,15 @@ export async function POST(request: Request) {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
+      signal: AbortSignal.timeout(12_000),
     });
 
-    const result = await apiResponse.json();
+    const contentType = apiResponse.headers.get("content-type") || "";
+    const result = contentType.includes("application/json")
+      ? await apiResponse.json() as { code?: number; edata?: { result?: string; entityId?: string | number } }
+      : null;
 
-    if (apiResponse.ok && result.code === 200 && result.edata?.result === "success") {
+    if (apiResponse.ok && result?.code === 200 && result.edata?.result === "success") {
       return NextResponse.json({ success: true, leadId: result.edata.entityId });
     } else {
       console.error("Pravoved API Error", { status: apiResponse.status, code: result?.code });
@@ -119,6 +124,12 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error("Lead processing error:", error instanceof Error ? error.message : "unknown error");
+    if (error instanceof Error && (error.message.includes("REDIS_URL") || error.name === "TimeoutError")) {
+      return NextResponse.json(
+        { error: "Сервис временно недоступен. Пожалуйста, попробуйте позже." },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     return NextResponse.json(
       { error: "Внутренняя ошибка сервера." },
       { status: 500 }

@@ -34,6 +34,7 @@ interface AIChatContextValue {
   remainingRequests: number | null;
   setLanguage: (language: string) => void;
   sendQuestion: (question: string, options?: SendQuestionOptions) => Promise<void>;
+  syncLimitStatus: () => Promise<void>;
   addAssistantMessage: (text: string, options?: { id?: string; once?: boolean }) => void;
   clearError: () => void;
 }
@@ -168,12 +169,11 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
         window.localStorage.removeItem(CHAT_STORAGE_KEY);
       } finally {
         hasRestoredStorageRef.current = true;
-        void syncLimitStatus();
       }
     }, 0);
 
     return () => window.clearTimeout(restoreTimer);
-  }, [syncLimitStatus]);
+  }, []);
 
   useEffect(() => {
     if (!hasRestoredStorageRef.current) return;
@@ -295,9 +295,10 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     remainingRequests,
     setLanguage,
     sendQuestion,
+    syncLimitStatus,
     addAssistantMessage,
     clearError: () => setErrorMsg(null),
-  }), [addAssistantMessage, errorMsg, isTyping, language, messages, remainingRequests, sendQuestion]);
+  }), [addAssistantMessage, errorMsg, isTyping, language, messages, remainingRequests, sendQuestion, syncLimitStatus]);
 
   return <AIChatContext.Provider value={value}>{children}</AIChatContext.Provider>;
 }

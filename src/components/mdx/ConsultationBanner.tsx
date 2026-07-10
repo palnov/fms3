@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { Send, Bot, User, AlertCircle, ArrowRight, Sparkles } from "lucide-react";
 import SafeMessageText from "@/components/chat/SafeMessageText";
 import LeadForm from "@/components/forms/LeadForm";
@@ -130,7 +131,7 @@ export default function ConsultationBanner({
     <section 
       ref={bannerRef}
       data-toc-exclude
-      className="bottom-banner-chat my-12 overflow-hidden rounded-[2rem] border border-[#dfe8ff] bg-[#dfe9ff] p-4 text-[#1f2c41] shadow-[0_18px_48px_rgba(31,44,65,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(31,44,65,0.11)] sm:p-6"
+      className="bottom-banner-chat ym-hide-content my-12 overflow-hidden rounded-[2rem] border border-[#dfe8ff] bg-[#dfe9ff] p-4 text-[#1f2c41] shadow-[0_18px_48px_rgba(31,44,65,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(31,44,65,0.11)] sm:p-6"
     >
       {/* Header Info */}
       <div className="mb-5 rounded-[1.5rem] bg-white/55 px-4 py-4 backdrop-blur-sm sm:px-5">
@@ -244,7 +245,7 @@ export default function ConsultationBanner({
 
       {/* Error Message */}
       {errorMsg && (
-        <div data-motion-live className="mb-3 flex items-center gap-2 rounded-xl border border-[#ff2e32]/20 bg-[#fff0f0] p-3 text-xs font-bold text-[#d92327]">
+        <div data-motion-live role="alert" aria-live="assertive" className="mb-3 flex items-center gap-2 rounded-xl border border-[#ff2e32]/20 bg-[#fff0f0] p-3 text-xs font-bold text-[#d92327]">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -256,7 +257,7 @@ export default function ConsultationBanner({
           e.preventDefault();
           handleSend(inputText);
         }}
-        className="flex items-center gap-2 rounded-full bg-white/95 p-2 shadow-[0_10px_28px_rgba(89,111,160,0.12)]"
+        className="ym-disable-submit flex items-center gap-2 rounded-full bg-white/95 p-2 shadow-[0_10px_28px_rgba(89,111,160,0.12)]"
       >
         <input
           type="text"
@@ -264,7 +265,7 @@ export default function ConsultationBanner({
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
           disabled={isTyping || isTypingWelcome}
-          className="min-w-0 flex-grow rounded-full border-0 bg-transparent px-4 py-3 text-sm font-medium text-[#1f2c41] transition-all placeholder:text-[#6f7890] focus:outline-none disabled:opacity-50"
+          className="ym-disable-keys min-w-0 flex-grow rounded-full border-0 bg-transparent px-4 py-3 text-sm font-medium text-[#1f2c41] transition-all placeholder:text-[#6f7890] focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
@@ -275,6 +276,9 @@ export default function ConsultationBanner({
           <Send className="h-4 w-4" />
         </button>
       </form>
+      <p className="!mb-0 !mt-2 text-center !text-[11px] !text-[#667287]">
+        Сообщения обрабатываются по <Link href="/privacy" className="font-bold underline">правилам конфиденциальности</Link>.
+      </p>
     </section>
   );
 }

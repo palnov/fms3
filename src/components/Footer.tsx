@@ -19,6 +19,7 @@ export default function Footer() {
           <Link href="/tools/calculators">Калькуляторы</Link>
           <Link href="/tools/document-check">Проверка документов</Link>
           <Link href="/tools/ai-consultant">ИИ-помощник</Link>
+          <Link href="/privacy">Конфиденциальность</Link>
         </div>
       </div>
       <div className="border-t border-[#d8dee7]">
