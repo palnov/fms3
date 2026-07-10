@@ -31,14 +31,23 @@ export default function ConsultationBanner({
   const [welcomeText, setWelcomeText] = useState("");
   const { messages, isTyping, errorMsg, sendQuestion } = useAIChat();
   
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const previousChatStateRef = useRef({ messageCount: messages.length, isTyping });
   const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (messages.length > 0) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [messages, isTyping]);
+    const previousState = previousChatStateRef.current;
+    const shouldScroll =
+      messages.length > previousState.messageCount ||
+      (isTyping && !previousState.isTyping);
+
+    previousChatStateRef.current = { messageCount: messages.length, isTyping };
+
+    if (!shouldScroll) return;
+
+    const container = messagesContainerRef.current;
+    container?.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages.length, isTyping]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
@@ -152,7 +161,10 @@ export default function ConsultationBanner({
         }`}
       >
         <div className="min-h-0 overflow-hidden">
-          <div className="flex max-h-[380px] flex-col gap-5 overflow-y-auto px-1 pr-2 transition-[max-height] duration-500 ease-out">
+          <div
+            ref={messagesContainerRef}
+            className="flex max-h-[380px] flex-col gap-5 overflow-y-auto px-1 pr-2 transition-[max-height] duration-500 ease-out"
+          >
             {welcomeText && (
               <div data-motion-live className="flex w-full flex-col items-start">
                 <div className="flex max-w-[88%] items-end gap-2.5 sm:max-w-[78%]">
@@ -238,7 +250,6 @@ export default function ConsultationBanner({
                 </div>
               </div>
             )}
-            <div ref={chatEndRef} />
           </div>
         </div>
       </div>

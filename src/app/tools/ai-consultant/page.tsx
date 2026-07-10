@@ -139,10 +139,11 @@ function AIConsultantChat() {
   const searchParams = useSearchParams();
   const { messages, language, setLanguage, isTyping, errorMsg, remainingRequests, sendQuestion, syncLimitStatus } = useAIChat();
   const [inputText, setInputText] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const initialQuestionSentRef = useRef(false);
+  const previousChatStateRef = useRef({ messageCount: messages.length, isTyping });
 
   useEffect(() => {
     void syncLimitStatus();
@@ -166,10 +167,18 @@ function AIConsultantChat() {
   };
 
   useEffect(() => {
-    if (messages.length > 0 || isTyping) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [messages, isTyping]);
+    const previousState = previousChatStateRef.current;
+    const shouldScroll =
+      messages.length > previousState.messageCount ||
+      (isTyping && !previousState.isTyping);
+
+    previousChatStateRef.current = { messageCount: messages.length, isTyping };
+
+    if (!shouldScroll) return;
+
+    const container = messagesContainerRef.current;
+    container?.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [messages.length, isTyping]);
 
   const handleSend = useCallback(async (text: string) => {
     if (!text.trim()) return;
@@ -263,7 +272,7 @@ function AIConsultantChat() {
         </div>
 
         {/* Chat Area */}
-        <div className="flex-grow overflow-y-auto p-5 space-y-6 bg-slate-50/20 dark:bg-slate-950/10">
+        <div ref={messagesContainerRef} className="flex-grow overflow-y-auto p-5 space-y-6 bg-slate-50/20 dark:bg-slate-950/10">
           {messages.length === 0 && (
             <div data-motion-live className="flex gap-4 max-w-[90%] md:max-w-[80%]">
               <div className="w-9 h-9 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -383,7 +392,6 @@ function AIConsultantChat() {
               </div>
             </div>
           )}
-          <div ref={chatEndRef} />
         </div>
 
         {/* Error panel */}

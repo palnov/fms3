@@ -16,6 +16,26 @@ test("renders an MDX article", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Вид на жительство");
 });
 
+test("does not scroll an article to restored consultant messages", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("fms3_shared_ai_chat", JSON.stringify({
+      version: 1,
+      messages: [{
+        id: "restored-message",
+        sender: "user",
+        text: "Сохранённый вопрос",
+        timestamp: new Date().toISOString(),
+      }],
+      language: "ru",
+      remainingRequests: 9,
+    }));
+  });
+
+  await page.goto("/pathways/vnzh");
+  await expect(page.getByText("Сохранённый вопрос")).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(100);
+});
+
 test("returns a genuine 404", async ({ page }) => {
   const response = await page.goto("/definitely-not-a-real-route");
   expect(response?.status()).toBe(404);

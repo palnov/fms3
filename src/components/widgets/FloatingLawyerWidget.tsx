@@ -85,10 +85,11 @@ const TRANSLATIONS: Record<string, {
 export default function FloatingLawyerWidget({ initiallyOpen = false }: { initiallyOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(initiallyOpen);
   const [inputVal, setInputVal] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = useRef<HTMLDivElement>(null);
   const { messages, language, setLanguage, isTyping, errorMsg, sendQuestion, syncLimitStatus } = useAIChat();
+  const previousChatStateRef = useRef({ messageCount: messages.length, isTyping });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -101,10 +102,19 @@ export default function FloatingLawyerWidget({ initiallyOpen = false }: { initia
   }, []);
 
   useEffect(() => {
-    if (isOpen && messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [isOpen, messages, isTyping]);
+    const previousState = previousChatStateRef.current;
+    const shouldScroll =
+      isOpen &&
+      (messages.length > previousState.messageCount ||
+        (isTyping && !previousState.isTyping));
+
+    previousChatStateRef.current = { messageCount: messages.length, isTyping };
+
+    if (!shouldScroll) return;
+
+    const container = messagesContainerRef.current;
+    container?.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [isOpen, messages.length, isTyping]);
 
   const t = TRANSLATIONS[language] || TRANSLATIONS.ru;
 
@@ -227,7 +237,7 @@ export default function FloatingLawyerWidget({ initiallyOpen = false }: { initia
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-grow space-y-4 overflow-y-auto bg-[#f4f6fa] p-4">
+            <div ref={messagesContainerRef} className="flex-grow space-y-4 overflow-y-auto bg-[#f4f6fa] p-4">
               {displayMessages.map((msg) => (
                 <div key={msg.id} data-motion-live className="space-y-2">
                   <div className={`flex gap-2.5 max-w-[85%] ${msg.sender === "user" ? "ml-auto flex-row-reverse" : ""}`}>
@@ -300,7 +310,6 @@ export default function FloatingLawyerWidget({ initiallyOpen = false }: { initia
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             {errorMsg ? <p role="alert" aria-live="assertive" className="border-t border-[#ffd0d1] bg-[#fff0f0] px-3 py-2 text-xs font-semibold text-[#9b272a]">{errorMsg}</p> : null}
