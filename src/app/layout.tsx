@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -54,6 +55,36 @@ export default function RootLayout({
           <Footer />
           <AnalyticsManager />
         </AIChatProvider>
+        <Script id="feedot-widgets-loader" strategy="afterInteractive">
+          {`
+            (function(f, ee, d, o, t) {
+                if (ee._feedot) return;
+                ee._feedot = f;
+                ee._feedotStandalone = {"folder":"/2e32560face91b58d22a63208af38c92","build":"2e325","config":"60fac","settings":"532f2ec11488e9da26a317de2b0510d5","init":"173a6d6f6e4e1e464a611728a498d0aa"};
+
+                function loadScript(src, onError) {
+                    o = d.createElement('script');
+                    o.src = src;
+                    o.defer = true;
+                    if (o.addEventListener)
+                        o.addEventListener('error', onError, false);
+                    else if (o.attachEvent)
+                        o.attachEvent('onerror', onError);
+                    d.body.appendChild(o);
+                }
+
+                t = (new Date()).getTime();
+                loadScript([
+                    ee._feedotStandalone.folder,
+                    ee._feedotStandalone.build,
+                    ee._feedotStandalone.init + '.js?t=' + t
+                ].join('/'), function() {
+                    ee._feedotStandalone = null;
+                    loadScript('https://widget.info-app5shs.ru/js/init.js?t=' + t);
+                });
+            })('2e32560face91b58d22a63208af38c92', window, document);
+          `}
+        </Script>
       </body>
     </html>
   );
