@@ -30,7 +30,7 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl \
+  && apt-get install -y --no-install-recommends ca-certificates curl tar \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /data \
   && chown node:node /data
