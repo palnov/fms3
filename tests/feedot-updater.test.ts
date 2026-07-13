@@ -10,10 +10,8 @@ import {
 } from "@/lib/feedot-updater";
 import { FEEDOT_FOLDER_NAME } from "@/lib/feedot-storage";
 import { GET as getFeedotAsset } from "@/app/2e32560face91b58d22a63208af38c92/[...path]/route";
-import {
-  GET as getFeedotSiteRootAsset,
-  HEAD as headFeedotSiteRootAsset,
-} from "@/app/[...path]/route";
+import { NextRequest } from "next/server";
+import { proxy as feedotSiteRootProxy } from "@/proxy";
 
 const PRIVATE_NAME = "1eff21a67161e68d4476010680e0e7ba";
 const PRIVATE_KEY = "41f4d0dbc4814826102ea6c36e1ce94c";
@@ -142,13 +140,11 @@ describe("Feedot updater protocol", () => {
         },
       }]));
 
-      const assetResponse = await getFeedotSiteRootAsset(
-        new Request("https://ufms-help.ru/media/banner.webp"),
-        { params: Promise.resolve({ path: ["media", "banner.webp"] }) },
+      const assetResponse = await feedotSiteRootProxy(
+        new NextRequest("https://ufms-help.ru/media/banner.webp"),
       );
-      const headResponse = await headFeedotSiteRootAsset(
-        new Request("https://ufms-help.ru/media/banner.webp", { method: "HEAD" }),
-        { params: Promise.resolve({ path: ["media", "banner.webp"] }) },
+      const headResponse = await feedotSiteRootProxy(
+        new NextRequest("https://ufms-help.ru/media/banner.webp", { method: "HEAD" }),
       );
 
       expect(updaterResponse.status).toBe(200);
