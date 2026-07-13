@@ -6,5 +6,4 @@ export const metadata: Metadata = {
   alternates: { canonical: "/tools/checklist-generator" },
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) { return children; }
-
+export default function Layout({ children }: { children: React.ReactNode }) { return <div className="tool-page">{children}</div>; }

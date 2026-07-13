@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function EditorialPolicyPage() {
   return (
-    <div className="site-container max-w-4xl py-12 sm:py-20">
+    <div className="site-container public-policy-page max-w-4xl py-12 sm:py-20">
       <p className="section-kicker">О справочнике</p>
       <h1 className="display-title mt-4">Редакционная политика</h1>
       <p className="mt-6 text-lg leading-8 text-[#667287]">
@@ -49,4 +49,3 @@ export default function EditorialPolicyPage() {
     </div>
   );
 }
-

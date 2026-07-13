@@ -111,21 +111,21 @@ export default function ConsultationBanner({
   // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
   if (!isBottomBanner) {
     return (
-      <section data-toc-exclude className="my-8 overflow-hidden rounded-2xl border border-[#1f2c41] bg-[#1f2c41] p-5 text-white shadow-xl transition-all duration-300 sm:p-7">
+      <section data-toc-exclude className="article-next-step-banner my-8 overflow-hidden p-5 shadow-xl transition-all duration-300 sm:p-7">
         <div className="grid items-center gap-6 md:grid-cols-[1fr_auto]">
           <div>
-            <span className="mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-[#ff8a8c]">
+            <span className="article-next-step-label mb-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em]">
               <Bot className="h-4 w-4" />
               Следующий шаг
             </span>
-            <h3 className="!m-0 !text-xl !font-bold !text-white sm:!text-2xl">{title}</h3>
-            <p className="!mb-0 !mt-3 !text-sm !leading-6 !text-slate-300">{description}</p>
+            <h3 className="article-next-step-title !m-0 !text-xl !font-bold sm:!text-2xl">{title}</h3>
+            <p className="article-next-step-description !mb-0 !mt-3 !text-sm !leading-6">{description}</p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row md:flex-col shrink-0">
             <button
               type="button"
               onClick={scrollToBottomChat}
-              className="button-primary inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#ff2e32] px-4 text-sm font-bold text-white shadow-md transition-colors hover:bg-[#d92327] active:scale-95"
+              className="article-next-step-action inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap px-4 text-sm font-bold shadow-md transition-colors active:scale-95"
             >
               Задать вопрос <ArrowRight className="h-4 w-4" />
             </button>
@@ -140,38 +140,32 @@ export default function ConsultationBanner({
     <section 
       ref={bannerRef}
       data-toc-exclude
-      className="bottom-banner-chat ym-hide-content my-12 overflow-hidden rounded-[2rem] border border-[#dfe8ff] bg-[#dfe9ff] p-4 text-[#1f2c41] shadow-[0_18px_48px_rgba(31,44,65,0.08)] transition-shadow duration-300 hover:shadow-[0_24px_60px_rgba(31,44,65,0.11)] sm:p-6"
+      className="article-chat-banner bottom-banner-chat ym-hide-content my-12 overflow-hidden p-4 transition-shadow duration-300 sm:p-6"
     >
       {/* Header Info */}
-      <div className="mb-5 rounded-[1.5rem] bg-white/55 px-4 py-4 backdrop-blur-sm sm:px-5">
-        <span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#02629f] shadow-sm">
-          <Bot className="h-3.5 w-3.5 text-[#02629f]" />
+      <div className="article-chat-header mb-5 px-4 py-4 sm:px-5">
+        <span className="article-chat-kicker mb-3 inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] shadow-sm">
+          <Bot className="h-3.5 w-3.5" />
           Спросите ИИ
         </span>
-        <h3 className="!m-0 !text-xl !font-bold !tracking-normal text-[#1f2c41] sm:!text-2xl">{title}</h3>
-        <p className="!mb-0 !mt-3 !text-sm !leading-6 text-[#5f6e87]">{description}</p>
+        <h3 className="article-chat-title !m-0 !text-xl !font-bold !tracking-normal sm:!text-2xl">{title}</h3>
+        <p className="article-chat-description !mb-0 !mt-3 !text-sm !leading-6">{description}</p>
       </div>
 
       {/* Chat Messages Log */}
-      <div
-        className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-out ${
-          messages.length > 0 || welcomeText || isTypingWelcome
-            ? "mb-5 grid-rows-[1fr] opacity-100"
-            : "mb-0 grid-rows-[0fr] opacity-0"
-        }`}
-      >
+      <div className="mb-5 grid grid-rows-[1fr] opacity-100">
         <div className="min-h-0 overflow-hidden">
           <div
             ref={messagesContainerRef}
-            className="flex max-h-[380px] flex-col gap-5 overflow-y-auto px-1 pr-2 transition-[max-height] duration-500 ease-out"
+            className="article-chat-log flex max-h-[380px] flex-col gap-5 overflow-y-auto transition-[max-height] duration-500 ease-out"
           >
             {welcomeText && (
               <div data-motion-live className="flex w-full flex-col items-start">
                 <div className="flex max-w-[88%] items-end gap-2.5 sm:max-w-[78%]">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 bg-white text-[#02629f] shadow-sm">
+                  <div className="article-chat-avatar article-chat-avatar-ai flex h-9 w-9 shrink-0 items-center justify-center shadow-sm">
                     <Bot className="h-4 w-4" />
                   </div>
-                  <div className="rounded-[1.55rem] rounded-bl-md bg-white/95 px-5 py-4 !text-sm !leading-6 text-[#4d5564] shadow-[0_10px_28px_rgba(89,111,160,0.10)]">
+                  <div className="article-chat-bubble article-chat-bubble-ai px-5 py-4 !text-sm !leading-6">
                     <p className="!m-0 min-h-[1.25rem] !max-w-none !text-sm !leading-6">{welcomeText}</p>
                   </div>
                 </div>
@@ -184,28 +178,28 @@ export default function ConsultationBanner({
                 className={`flex w-full flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
               >
                 <div className={`flex max-w-[88%] items-end gap-2.5 sm:max-w-[78%] ${msg.sender === "user" ? "flex-row-reverse" : ""}`}>
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 shadow-sm ${
+                  <div className={`article-chat-avatar flex h-9 w-9 shrink-0 items-center justify-center shadow-sm ${
                     msg.sender === "user" 
-                      ? "bg-[#02629f] text-white" 
-                      : "bg-white text-[#02629f]"
+                      ? "article-chat-avatar-user"
+                      : "article-chat-avatar-ai"
                   }`}>
                     {msg.sender === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </div>
-                  <div className={`rounded-[1.55rem] bg-white/95 px-5 py-4 !text-sm !leading-6 text-[#4d5564] shadow-[0_10px_28px_rgba(89,111,160,0.10)] ${
-                    msg.sender === "user" ? "rounded-br-md" : "rounded-bl-md"
+                  <div className={`article-chat-bubble px-5 py-4 !text-sm !leading-6 ${
+                    msg.sender === "user" ? "article-chat-bubble-user" : "article-chat-bubble-ai"
                   }`}>
                     {msg.sender === "user" ? (
                       <p className="!m-0 min-h-[1.25rem] !max-w-none !text-sm !leading-6">{msg.text}</p>
                     ) : (
                       <SafeMessageText
                         text={msg.text}
-                        linkClassName="font-semibold text-[#02629f] underline underline-offset-2 transition-colors hover:text-[#014f82]"
+                        linkClassName="article-chat-message-link font-semibold underline underline-offset-2 transition-colors"
                         paragraphClassName="!mb-1.5 min-h-[1.25rem] !max-w-none !text-sm !leading-6 last:!mb-0"
                       />
                     )}
                   </div>
                 </div>
-                <span className={`mt-1 text-[11px] font-semibold text-[#6f7890] ${msg.sender === "user" ? "mr-12" : "ml-12"}`}>
+                <span className={`article-chat-timestamp mt-1 text-[11px] font-semibold ${msg.sender === "user" ? "mr-12" : "ml-12"}`}>
                   {msg.timestamp.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" })}
                 </span>
                 {msg.sender === "ai" && msg.suggestedReplies && msg.suggestedReplies.length > 0 && !msg.showLeadForm && (
@@ -216,7 +210,7 @@ export default function ConsultationBanner({
                         type="button"
                         onClick={() => handleSend(reply)}
                         disabled={isTyping || isTypingWelcome}
-                        className="rounded-full border border-white/80 bg-white/90 px-3 py-1.5 text-xs font-bold text-[#02629f] shadow-sm transition-colors hover:bg-white disabled:opacity-50"
+                        className="article-chat-suggestion px-3 py-1.5 text-xs font-bold shadow-sm transition-colors disabled:opacity-50"
                       >
                         {reply}
                       </button>
@@ -224,12 +218,12 @@ export default function ConsultationBanner({
                   </div>
                 )}
                 {msg.sender === "ai" && msg.showLeadForm && (
-                  <div data-motion-live className="ml-12 mt-3 max-w-md rounded-[1.5rem] border border-white/85 bg-white/95 p-5 shadow-[0_10px_28px_rgba(89,111,160,0.12)]">
-                    <div className="mb-2 flex items-center gap-2 text-[#ff2e32]">
+                  <div data-motion-live className="article-chat-lead-card ml-12 mt-3 max-w-md p-5">
+                    <div className="article-chat-lead-kicker mb-2 flex items-center gap-2">
                       <Sparkles className="h-4 w-4" />
-                      <h4 className="!m-0 !text-sm !font-bold !text-[#1f2c41]">Можно сверить ситуацию с юристом</h4>
+                      <h4 className="!m-0 !text-sm !font-bold">Можно сверить ситуацию с юристом</h4>
                     </div>
-                    <p className="!mb-4 !mt-0 !text-xs !leading-5 !text-[#667287]">
+                    <p className="article-chat-lead-copy !mb-4 !mt-0 !text-xs !leading-5">
                       Если есть срок, отказ, запрет или риск ошибки в документах, специалист бесплатно уточнит детали и подскажет следующий шаг.
                     </p>
                     <LeadForm sourceContext={context} defaultQuestion={lastUserQuestion} />
@@ -240,13 +234,13 @@ export default function ConsultationBanner({
 
             {(isTyping || isTypingWelcome) && (
               <div data-motion-live className="flex w-full items-end gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/75 bg-white text-[#02629f] shadow-sm">
+                <div className="article-chat-avatar article-chat-avatar-ai flex h-9 w-9 shrink-0 items-center justify-center shadow-sm">
                   <Bot className="h-4 w-4" />
                 </div>
-                <div className="flex min-h-14 items-center gap-1.5 rounded-[1.55rem] rounded-bl-md bg-white/95 px-5 py-4 shadow-[0_10px_28px_rgba(89,111,160,0.10)]" aria-label="ИИ печатает">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287]"></span>
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287] [animation-delay:0.16s]"></span>
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#667287] [animation-delay:0.32s]"></span>
+                <div className="article-chat-typing flex min-h-14 items-center gap-1.5 px-5 py-4" aria-label="ИИ печатает">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full"></span>
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0.16s]"></span>
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full [animation-delay:0.32s]"></span>
                 </div>
               </div>
             )}
@@ -256,7 +250,7 @@ export default function ConsultationBanner({
 
       {/* Error Message */}
       {errorMsg && (
-        <div data-motion-live role="alert" aria-live="assertive" className="mb-3 flex items-center gap-2 rounded-xl border border-[#ff2e32]/20 bg-[#fff0f0] p-3 text-xs font-bold text-[#d92327]">
+        <div data-motion-live role="alert" aria-live="assertive" className="article-chat-error mb-3 flex items-center gap-2 p-3 text-xs font-bold">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -268,7 +262,7 @@ export default function ConsultationBanner({
           e.preventDefault();
           handleSend(inputText);
         }}
-        className="ym-disable-submit flex items-center gap-2 rounded-full bg-white/95 p-2 shadow-[0_10px_28px_rgba(89,111,160,0.12)]"
+        className="article-chat-input-bar ym-disable-submit flex items-center gap-2 p-2"
       >
         <input
           type="text"
@@ -276,18 +270,18 @@ export default function ConsultationBanner({
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Спросите ИИ-помощника по теме статьи..."
           disabled={isTyping || isTypingWelcome}
-          className="ym-disable-keys min-w-0 flex-grow rounded-full border-0 bg-transparent px-4 py-3 text-sm font-medium text-[#1f2c41] transition-all placeholder:text-[#6f7890] focus:outline-none disabled:opacity-50"
+          className="article-chat-input-field ym-disable-keys min-w-0 flex-grow bg-transparent px-4 py-3 text-sm font-medium transition-all focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={isTyping || isTypingWelcome || !inputText.trim()}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#4d5564] transition-colors hover:bg-[#edf2fd] hover:text-[#02629f] active:scale-95 disabled:opacity-45"
+          className="article-chat-send flex h-12 w-12 shrink-0 items-center justify-center transition-colors active:scale-95 disabled:opacity-45"
           aria-label="Отправить вопрос"
         >
           <Send className="h-4 w-4" />
         </button>
       </form>
-      <p className="!mb-0 !mt-2 text-center !text-[11px] !text-[#667287]">
+      <p className="article-chat-privacy !mb-0 !mt-2 text-center !text-[11px]">
         Сообщения обрабатываются по <Link href="/privacy" className="font-bold underline">правилам конфиденциальности</Link>.
       </p>
     </section>

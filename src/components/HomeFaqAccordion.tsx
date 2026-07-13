@@ -6,9 +6,10 @@ import gsap from "gsap";
 
 interface HomeFaqAccordionProps {
   items: Array<[string, string]>;
+  variant?: "default" | "institutional";
 }
 
-export default function HomeFaqAccordion({ items }: HomeFaqAccordionProps) {
+export default function HomeFaqAccordion({ items, variant = "default" }: HomeFaqAccordionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
 
@@ -30,7 +31,7 @@ export default function HomeFaqAccordion({ items }: HomeFaqAccordionProps) {
   }, [openIndex]);
 
   return (
-    <div data-motion-stagger className="grid items-start gap-3 md:grid-cols-3">
+    <div data-motion-stagger className={`grid items-start gap-3 md:grid-cols-3 ${variant === "institutional" ? "home-faq-institutional" : ""}`}>
       {items.map(([question, answer], index) => {
         const isOpen = openIndex === index;
         const panelId = `home-faq-${index}`;
@@ -39,8 +40,8 @@ export default function HomeFaqAccordion({ items }: HomeFaqAccordionProps) {
           <section
             key={question}
             data-motion-card
-            className={`rounded-2xl border bg-white p-5 shadow-[0_14px_36px_rgba(31,44,65,0.06)] transition-colors duration-200 ${
-              isOpen ? "border-[#02629f]/35 shadow-[0_18px_44px_rgba(2,98,159,0.12)]" : "border-[#d8dee7]"
+            className={`home-faq-card rounded-2xl border bg-white p-5 shadow-[0_14px_36px_rgba(31,44,65,0.06)] transition-colors duration-200 ${
+              isOpen ? "border-[#c8aa70]/55 shadow-[0_18px_44px_rgba(28,41,37,0.10)]" : "border-[#d9ddd5]"
             }`}
           >
             <button
@@ -52,7 +53,7 @@ export default function HomeFaqAccordion({ items }: HomeFaqAccordionProps) {
             >
               <span>{question}</span>
               <CheckCircle2
-                className={`h-5 w-5 shrink-0 text-[#02629f] transition-transform duration-200 ${
+                className={`h-5 w-5 shrink-0 text-[#a98a4f] transition-transform duration-200 ${
                   isOpen ? "rotate-45" : ""
                 }`}
               />

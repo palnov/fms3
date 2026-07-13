@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useSyncExternalStore } from "react";
 
 const COUNTER_ID = 47198382;
@@ -92,6 +93,7 @@ export function AnalyticsControls() {
 
 export default function AnalyticsManager() {
   const preference = useAnalyticsPreference();
+  const pathname = usePathname();
 
   useEffect(() => {
     const storedPreference = getPreferenceSnapshot();
@@ -102,14 +104,11 @@ export default function AnalyticsManager() {
   if (preference) return null;
 
   return (
-    <aside className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-3xl rounded-2xl border border-[#d8dee7] bg-white p-4 shadow-2xl" aria-label="Настройки аналитики">
-      <p className="text-sm leading-relaxed text-[#4f5c70]">
-        Мы используем Яндекс Метрику и Webvisor для улучшения сайта. Аналитика уже включена; вы можете отключить её сейчас или позже в <Link href="/privacy" className="font-bold text-[#02629f] underline">настройках конфиденциальности</Link>.
+    <aside className={`analytics-consent fixed bottom-4 left-4 right-4 z-[60] mx-auto flex max-w-xl items-center gap-4 rounded-2xl border border-[#d8dee7] bg-white p-4 shadow-2xl ${pathname === "/" ? "analytics-consent-home" : ""}`} aria-label="Настройки аналитики">
+      <p className="analytics-consent-copy min-w-0 flex-1 text-sm leading-relaxed text-[#4f5c70]">
+        Мы используем сервисы аналитики, чтобы улучшать сайт. Управлять ими можно в <Link href="/privacy" className="font-bold text-[#a98a4f] underline">настройках конфиденциальности</Link>.
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" className="button-primary" onClick={() => setAnalyticsPreference("accepted")}>Оставить включённой</button>
-        <button type="button" className="button-secondary" onClick={() => setAnalyticsPreference("declined")}>Отключить</button>
-      </div>
+      <button type="button" className="button-primary analytics-consent-primary" onClick={() => setAnalyticsPreference("accepted")}>ОК</button>
     </aside>
   );
 }

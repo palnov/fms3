@@ -54,18 +54,18 @@ export default function LeadForm({
     return (
       <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center">
         <CheckCircle2 className="mx-auto mb-3 h-9 w-9 text-emerald-600" />
-        <h3 className="!m-0 !text-lg !font-bold !text-[#1f2c41]">Заявка отправлена</h3>
+        <h3 className="!m-0 !text-lg !font-bold !text-[#1c2925]">Заявка отправлена</h3>
         <p className="!mb-0 !mt-2 !text-sm !text-[#667287]">Специалист свяжется с вами по указанному номеру.</p>
       </div>
     );
   }
 
   const isDark = variant === "dark";
-  const labelClass = isDark ? "text-sm font-bold text-slate-200" : "text-sm font-bold text-[#1f2c41]";
+  const labelClass = isDark ? "text-sm font-bold text-slate-200" : "text-sm font-bold text-[#1c2925]";
   const consentClass = isDark ? "!m-0 !text-xs !leading-5 !text-slate-400" : "!m-0 !text-xs !leading-5 !text-[#7b8799]";
   const fieldClass = isDark
-    ? "mt-1.5 w-full rounded-xl border border-slate-600 bg-white px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#7db7ff] focus:bg-white"
-    : "mt-1.5 w-full rounded-xl border border-[#d8dee7] bg-[#f4f6fa] px-4 py-3 text-base text-[#1f2c41] placeholder:text-[#8a95a5] focus:border-[#02629f] focus:bg-white";
+    ? "mt-1.5 w-full rounded-xl border border-slate-600 bg-white px-4 py-3 text-base text-[#1c2925] placeholder:text-[#89958d] focus:border-[#d5ba85] focus:bg-white"
+    : "mt-1.5 w-full rounded-xl border border-[#d9ddd5] bg-[#edf1eb] px-4 py-3 text-base text-[#1c2925] placeholder:text-[#89958d] focus:border-[#c8aa70] focus:bg-[#fbfaf6]";
 
   return (
     <form onSubmit={handleSubmit} className="ym-disable-submit grid gap-4">
@@ -95,12 +95,12 @@ export default function LeadForm({
       </label>
 
       <label className={`flex items-start gap-2 ${consentClass}`}>
-        <input type="checkbox" name="privacyConsent" required className="mt-1 h-4 w-4 shrink-0 accent-[#02629f]" />
+        <input type="checkbox" name="privacyConsent" required className="mt-1 h-4 w-4 shrink-0 accent-[#c8aa70]" />
         <span>Я согласен с обработкой данных на условиях <Link href="/privacy" className="font-bold underline">политики конфиденциальности</Link>.</span>
       </label>
 
       {status === "error" && (
-        <div role="alert" aria-live="assertive" className="flex gap-2 rounded-xl bg-[#fff0f0] p-3 text-sm text-[#9b272a]">
+        <div role="alert" aria-live="assertive" className="flex gap-2 rounded-xl border border-[#d8a49d] bg-[#f5e7e2] p-3 text-sm text-[#984943]">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
           <span>{errorMessage}</span>
         </div>

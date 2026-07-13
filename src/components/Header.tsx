@@ -17,6 +17,7 @@ const links = [
 
 export default function Header() {
   const pathname = usePathname();
+  const isPublic = !pathname.startsWith("/admin");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -87,13 +88,13 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#d8dee7]/90 bg-[#f4f6fa]/92 backdrop-blur-xl">
+    <header className={`sticky top-0 z-50 border-b border-[#d8dee7]/90 bg-[#f4f6fa]/92 backdrop-blur-xl ${isPublic ? "home-header" : ""}`}>
       <div className="site-container flex min-h-20 items-center gap-5">
         <Link href="/" className="mr-auto flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#1f2c41] text-sm font-black text-white">
+          <span className="header-brand-mark grid h-10 w-10 place-items-center rounded-xl bg-[#1f2c41] text-sm font-black text-white">
             МС
           </span>
-          <span className="leading-none">
+          <span className="header-wordmark leading-none">
             <strong className="block text-[15px] font-extrabold tracking-[-0.035em]">Миграционный</strong>
             <span className="text-[13px] font-bold text-[#ff2e32]">справочник</span>
           </span>
@@ -108,8 +109,8 @@ export default function Header() {
                 href={link.href}
                 className={`border-b-2 py-7 text-sm font-bold transition-colors ${
                   active
-                    ? "border-[#ff2e32] text-[#1f2c41]"
-                    : "border-transparent text-[#667287] hover:text-[#02629f]"
+                    ? "header-nav-active border-[#ff2e32] text-[#1f2c41]"
+                    : "header-nav-link border-transparent text-[#667287] hover:text-[#02629f]"
                 }`}
               >
                 {link.label}
@@ -120,16 +121,11 @@ export default function Header() {
 
         <a
           href={getPhoneHref(PARTNER_PHONE)}
-          className="hidden min-h-11 items-center gap-2 rounded-xl border border-[#d8dee7] bg-white px-3 text-left text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:flex"
+          className="header-hotline hidden min-h-11 items-center gap-2 px-1 text-left text-[#1f2c41] transition-colors hover:text-[#02629f] xl:flex"
           aria-label={`Горячая линия ${PARTNER_PHONE}`}
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#fff1f1] text-[#ff2e32]">
-            <Phone className="h-4 w-4" />
-          </span>
-          <span className="leading-none">
-            <span className="block text-[10px] font-extrabold uppercase text-[#667287]">Горячая линия</span>
-            <span className="mt-1 block text-sm font-extrabold">{PARTNER_PHONE}</span>
-          </span>
+          <Phone className="h-4 w-4" />
+          <span className="text-sm font-extrabold tabular-nums">{PARTNER_PHONE}</span>
         </a>
 
         <div className="hidden items-center sm:flex">
@@ -137,7 +133,7 @@ export default function Header() {
             <button
               type="button"
               onClick={searchOpen ? closeSearch : openSearch}
-              className="grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f]"
+              className="header-icon-button grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#1f2c41] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f]"
               aria-label="Найти ответ"
               aria-expanded={searchOpen}
             >
@@ -181,7 +177,7 @@ export default function Header() {
 
         <a
           href={getPhoneHref(PARTNER_PHONE)}
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
+          className="header-icon-button grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
           aria-label={`Горячая линия ${PARTNER_PHONE}`}
         >
           <Phone className="h-5 w-5" />
@@ -189,7 +185,7 @@ export default function Header() {
 
         <button
           type="button"
-          className="grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white lg:hidden"
+          className="header-icon-button grid h-11 w-11 place-items-center rounded-xl border border-[#d8dee7] bg-white lg:hidden"
           aria-label={open ? "Закрыть меню" : "Открыть меню"}
           aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
@@ -199,20 +195,15 @@ export default function Header() {
       </div>
 
       {open && (
-        <nav aria-label="Мобильная навигация" className="motion-mobile-menu site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
+        <nav aria-label="Мобильная навигация" className="header-mobile-panel motion-mobile-menu site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
           <a
             href={getPhoneHref(PARTNER_PHONE)}
             onClick={() => setOpen(false)}
-            className="mb-2 flex items-center gap-3 rounded-xl border border-[#d8dee7] bg-white px-3 py-3 text-[#1f2c41] shadow-sm"
+            className="header-hotline mb-2 flex min-h-11 items-center gap-3 border-b border-[#d8dee7] px-3 py-3 text-[#1f2c41]"
             aria-label={`Горячая линия ${PARTNER_PHONE}`}
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#fff1f1] text-[#ff2e32]">
-              <Phone className="h-4 w-4" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[11px] font-extrabold uppercase text-[#667287]">Горячая линия</span>
-              <span className="block text-sm font-extrabold text-[#02629f]">{PARTNER_PHONE}</span>
-            </span>
+            <Phone className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-extrabold tabular-nums">{PARTNER_PHONE}</span>
           </a>
           {links.map((link) => (
             <Link

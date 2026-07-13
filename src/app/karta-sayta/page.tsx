@@ -21,11 +21,11 @@ const tools = [
 
 export default function SitemapPage() {
   return (
-    <div className="site-container py-12 sm:py-20">
+    <div className="site-container public-index-page py-12 sm:py-20">
       <p className="section-kicker">Навигация</p>
       <h1 className="display-title mt-4">Карта сайта</h1>
       <p className="mt-5 max-w-3xl text-lg leading-8 text-[#667287]">
-        Все опубликованные инструкции и практические сервисы. Для выбора маршрута начните с <Link className="font-bold text-[#02629f]" href="/pathways">каталога путей легализации</Link>.
+        Все опубликованные инструкции и практические сервисы. Для начала откройте <Link className="font-bold text-[#2d5145]" href="/pathways">раздел документов и статусов</Link>.
       </p>
 
       <section className="mt-10">
@@ -44,11 +44,10 @@ export default function SitemapPage() {
         <h2 className="section-title">Сервисы</h2>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {tools.map(([href, title]) => (
-            <Link key={href} href={href} className="surface-card p-5 font-bold text-[#02629f]">{title}</Link>
+            <Link key={href} href={href} className="surface-card p-5 font-bold text-[#2d5145]">{title}</Link>
           ))}
         </div>
       </section>
     </div>
   );
 }
-

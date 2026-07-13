@@ -155,7 +155,7 @@ export default function ArticleSidebar() {
       {tocGroups.length > 0 && (
         <nav data-motion-card className="article-aside-card article-toc" aria-label="Содержание статьи">
           <strong className="flex items-center gap-2">
-            <ListTree className="h-4 w-4 text-[#02629f]" /> Содержание
+            <ListTree className="article-sidebar-icon article-sidebar-icon-primary h-4 w-4" /> Содержание
           </strong>
           <ol>
             {tocGroups.map((group) => {
@@ -202,7 +202,7 @@ export default function ArticleSidebar() {
       {relatedArticles.length > 0 && (
         <div data-motion-card className="article-aside-card article-related">
           <strong className="flex items-center gap-2">
-            <Network className="h-4 w-4 text-[#ff2e32]" /> Связанные страницы
+            <Network className="article-sidebar-icon article-sidebar-icon-accent h-4 w-4" /> Связанные страницы
           </strong>
           <div className="article-related-list">
             {relatedArticles.map((article) => (
@@ -217,16 +217,16 @@ export default function ArticleSidebar() {
 
       <div data-motion-card className="article-aside-card article-status-card">
         <strong className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-[#ff2e32]" /> Материал актуализируется
+          <CheckCircle2 className="article-sidebar-icon article-sidebar-icon-accent h-4 w-4" /> Материал актуализируется
         </strong>
         <p>Мы указываем правовые основания и даты, но перед подачей документов проверяйте региональные требования.</p>
       </div>
       <div data-motion-card className="article-aside-card">
         <strong className="flex items-center gap-2">
-          <Bot className="h-4 w-4 text-[#02629f]" /> Не нашли свой случай?
+          <Bot className="article-sidebar-icon article-sidebar-icon-primary h-4 w-4" /> Не нашли свой случай?
         </strong>
         <p>ИИ-помощник найдет ответ в базе знаний и предложит связанные инструкции.</p>
-        <Link href="/tools/ai-consultant" className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-[#02629f]">
+        <Link href="/tools/ai-consultant" className="article-sidebar-action mt-3 inline-flex items-center gap-1 text-sm font-bold">
           Задать вопрос <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

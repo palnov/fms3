@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import LazyFloatingLawyerWidget from "@/components/widgets/LazyFloatingLawyerWidget";
 import { AIChatProvider } from "@/components/chat/AIChatProvider";
 import AnalyticsManager from "@/components/analytics/AnalyticsManager";
 
@@ -53,7 +52,6 @@ export default function RootLayout({
           <Header />
           <main id="main-content" className="flex-grow flex flex-col">{children}</main>
           <Footer />
-          <LazyFloatingLawyerWidget />
           <AnalyticsManager />
         </AIChatProvider>
       </body>

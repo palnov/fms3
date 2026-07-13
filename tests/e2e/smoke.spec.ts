@@ -6,7 +6,7 @@ test("renders the main public experience", async ({ page }) => {
     if (request.url().includes("/api/consultant")) consultantRequests.push(request.url());
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("законный путь");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Как житьи работатьв Россиизаконно");
   await expect(page.getByRole("navigation", { name: "Основная навигация" })).toBeAttached();
   expect(consultantRequests).toEqual([]);
 });
@@ -45,7 +45,7 @@ test("returns a genuine 404", async ({ page }) => {
 test("keeps tool controls readable under a dark OS preference", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/tools/check-rvp");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("color", "rgb(31, 44, 65)");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCSS("color", "rgb(28, 41, 37)");
   await expect(page.getByLabel("Регион подачи документов")).toBeVisible();
   await expect(page.getByLabel("Дата рождения")).toBeVisible();
   await expect(page.getByLabel("Номер документа (паспорта)")).toBeVisible();

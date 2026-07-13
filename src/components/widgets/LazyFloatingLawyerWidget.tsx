@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { MessageSquare } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const FloatingLawyerWidget = dynamic(() => import("@/components/widgets/FloatingLawyerWidget"), {
@@ -10,6 +11,7 @@ const FloatingLawyerWidget = dynamic(() => import("@/components/widgets/Floating
 
 export default function LazyFloatingLawyerWidget() {
   const [loaded, setLoaded] = useState(false);
+  const pathname = usePathname();
 
   if (loaded) return <FloatingLawyerWidget initiallyOpen />;
 
@@ -17,7 +19,7 @@ export default function LazyFloatingLawyerWidget() {
     <button
       type="button"
       onClick={() => setLoaded(true)}
-      className="fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center gap-2 rounded-xl bg-[#ff2e32] text-white shadow-[0_14px_36px_rgba(31,44,65,.18)] transition-colors hover:bg-[#d92327] sm:w-auto sm:px-4"
+      className={`floating-assistant-trigger fixed bottom-5 right-5 z-50 flex h-12 w-12 items-center justify-center gap-2 sm:w-auto sm:px-4 ${pathname === "/" ? "floating-assistant-trigger-home" : ""}`}
       aria-label="Задать вопрос ИИ"
     >
       <MessageSquare className="h-5 w-5" />
