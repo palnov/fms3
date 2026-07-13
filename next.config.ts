@@ -3,14 +3,29 @@ import createMDX from "@next/mdx";
 import remarkGfm from "remark-gfm";
 
 const isDev = process.env.NODE_ENV === "development";
+const feedotConnectSources = [
+  "https://widget.info-app5shs.ru",
+  "https://config.widget.info-app5shs.ru",
+  "https://dialog.chat.info-app5shs.ru",
+  "https://leads-reception.info-app5shs.ru",
+  "https://api.info-app5shs.ru",
+  "https://geo-db.info-app5shs.ru",
+  "https://d.my.feedot.com",
+  "https://clarification.info-app5shs.ru",
+  "https://receiver.pravoved.org",
+  "https://feedot.statsget.com",
+  "https://classification.info-app5shs.ru",
+  "https://api-text-models-feedot.eu.app-raise.org",
+  "https://runtry.servicetory.com",
+];
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://widget.info-app5shs.ru`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com",
-  "font-src 'self' data:",
-  "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com https://*.webvisor.com wss://*.webvisor.com",
-  "frame-src 'self' https://*.webvisor.com https://mc.yandex.ru https://mc.yandex.com",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://mc.yandex.ru https://mc.yandex.com https://yastatic.net ${feedotConnectSources[0]} ${feedotConnectSources[1]}`,
+  `style-src 'self' 'unsafe-inline' https://*.info-app5shs.ru`,
+  `img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.info-app5shs.ru https://*.feedot.com https://*.pravoved.org`,
+  "font-src 'self' data: https://*.info-app5shs.ru",
+  `connect-src 'self' https://mc.yandex.ru https://mc.yandex.com https://*.webvisor.com wss://*.webvisor.com ${feedotConnectSources.join(" ")}`,
+  `frame-src 'self' https://*.webvisor.com https://mc.yandex.ru https://mc.yandex.com https://*.info-app5shs.ru`,
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

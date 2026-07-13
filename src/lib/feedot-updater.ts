@@ -1,9 +1,13 @@
+import { createReadStream, createWriteStream } from "node:fs";
 import { execFile } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, type Hash } from "node:crypto";
 import { constants } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
+import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 import {
   clearFeedotDirectory,
@@ -40,7 +44,6 @@ const ALLOWED_HOSTS = [
   "info-app2.ru",
   "info-app5shs.ru",
 ];
-const MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024;
 const DOWNLOAD_TIMEOUT_MS = 60_000;
 const ARCHIVE_TIMEOUT_MS = 120_000;
 
@@ -167,12 +170,15 @@ function getOperatingSystem() {
   }
 }
 
-function md5(value: Buffer) {
-  return createHash("md5").update(value).digest("hex");
-}
-
 async function md5File(filePath: string) {
-  return md5(await fs.readFile(filePath));
+  const hash = createHash("md5");
+  const input = createReadStream(filePath);
+
+  for await (const chunk of input) {
+    hash.update(chunk);
+  }
+
+  return hash.digest("hex");
 }
 
 async function validateAction() {
@@ -253,7 +259,16 @@ function validateDownloadUrl(rawUrl: unknown) {
   return url;
 }
 
-async function downloadRemote(rawUrl: unknown) {
+function createHashingTransform(hash: Hash) {
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      hash.update(chunk);
+      callback(null, chunk);
+    },
+  });
+}
+
+async function downloadRemoteToFile(rawUrl: unknown, destination: string) {
   const url = validateDownloadUrl(rawUrl);
   let response: Response;
 
@@ -263,10 +278,7 @@ async function downloadRemote(rawUrl: unknown) {
       signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
     });
   } catch (error) {
-    throw new FeedotError("Can't download file", {
-      url: url.toString(),
-      errorMessage: error instanceof Error ? error.message : "Request failed",
-    });
+    return downloadWithCurl(url, destination, error);
   }
 
   if (!response.ok) {
@@ -280,20 +292,77 @@ async function downloadRemote(rawUrl: unknown) {
     validateDownloadUrl(response.url);
   }
 
-  const buffer = Buffer.from(await response.arrayBuffer());
-  if (buffer.length > MAX_DOWNLOAD_SIZE) {
-    throw new FeedotError("Can't download file", {
-      url: url.toString(),
-      errorMessage: "Downloaded file is too large",
-    });
+  if (!response.body) {
+    return downloadWithCurl(url, destination, new Error("Response has no body"));
+  }
+
+  const hash = createHash("md5");
+  try {
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+    await pipeline(
+      Readable.fromWeb(response.body as unknown as NodeReadableStream),
+      createHashingTransform(hash),
+      createWriteStream(destination),
+    );
+  } catch (error) {
+    await fs.rm(destination, { force: true });
+    return downloadWithCurl(url, destination, error);
   }
 
   return {
     success: true,
     httpCode: response.status,
-    hash: md5(buffer),
-    buffer,
+    hash: hash.digest("hex"),
   };
+}
+
+async function downloadWithCurl(url: URL, destination: string, fallbackReason: unknown) {
+  try {
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+    const { stdout } = await execFileAsync(
+      "curl",
+      [
+        "--silent",
+        "--show-error",
+        "--insecure",
+        "--max-time",
+        String(DOWNLOAD_TIMEOUT_MS / 1000),
+        "--output",
+        destination,
+        "--write-out",
+        "%{http_code}",
+        url.toString(),
+      ],
+      { maxBuffer: 1024 * 1024 },
+    );
+    const httpCode = Number.parseInt(stdout.trim(), 10);
+
+    if (httpCode !== 200) {
+      await fs.rm(destination, { force: true });
+      throw new FeedotError("Can't download file", {
+        url: url.toString(),
+        httpCode: Number.isNaN(httpCode) ? 0 : httpCode,
+      });
+    }
+
+    return {
+      success: true,
+      httpCode,
+      hash: await md5File(destination),
+    };
+  } catch (error) {
+    await fs.rm(destination, { force: true });
+    if (error instanceof FeedotError) {
+      throw error;
+    }
+
+    const details = error as { stderr?: string };
+    const fallbackMessage = fallbackReason instanceof Error ? fallbackReason.message : "Request failed";
+    throw new FeedotError("Can't download file", {
+      url: url.toString(),
+      errorMessage: details.stderr?.trim() || fallbackMessage,
+    });
+  }
 }
 
 function verifyHash(params: JsonRecord, actualHash: string) {
@@ -333,9 +402,8 @@ async function downloadFileAction(rawParams: unknown) {
   const temporaryFile = path.join(temporaryDirectory, path.basename(fileName));
 
   try {
-    const downloaded = await downloadRemote(params.url);
+    const downloaded = await downloadRemoteToFile(params.url, temporaryFile);
     verifyHash(params, downloaded.hash);
-    await fs.writeFile(temporaryFile, downloaded.buffer);
     result.tmpFile = {
       success: true,
       httpCode: downloaded.httpCode,
@@ -374,8 +442,9 @@ async function downloadFilesSetAction(rawParams: unknown) {
   const downloadedFiles: JsonRecord[] = [];
 
   try {
-    for (const file of files) {
-      const downloaded = await downloadRemote(file.url);
+    for (const [index, file] of files.entries()) {
+      const downloadedFile = path.join(temporaryFolder, `.download-${index}`);
+      const downloaded = await downloadRemoteToFile(file.url, downloadedFile);
       if (params.verify && typeof file.hash === "string" && file.hash && file.hash !== downloaded.hash) {
         throw new FeedotError("Hash sum of downloaded file not match", {
           url: file.url,
@@ -388,7 +457,7 @@ async function downloadFilesSetAction(rawParams: unknown) {
 
       const temporaryFile = resolveFeedotPath(temporaryFolder, file.fileName);
       await fs.mkdir(path.dirname(temporaryFile), { recursive: true });
-      await fs.writeFile(temporaryFile, downloaded.buffer);
+      await fs.rename(downloadedFile, temporaryFile);
       downloadedFiles.push({
         url: file.url,
         verify: params.verify && file.hash ? true : null,
@@ -427,9 +496,8 @@ async function downloadTarFileAction(rawParams: unknown) {
   };
 
   try {
-    const downloaded = await downloadRemote(params.url);
+    const downloaded = await downloadRemoteToFile(params.url, archivePath);
     verifyHash(params, downloaded.hash);
-    await fs.writeFile(archivePath, downloaded.buffer);
     result.tmpFile = {
       success: true,
       httpCode: downloaded.httpCode,

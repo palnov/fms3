@@ -10,6 +10,10 @@ import {
 } from "@/lib/feedot-updater";
 import { FEEDOT_FOLDER_NAME } from "@/lib/feedot-storage";
 import { GET as getFeedotAsset } from "@/app/2e32560face91b58d22a63208af38c92/[...path]/route";
+import {
+  GET as getFeedotSiteRootAsset,
+  HEAD as headFeedotSiteRootAsset,
+} from "@/app/[...path]/route";
 
 const PRIVATE_NAME = "1eff21a67161e68d4476010680e0e7ba";
 const PRIVATE_KEY = "41f4d0dbc4814826102ea6c36e1ce94c";
@@ -110,6 +114,50 @@ describe("Feedot updater protocol", () => {
       expect(fetchMock).toHaveBeenCalledOnce();
       expect(assetResponse.status).toBe(200);
       await expect(assetResponse.text()).resolves.toBe("window.feedotLoaded = true;");
+    });
+  });
+
+  it("downloads media to siteRoot and serves it at the original URL", async () => {
+    await withDataDirectory(async () => {
+      const body = new TextEncoder().encode("feedot-media");
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        url: "https://info-static.ru/media/banner.webp",
+        body: new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(body);
+            controller.close();
+          },
+        }),
+      }) as Response);
+      vi.stubGlobal("fetch", fetchMock);
+
+      const updaterResponse = await processFeedotPost(payload([{
+        method: "downloadFile",
+        params: {
+          url: "https://info-static.ru/media/banner.webp",
+          dist: "siteRoot",
+          fileName: "media/banner.webp",
+        },
+      }]));
+
+      const assetResponse = await getFeedotSiteRootAsset(
+        new Request("https://ufms-help.ru/media/banner.webp"),
+        { params: Promise.resolve({ path: ["media", "banner.webp"] }) },
+      );
+      const headResponse = await headFeedotSiteRootAsset(
+        new Request("https://ufms-help.ru/media/banner.webp", { method: "HEAD" }),
+        { params: Promise.resolve({ path: ["media", "banner.webp"] }) },
+      );
+
+      expect(updaterResponse.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledOnce();
+      expect(assetResponse.status).toBe(200);
+      expect(assetResponse.headers.get("content-type")).toBe("image/webp");
+      await expect(assetResponse.text()).resolves.toBe("feedot-media");
+      expect(headResponse.status).toBe(200);
+      await expect(headResponse.text()).resolves.toBe("");
     });
   });
 

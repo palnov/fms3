@@ -10,3 +10,11 @@ export async function GET(
   const { path: segments } = await params;
   return serveFeedotAsset(FEEDOT_SHARED_FOLDER_NAME, segments);
 }
+
+export async function HEAD(
+  _request: Request,
+  { params }: { params: Promise<{ path: string[] }> },
+) {
+  const { path: segments } = await params;
+  return serveFeedotAsset(FEEDOT_SHARED_FOLDER_NAME, segments, true);
+}

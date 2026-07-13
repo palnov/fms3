@@ -60,6 +60,10 @@ export function resolveFeedotAssetPath(
   );
 }
 
+export function resolveFeedotSiteRootPath(segments: readonly string[]) {
+  return resolveFeedotPath(getFeedotStorageRoot(), segments.join("/"));
+}
+
 export function normalizeRelativePath(value: string) {
   if (typeof value !== "string") {
     throw new Error("Invalid path");
