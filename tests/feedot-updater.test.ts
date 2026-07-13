@@ -136,7 +136,7 @@ describe("Feedot updater protocol", () => {
         params: {
           url: "https://info-static.ru/media/banner.webp",
           dist: "siteRoot",
-          fileName: "media/banner.webp",
+          fileName: "/media/banner.webp",
         },
       }]));
 

@@ -20,7 +20,6 @@ import {
   getFeedotDirectories,
   isRegularFile,
   listFeedotFiles,
-  normalizeRelativePath,
   removeFeedotPath,
   replaceFeedotPath,
   resolveFeedotPath,
@@ -89,7 +88,17 @@ function requireDistribution(value: unknown, allowed: readonly FeedotDistributio
 
 function requireFileName(value: unknown) {
   try {
-    return normalizeRelativePath(requireString(value));
+    const rawPath = requireString(value).replaceAll("\\", "/").trim();
+    const parts = rawPath.split("/").filter(Boolean);
+
+    if (
+      !parts.length ||
+      parts.some((part) => part === "." || part === ".." || /^[a-zA-Z]:$/.test(part))
+    ) {
+      throw new Error("Invalid path");
+    }
+
+    return parts.join("/");
   } catch {
     throw new FeedotError("Invalid params");
   }
