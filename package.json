@@ -11,10 +11,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "payload:migrate": "node -r ./scripts/payload-env-shim.cjs ./node_modules/tsx/dist/cli.mjs scripts/payload-migrate.mts",
-    "payload:migrate:dry": "node -r ./scripts/payload-env-shim.cjs ./node_modules/tsx/dist/cli.mjs scripts/payload-migrate.mts --dry-run",
-    "payload:migrate:create": "node -r ./scripts/payload-env-shim.cjs ./node_modules/tsx/dist/cli.mjs scripts/payload-create-migration.mts",
-    "payload:test-rules": "node -r ./scripts/payload-env-shim.cjs ./node_modules/tsx/dist/cli.mjs scripts/payload-test-rules.mts",
+    "payload:migrate": "node scripts/payload-runner.cjs scripts/payload-migrate.mts",
+    "payload:migrate:dry": "node scripts/payload-runner.cjs scripts/payload-migrate.mts --dry-run",
+    "payload:migrate:create": "node scripts/payload-runner.cjs scripts/payload-create-migration.mts",
+    "payload:test-rules": "node scripts/payload-runner.cjs scripts/payload-test-rules.mts",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
