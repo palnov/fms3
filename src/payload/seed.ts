@@ -1,4 +1,3 @@
-import { convertMarkdownToLexical, type SanitizedServerEditorConfig } from "@payloadcms/richtext-lexical";
 import type { Payload } from "payload";
 import type { DataTableDefinition, ToolDefinition } from "@/lib/no-code-runtime/types";
 
@@ -241,17 +240,31 @@ async function upsert(payload: Payload, collection: "tools" | "data-tables", whe
   return payload.create({ collection, data, overrideAccess: true });
 }
 
-export async function seedPayload(payload: Payload, force = false) {
-  const editorConfig = (payload.config.editor as { editorConfig?: SanitizedServerEditorConfig }).editorConfig;
-  if (!editorConfig) throw new Error("Payload Lexical editor config is unavailable.");
+function plainMarkdownToLexical(markdown: string) {
+  const paragraphs = markdown
+    .split(/\n\s*\n/)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map((text) => ({
+      type: "paragraph",
+      version: 1,
+      format: "",
+      indent: 0,
+      direction: "ltr",
+      children: [{ detail: 0, format: 0, mode: "normal", style: "", text, type: "text", version: 1 }],
+    }));
 
+  return { root: { type: "root", version: 1, format: "", indent: 0, direction: "ltr", children: paragraphs } };
+}
+
+export async function seedPayload(payload: Payload, force = false) {
   for (const table of DATA_TABLE_SEEDS) {
     await upsert(payload, "data-tables", "key", table.key, { ...table, sourceKey: `seed:${table.key}`, sourceTitle: "Стартовые данные проекта", _status: "published" }, force);
   }
 
   for (const seed of TOOL_SEEDS) {
     const { contentMarkdown, ...tool } = seed;
-    const content = convertMarkdownToLexical({ editorConfig, markdown: contentMarkdown });
+    const content = plainMarkdownToLexical(contentMarkdown);
     await upsert(payload, "tools", "slug", seed.slug, { ...tool, content, legacyMarkdown: contentMarkdown, sourceKey: `seed:${seed.slug}`, _status: "published" }, force);
   }
 
