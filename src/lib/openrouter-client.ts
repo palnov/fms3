@@ -33,7 +33,7 @@ function isSafetyOnlyAnswer(text: string) {
   ].some((pattern) => pattern.test(normalized));
 }
 
-export async function generateOpenRouterAnswer(prompt: string, apiKey: string) {
+export async function generateOpenRouterAnswer(prompt: string, apiKey: string, options?: { maxTokens?: number; temperature?: number }) {
   const model = getOpenRouterModel();
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -47,8 +47,8 @@ export async function generateOpenRouterAnswer(prompt: string, apiKey: string) {
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-        max_tokens: 1200,
+        temperature: options?.temperature ?? 0.3,
+        max_tokens: options?.maxTokens ?? 1200,
       }),
       signal: AbortSignal.timeout(OPENROUTER_TIMEOUT_MS),
     });

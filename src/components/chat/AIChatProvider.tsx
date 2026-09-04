@@ -21,9 +21,10 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-interface SendQuestionOptions {
+export interface SendQuestionOptions {
   context?: string;
   forceLeadForm?: boolean;
+  toolSlug?: string;
 }
 
 interface AIChatContextValue {
@@ -207,7 +208,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch("/api/consultant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, language, context: options?.context, history: requestHistory }),
+        body: JSON.stringify({ question: text, language, context: options?.context, history: requestHistory, toolSlug: options?.toolSlug }),
       });
       const data = await response.json();
 

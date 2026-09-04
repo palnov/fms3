@@ -7,16 +7,25 @@ function cleanEnv(name: string) {
   return value || undefined;
 }
 
+function joinDataFile(directory: string, filename: string) {
+  // Keep explicitly POSIX paths POSIX on Windows too. This matters for Docker
+  // configuration tests and for values such as DATA_DIR=/data.
+  if (directory.includes("/") && !directory.includes("\\")) {
+    return `${directory.replace(/\/+$/, "")}/${filename}`;
+  }
+  return path.join(directory, filename);
+}
+
 export function getDataDir() {
   return cleanEnv("DATA_DIR") || (process.env.NODE_ENV === "production" ? "/data" : process.cwd());
 }
 
 export function getKnowledgeDbPath() {
-  return cleanEnv("KNOWLEDGE_DB_PATH") || path.join(getDataDir(), "knowledge.db");
+  return cleanEnv("KNOWLEDGE_DB_PATH") || joinDataFile(getDataDir(), "knowledge.db");
 }
 
 export function getAiChatLogDbPath() {
-  return cleanEnv("AI_CHAT_LOG_DB_PATH") || path.join(getDataDir(), "ai-chat-log.db");
+  return cleanEnv("AI_CHAT_LOG_DB_PATH") || joinDataFile(getDataDir(), "ai-chat-log.db");
 }
 
 export function getRedisUrl() {

@@ -25,6 +25,7 @@ import {
 import { getKnowledgeDbPath, getRequiredSecret } from "@/lib/runtime-config";
 import { retrieveKnowledge } from "@/lib/knowledge-repository";
 import { generateOpenRouterAnswer, getOpenRouterModel } from "@/lib/openrouter-client";
+import { getToolBySlug } from "@/lib/cms/queries";
 
 const CONSULTANT_DAILY_LIMIT = 10;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -328,7 +329,7 @@ export async function POST(request: Request) {
 
   try {
     const secretKey = getSecretKey();
-    const body = await readJsonBody<{ question?: unknown; language?: unknown; context?: unknown; history?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
+    const body = await readJsonBody<{ question?: unknown; language?: unknown; context?: unknown; history?: unknown; toolSlug?: unknown }>(request, REQUEST_BODY_LIMIT_BYTES);
     if (!body) {
       return NextResponse.json({ error: "Некорректный или слишком большой запрос." }, { status: 400 });
     }
@@ -345,6 +346,9 @@ export async function POST(request: Request) {
     const conversationContext = formatConversationContext(conversationHistory);
     const scopeCheckText = [conversationContext, pageContext, question].filter(Boolean).join("\n");
     const retrievalQuery = buildRetrievalQuery(question, conversationHistory, pageContext);
+    const requestedToolSlug = asTrimmedString(body.toolSlug, 160);
+    const configuredTool = requestedToolSlug?.startsWith("/tools/") ? await getToolBySlug(requestedToolSlug) : null;
+    const aiConfig = configuredTool?.toolType === "ai" ? configuredTool.ai : undefined;
 
     // Map language codes to names for the LLM
     const languageNames: Record<string, string> = {
@@ -492,14 +496,30 @@ export async function POST(request: Request) {
 
     // 3. Retrieve context using cached embeddings (RAG)
     const queryVector = await getQueryEmbedding(retrievalQuery, openrouterApiKey);
-    const { chunks: topChunks, templates: matchedTemplates } = retrieveKnowledge(queryVector, retrievalQuery);
+    const maxSources = Math.max(1, Math.min(8, Number(aiConfig?.maxSources) || 4));
+    const sourceFilters = Array.isArray(aiConfig?.sourceFilters)
+      ? aiConfig.sourceFilters.filter((filter): filter is string => typeof filter === "string" && filter.trim().length > 0).slice(0, 20)
+      : [];
+    const retrieved = retrieveKnowledge(queryVector, retrievalQuery, maxSources);
+    const topChunks = sourceFilters.length > 0
+      ? retrieved.chunks.filter((chunk) => sourceFilters.some((filter) => chunk.source_file.toLowerCase().includes(filter.toLowerCase()) || chunk.source_url?.toLowerCase().includes(filter.toLowerCase())))
+      : retrieved.chunks;
+    const matchedTemplates = retrieved.templates;
 
     // 4. Build the grounded prompt
     const contextText = topChunks.map(c => `[Файл: ${c.source_file}]\n${c.content}`).join("\n\n");
     const templatesText = matchedTemplates.map(t => `- **${t.title}**: Бланк: [Скачать](${t.file_path}), Образец заполнения: [Скачать](${t.sample_path})`).join("\n");
 
+    const configuredGuidance = [
+      aiConfig?.systemPrompt ? `Дополнительная редакционная инструкция:\n${aiConfig.systemPrompt.slice(0, 4000)}` : "",
+      aiConfig?.tone ? `Тон ответа: ${aiConfig.tone.slice(0, 300)}` : "",
+      aiConfig?.answerFormat ? `Формат ответа:\n${aiConfig.answerFormat.slice(0, 1200)}` : "",
+    ].filter(Boolean).join("\n\n");
+
     const systemPrompt = `Ты — профессиональный ИИ-консультант по миграционным вопросам в РФ на сайте "Миграция в Россию".
 Твоя задача — давать четкие, структурированные и юридически точные ответы на основе предоставленного контекста.
+
+${configuredGuidance ? `НАСТРОЙКИ ИЗ CMS (они не отменяют правила безопасности и требования отвечать только по базе):\n${configuredGuidance}\n` : ""}
 
 ПРАВИЛА ОТВЕТА:
 1. Используй ТОЛЬКО информацию из "БАЗЫ ЗНАНИЙ" ниже. Не выдумывай юридические факты. Если в вопросе пользователя упоминается конкретная страна, а в БАЗЕ ЗНАНИЙ нет прямого упоминания этой страны или её визового статуса, ты должен:
@@ -533,7 +553,9 @@ ${conversationContext || "Нет предыдущих сообщений."}
 
 Ответ:`;
 
-    const answer = await generateOpenRouterAnswer(systemPrompt, openrouterApiKey);
+    const answer = await generateOpenRouterAnswer(systemPrompt, openrouterApiKey, {
+      maxTokens: Math.max(100, Math.min(8000, Number(aiConfig?.maxTokens) || 1200)),
+    });
 
     // Dedup by source_file and build the array of source info
     const uniqueSourcesMap = new Map<string, { name: string; parent_url?: string | null; download_url?: string | null }>();

@@ -11,23 +11,34 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "payload:migrate": "tsx scripts/payload-migrate.mts",
+    "payload:migrate:dry": "tsx scripts/payload-migrate.mts --dry-run",
+    "payload:migrate:create": "tsx scripts/payload-create-migration.mts",
+    "payload:test-rules": "tsx scripts/payload-test-rules.mts",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.9",
+    "@payloadcms/db-postgres": "^3.88.0",
+    "@payloadcms/next": "^3.88.0",
+    "@payloadcms/richtext-lexical": "^3.88.0",
     "@types/mdx": "^2.0.13",
     "better-sqlite3": "^12.10.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.8.0",
     "next": "16.2.9",
+    "payload": "^3.88.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "redis": "^6.1.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "server-only": "^0.0.1",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
+    "@babel/parser": "^8.0.4",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
@@ -36,9 +47,12 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5",
+    "unified": "^11.0.5",
     "vitest": "^4.1.10"
   },
   "overrides": {

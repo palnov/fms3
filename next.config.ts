@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
+import { withPayload } from "@payloadcms/next/withPayload";
 import remarkGfm from "remark-gfm";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -130,4 +131,4 @@ const withMDX = createMDX({
   },
 });
 
-export default withMDX(nextConfig);
+export default withPayload(withMDX(nextConfig));

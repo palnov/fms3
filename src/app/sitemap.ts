@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PUBLIC_ROUTES } from "@/lib/public-routes";
+import { getPublishedContentPaths } from "@/lib/cms/queries";
 import { getSiteOrigin } from "@/lib/runtime-config";
 
 const LAST_MODIFIED: Partial<Record<(typeof PUBLIC_ROUTES)[number][0], string>> = {
@@ -22,12 +23,26 @@ const LAST_MODIFIED: Partial<Record<(typeof PUBLIC_ROUTES)[number][0], string>> 
   "/legal/controlled-persons-register/removal": "2026-07-10",
 };
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteOrigin();
-  return PUBLIC_ROUTES.map(([path, changeFrequency, priority]) => ({
-    url: `${siteUrl}${path}`,
+  const staticEntries = PUBLIC_ROUTES.map(([path, changeFrequency, priority]) => ({
+    url: `${siteUrl}${path || "/"}`,
     lastModified: LAST_MODIFIED[path],
     changeFrequency,
     priority,
   }));
+  const staticPaths = new Set<string>(PUBLIC_ROUTES.map(([path]) => path || "/"));
+  const cmsPaths = await getPublishedContentPaths();
+  const dynamicEntries = [...cmsPaths.pages, ...cmsPaths.tools]
+    .filter(({ path }) => !staticPaths.has(path || "/"))
+    .map(({ path, updatedAt }) => ({
+      url: `${siteUrl}${path}`,
+      lastModified: updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: path.startsWith("/tools/") ? 0.7 : 0.6,
+    }));
+
+  return [...staticEntries, ...dynamicEntries];
 }

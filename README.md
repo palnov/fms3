@@ -6,6 +6,7 @@
 
 - Next.js 16 App Router, React 19, TypeScript
 - Tailwind CSS 4 и MDX
+- Payload CMS 3 с PostgreSQL: контент, SEO, медиа и no-code инструменты
 - SQLite (`better-sqlite3`) для локальной базы знаний
 - OpenRouter для embeddings и генерации ответов
 
@@ -19,6 +20,14 @@ npm run dev
 
 Откройте [http://localhost:3000](http://localhost:3000).
 
+Payload использует PostgreSQL. Перед первым запуском CMS укажите `DATABASE_URL` и `PAYLOAD_SECRET`, затем примените схему и стартовые данные:
+
+```bash
+npm run payload:migrate
+```
+
+После этого откройте [http://localhost:3000/cms](http://localhost:3000/cms) и создайте первого пользователя-администратора. Без `DATABASE_URL` сайт продолжает работать на сохранённых legacy-страницах, поэтому локальную разработку интерфейса можно вести и без PostgreSQL.
+
 Для работы ИИ-консультанта нужны Redis, `JWT_SECRET`, `RATE_LIMIT_SECRET`, `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` и подготовленный `knowledge.db`. Для админ-журнала нужен `ADMIN_SECRET`. Для отправки лидов нужны `PRAVOVED_REFERRAL_ID` и `PRAVOVED_SECRET`.
 
 ## Команды
@@ -31,8 +40,21 @@ npm run test      # unit/integration tests
 npm run build     # production build
 npm run start     # запуск production build
 npm run test:e2e  # Playwright после production build
+npm run payload:migrate:dry # проверить разбор legacy MDX без БД
+npm run payload:test-rules  # прогнать опубликованные тесты no-code правил
 npm run check     # lint + types + tests + build
 ```
+
+Для изменения схемы Payload в окружении с PostgreSQL создайте миграцию командой `npm run payload:migrate:create -- имя_изменения`, закоммитьте файлы из `migrations/`, а при релизе применяйте их до запуска приложения. В репозитории уже есть начальная схема Payload и миграция поля главной страницы. Команда `payload:migrate` также выполняет накопленные миграции и бережно импортирует исходный контент: существующие вручную отредактированные CMS-документы не перезаписываются без флага `--force`.
+
+## CMS и no-code инструменты
+
+- `/cms` — админка Payload; `/api/cms` — её внутренний REST API.
+- Коллекция `Pages` хранит информационные страницы, SEO-поля, rich text, служебные блоки и исходный Markdown для контроля миграции.
+- Коллекция `Tools` хранит все URL из `/tools/*`, поля форм, сценарные шаги, условия, формулы, результаты, тексты интерфейса, настройки AI и безопасные маппинги интеграций.
+- `DataTables` хранит изменяемые ставки и справочники. `RuleTestCases` позволяет держать проверяемые примеры для опубликованных калькуляторов.
+
+Чтобы создать новый калькулятор или сценарий без изменения кода, создайте запись в `Tools`, задайте URL `/tools/...`, выберите тип `calculator` или `scenario`, добавьте поля формы, формулы и результаты, затем опубликуйте документ. Условия задаются JSON-AST (`equals`, `in`, `and`, `or`, `not` и т. д.), а вычисления выполняются ограниченным интерпретатором без `eval` и `new Function`. Чек-листы настраиваются пунктами, группами и условиями; AI — системной инструкцией, тоном, форматом, фильтрами источников и лимитами; проверки — только через разрешённые адаптеры и маппинг полей, без хранения произвольных URL или секретов в CMS.
 
 ## Основные разделы
 
@@ -85,6 +107,8 @@ KNOWLEDGE_DB_PATH=/data/knowledge.db
 AI_CHAT_LOG_DB_PATH=/data/ai-chat-log.db
 AI_CHAT_LOG_RETENTION_DAYS=60
 REDIS_URL=redis://redis:6379
+DATABASE_URL=postgresql://payload:<password>@postgres:5432/fms3
+PAYLOAD_SECRET=<отдельная случайная строка не короче 32 символов>
 
 JWT_SECRET=<случайная строка не короче 32 символов>
 RATE_LIMIT_SECRET=<другая случайная строка не короче 32 символов>
@@ -97,6 +121,16 @@ PRAVOVED_SECRET=<secret>
 ```
 
 Не используйте одинаковое значение для трёх локальных secrets.
+
+Перед первым production-запуском примените Payload-миграции:
+
+```bash
+NODE_ENV=production npm run payload:migrate
+```
+
+Команда должна выполняться с теми же `DATABASE_URL` и `PAYLOAD_SECRET`, которые использует приложение. Не включайте `--force` в обычном деплое: он предназначен для намеренной повторной загрузки seed-каталога.
+
+В multi-stage Docker image запускается только Next.js standalone runtime, поэтому миграцию выполняйте отдельным pre-deploy шагом CI/CD или из checkout репозитория до старта контейнера. Каталог `/data` смонтирован как volume и используется для медиа Payload и локальных данных приложения.
 
 ### 4. Healthcheck
 
