@@ -189,7 +189,13 @@ export const validateTool: CollectionBeforeValidateHook = ({ data, originalDoc }
   }
   validateFieldDefinitions(tool.fields);
   validateFormulas(tool.formulas);
-  validateSteps(tool.steps);
+  const steps = Array.isArray(tool.steps)
+    ? tool.steps.map((item) => {
+      const step = asRecord(item);
+      return step ? { ...step, id: step.stepId ?? step.id } : item;
+    })
+    : tool.steps;
+  validateSteps(steps);
   validateResults(tool.results);
   return data;
 };

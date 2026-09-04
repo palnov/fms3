@@ -67,6 +67,20 @@ function toSerializable<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function normalizeCmsTool(value: unknown): CmsTool {
+  const tool = toSerializable(value) as Record<string, unknown>;
+  if (!Array.isArray(tool.steps)) return tool as unknown as CmsTool;
+
+  const steps = tool.steps.map((value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+    const step = value as Record<string, unknown>;
+    const { stepId, ...rest } = step;
+    return { ...rest, id: typeof stepId === "string" ? stepId : rest.id };
+  });
+
+  return { ...tool, steps } as unknown as CmsTool;
+}
+
 async function findPageByPath(path: string): Promise<CmsPage | null> {
   if (!isPayloadEnabled()) return null;
 
@@ -145,7 +159,7 @@ async function findToolBySlug(slug: string): Promise<CmsTool | null> {
       limit: 1,
       where: { slug: { equals: slug }, _status: { equals: "published" } },
     });
-    return result.docs[0] ? toSerializable(result.docs[0]) as unknown as CmsTool : null;
+    return result.docs[0] ? normalizeCmsTool(result.docs[0]) : null;
   } catch {
     return null;
   }
@@ -164,7 +178,7 @@ async function findToolDraftBySlug(slug: string): Promise<CmsTool | null> {
       overrideAccess: true,
       where: { slug: { equals: slug } },
     });
-    return result.docs[0] ? toSerializable(result.docs[0]) as unknown as CmsTool : null;
+    return result.docs[0] ? normalizeCmsTool(result.docs[0]) : null;
   } catch {
     return null;
   }

@@ -263,9 +263,10 @@ export async function seedPayload(payload: Payload, force = false) {
   }
 
   for (const seed of TOOL_SEEDS) {
-    const { contentMarkdown, ...tool } = seed;
+    const { contentMarkdown, steps: runtimeSteps, ...tool } = seed;
+    const steps = runtimeSteps?.map(({ id: stepId, ...step }) => ({ ...step, stepId }));
     const content = plainMarkdownToLexical(contentMarkdown);
-    await upsert(payload, "tools", "slug", seed.slug, { ...tool, content, legacyMarkdown: contentMarkdown, sourceKey: `seed:${seed.slug}`, _status: "published" }, force);
+    await upsert(payload, "tools", "slug", seed.slug, { ...tool, ...(steps ? { steps } : {}), content, legacyMarkdown: contentMarkdown, sourceKey: `seed:${seed.slug}`, _status: "published" }, force);
   }
 
   for (const test of RULE_TEST_SEEDS) {

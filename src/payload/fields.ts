@@ -150,7 +150,7 @@ export const toolDefinitionFields = (): Field[] => [
     type: "array",
     label: "Шаги сценария",
     fields: [
-      { name: "id", type: "text", label: "ID шага", required: true },
+      { name: "stepId", type: "text", label: "Ключ шага", required: true, admin: { description: "Уникальный ключ внутри этого сценария. Используйте его в полях «Следующий шаг» и «Куда перейти»." } },
       {
         name: "type",
         type: "select",
