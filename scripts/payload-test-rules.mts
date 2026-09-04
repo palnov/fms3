@@ -1,7 +1,6 @@
 import { getPayload } from "payload";
 import { evaluateTool } from "../src/lib/no-code-runtime/evaluator";
 import type { DataTableDefinition, InputValue, ToolDefinition } from "../src/lib/no-code-runtime/types";
-import { normalizeDataTableRows } from "../src/lib/cms/queries";
 
 type RuleTest = {
   id: string;
@@ -25,6 +24,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isInputValue(value: unknown): value is InputValue {
   return value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean" || (Array.isArray(value) && value.every((item) => typeof item === "string"));
+}
+
+function normalizeDataTableRows(rows: unknown): DataTableDefinition["rows"] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((row) => {
+    const source = row && typeof row === "object" ? row as Record<string, unknown> : {};
+    const values = source.values && typeof source.values === "object" ? source.values as Record<string, InputValue> : {};
+    return {
+      key: typeof source.key === "string" ? source.key : "",
+      effectiveFrom: typeof source.effectiveFrom === "string" ? source.effectiveFrom : undefined,
+      effectiveTo: typeof source.effectiveTo === "string" ? source.effectiveTo : undefined,
+      values,
+    };
+  });
 }
 
 function valuesMatch(actual: unknown, expected: unknown): boolean {
