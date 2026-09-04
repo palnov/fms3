@@ -1,5 +1,10 @@
-const nextEnv = require("@next/env");
+const Module = require("node:module");
+const originalLoad = Module._load;
 
-if (!nextEnv.default) {
-  nextEnv.default = nextEnv;
-}
+Module._load = function loadWithNextEnvInterop(request, parent, isMain) {
+  const loaded = originalLoad.call(this, request, parent, isMain);
+  if (request === "@next/env" && loaded && loaded.__esModule && !loaded.default) {
+    return { ...loaded, default: loaded, __esModule: false };
+  }
+  return loaded;
+};
