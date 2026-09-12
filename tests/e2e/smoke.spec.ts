@@ -6,7 +6,19 @@ test("renders the main public experience", async ({ page }) => {
     if (request.url().includes("/api/consultant")) consultantRequests.push(request.url());
   });
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Как житьи работатьв Россиизаконно");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Как жить и работать в России законно");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole("img", { name: "Паспорт России, РВП и вид на жительство" })).toBeVisible();
+  await expect(page.getByText("Подходящий вариант найден")).toHaveCount(0);
+  await expect(page.getByText("05 шагов до подачи")).toHaveCount(0);
+  await expect(page.getByText("Главный кластер")).toHaveCount(0);
+  await expect(page.locator('a[href="/pathways/vnzh"]')).not.toHaveCount(0);
+  await expect(page.locator('a[href="/pathways/rvp"]')).not.toHaveCount(0);
+  await expect(page.locator('a[href="/pathways/citizenship"]')).not.toHaveCount(0);
+  await expect(page.locator('a[href="/pathways/work/patent"]')).not.toHaveCount(0);
+  for (const id of ["situations", "tools", "statuses", "guides", "updates", "faq"]) {
+    await expect(page.locator(`#${id}`)).toBeAttached();
+  }
   await expect(page.getByRole("navigation", { name: "Основная навигация" })).toBeAttached();
   expect(consultantRequests).toEqual([]);
 });

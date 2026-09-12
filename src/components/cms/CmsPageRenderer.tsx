@@ -32,7 +32,7 @@ export function cmsPageMetadata(page: CmsPage): Metadata {
     alternates: canonical ? { canonical } : undefined,
     robots: seo?.noIndex ? { index: false, follow: false } : undefined,
     openGraph: {
-      type: "article",
+      type: page.path === "/" ? "website" : "article",
       url: canonical,
       title,
       description,

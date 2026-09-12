@@ -9,6 +9,9 @@ export type HomeContent = {
   heroPrimaryHref: string;
   heroSecondaryLabel: string;
   heroSecondaryHref: string;
+  editorialLabel: string;
+  editorialHref: string;
+  editorialText: string;
   trustItems: Array<{ title: string; text: string }>;
   situationsEyebrow: string;
   situationsTitle: string;
@@ -52,11 +55,14 @@ export type HomeContent = {
 export const DEFAULT_HOME_CONTENT: HomeContent = {
   heroEyebrow: "Миграционное право · редакция 2026",
   heroTitleLines: ["Как жить", "и работать", "в России", "законно"],
-  heroLead: "Понятные инструкции для иностранных граждан: как приехать, оформить документы и остаться в России.",
+  heroLead: "РВП, вид на жительство, гражданство и работа в России: основания, документы, сроки и порядок оформления для иностранных граждан.",
   heroPrimaryLabel: "Выбрать свою ситуацию",
   heroPrimaryHref: "#situations",
   heroSecondaryLabel: "Посмотреть инструкции",
   heroSecondaryHref: "/pathways",
+  editorialLabel: "Независимый миграционный справочник",
+  editorialHref: "/editorial-policy",
+  editorialText: "Справочник помогает разобраться в миграционных документах и порядке оформления. Узнайте, как мы работаем с источниками.",
   trustItems: [
     { title: "2026", text: "актуальная редакция" },
     { title: "115-ФЗ", text: "правовые основания" },
@@ -74,7 +80,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     { icon: "map", title: "Другой случай", text: "Квота на РВП и оформление без льгот", href: "/pathways/rvp/quota" },
   ],
   statusesEyebrow: "РВП, ВНЖ и гражданство",
-  statusesTitle: "Что можно оформить для жизни в России",
+  statusesTitle: "РВП, ВНЖ и гражданство России",
   statusesText: "Выберите нужный документ и узнайте требования, сроки и порядок оформления.",
   statusPrimary: { label: "Главный кластер", title: "Вид на жительство", text: "Основания, документы, сроки, обязанности после получения и частые ошибки.", linkLabel: "Как получить ВНЖ", href: "/pathways/vnzh" },
   statusSteps: [
@@ -95,7 +101,7 @@ export const DEFAULT_HOME_CONTENT: HomeContent = {
     { date: "Актуальный разбор", title: "Реестр контролируемых лиц", text: "Что означает включение в реестр и где проверять официальную информацию.", href: "/legal/controlled-persons-register" },
   ],
   toolsEyebrow: "Практические сервисы",
-  toolsTitle: "Узнайте, какие документы вам нужны",
+  toolsTitle: "Проверки и сервисы для документов",
   toolsText: "Ответьте на несколько вопросов, проверьте сроки и соберите документы для подачи.",
   tools: [
     { icon: "compass", diagram: "path", label: "С чего начать", title: "Подобрать документы и порядок действий", text: "Ответьте на несколько вопросов. Сервис подскажет, что можно оформить, какие документы собрать и что делать дальше.", href: "/tools/path-finder", featured: true },
@@ -174,6 +180,7 @@ export function normalizeHomeContent(value: unknown): HomeContent {
   const result = { ...DEFAULT_HOME_CONTENT } as HomeContent;
   for (const key of [
     "heroEyebrow", "heroLead", "heroPrimaryLabel", "heroPrimaryHref", "heroSecondaryLabel", "heroSecondaryHref",
+    "editorialLabel", "editorialHref", "editorialText",
     "situationsEyebrow", "situationsTitle", "situationsText", "statusesEyebrow", "statusesTitle", "statusesText",
     "statusLegalLabel", "statusLegalTitle", "statusLegalHref", "updatesEyebrow", "updatesTitle", "updatesText",
     "toolsEyebrow", "toolsTitle", "toolsText", "checksEyebrow", "checksTitle", "guidesEyebrow", "featuredGuideTitle",
