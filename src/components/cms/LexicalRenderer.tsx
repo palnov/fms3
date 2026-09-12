@@ -10,6 +10,7 @@ import {
   Warning,
 } from "@/components/mdx/ContentBlocks";
 import ConsultationBanner from "@/components/mdx/ConsultationBanner";
+import { containsLegacyBlockTokens, restoreLegacyBlocks } from "@/lib/cms/legacy-blocks";
 import type { CmsPage } from "@/lib/cms/queries";
 
 type LexicalNode = {
@@ -117,6 +118,7 @@ function isLinkCard(item: unknown): item is { href: string; title: string; descr
 function renderNode(node: LexicalNode, key: string, path: string): React.ReactNode {
   if (node.type === "block" || node.blockType) return renderBlock(node, key, path);
   if (node.type === "text" || node.type === "link" || node.type === "autolink" || node.type === "linebreak") return renderInline(node, key);
+  if (node.type === "paragraph" && containsLegacyBlockTokens(node)) return null;
 
   const children = (node.children ?? []).map((child, index) => renderNode(child, `${key}-${index}`, path));
   switch (node.type) {
@@ -155,7 +157,8 @@ function getRootChildren(content: unknown): LexicalNode[] {
 }
 
 export default function LexicalRenderer({ page }: { page: CmsPage }) {
-  const nodes = getRootChildren(page.content);
+  const content = restoreLegacyBlocks(page.content, page.legacyMarkdown);
+  const nodes = getRootChildren(content);
   if (nodes.length > 0) return <>{nodes.map((node, index) => renderNode(node, String(index), page.path))}</>;
   return <>{renderText(page.legacyMarkdown)}</>;
 }

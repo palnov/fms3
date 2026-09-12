@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 import configPromise from "@payload-config";
 import type { DataTableDefinition, InputValue, ToolDefinition } from "@/lib/no-code-runtime/types";
+import { restoreLegacyBlocks } from "@/lib/cms/legacy-blocks";
 
 export type CmsSeo = {
   title?: string;
@@ -67,6 +68,12 @@ function toSerializable<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
+function normalizeCmsPage(value: unknown): CmsPage {
+  const page = toSerializable(value) as CmsPage;
+  page.content = restoreLegacyBlocks(page.content, page.legacyMarkdown);
+  return page;
+}
+
 function normalizeCmsTool(value: unknown): CmsTool {
   const tool = toSerializable(value) as Record<string, unknown>;
   if (!Array.isArray(tool.steps)) return tool as unknown as CmsTool;
@@ -92,7 +99,7 @@ async function findPageByPath(path: string): Promise<CmsPage | null> {
       limit: 1,
       where: { path: { equals: path }, _status: { equals: "published" } },
     });
-    return result.docs[0] ? toSerializable(result.docs[0]) as unknown as CmsPage : null;
+    return result.docs[0] ? normalizeCmsPage(result.docs[0]) : null;
   } catch {
     return null;
   }
@@ -111,7 +118,7 @@ async function findPageDraftByPath(path: string): Promise<CmsPage | null> {
       overrideAccess: true,
       where: { path: { equals: path } },
     });
-    return result.docs[0] ? toSerializable(result.docs[0]) as unknown as CmsPage : null;
+    return result.docs[0] ? normalizeCmsPage(result.docs[0]) : null;
   } catch {
     return null;
   }

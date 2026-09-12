@@ -31,6 +31,8 @@ test("renders the main public experience", async ({ page }) => {
 test("renders an MDX article", async ({ page }) => {
   await page.goto("/pathways/vnzh");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Вид на жительство");
+  await expect(page.getByText(/CMS_BLOCK_\d+/i)).toHaveCount(0);
+  await expect(page.locator(".article-next-step-banner").first()).toBeVisible();
 });
 
 test("does not scroll an article to restored consultant messages", async ({ page }) => {

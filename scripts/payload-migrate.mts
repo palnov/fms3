@@ -199,7 +199,7 @@ function readLiteralAst(node: AstRecord & { properties?: unknown[]; elements?: u
     const result: Record<string, unknown> = {};
     for (const property of node.properties ?? []) {
       const item = property as AstRecord & { key?: AstRecord; value?: AstRecord; type?: string; computed?: boolean };
-      if (item.type !== "ObjectProperty" || item.computed || !item.key || !item.value) continue;
+      if (!["ObjectProperty", "Property"].includes(item.type ?? "") || item.computed || !item.key || !item.value) continue;
       const key = item.key.value ?? item.key.name;
       if (typeof key === "string") result[key] = readLiteralAst(item.value as AstRecord & { properties?: unknown[]; elements?: unknown[] });
     }
@@ -263,6 +263,7 @@ function replaceBlockTokens(content: unknown, blocks: MigratedBlock[]): unknown 
     if (block) return { type: "block", version: 2, fields: { ...block.fields, id: `migration-${block.token.toLowerCase()}` } };
   }
   if (Array.isArray(node.children)) node.children = node.children.map((child) => replaceBlockTokens(child, blocks));
+  if (node.root && typeof node.root === "object") node.root = replaceBlockTokens(node.root, blocks);
   return node;
 }
 
