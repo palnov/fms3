@@ -57,7 +57,7 @@ export default function HomeDocumentsIllustration() {
             <text x="145" y="227" fill="#5c7869" fontFamily="Arial, sans-serif" fontSize="6" textAnchor="middle" letterSpacing=".8">ДОКУМЕНТ</text>
           </g>
 
-          <g transform="translate(345 98) rotate(9 100 145)" filter="url(#home-document-shadow)">
+          <g transform="translate(322 98) rotate(9 100 145)" filter="url(#home-document-shadow)">
             <rect width="200" height="290" rx="18" fill="url(#home-vnzh-cover)" />
             <rect x="10" y="10" width="180" height="270" rx="12" fill="none" stroke="#091d31" strokeOpacity=".7" />
             <text x="100" y="39" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">РОССИЙСКАЯ</text>
@@ -67,7 +67,7 @@ export default function HomeDocumentsIllustration() {
             <text x="100" y="225" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="9.5" fontWeight="700" textAnchor="middle" letterSpacing=".2">ИНОСТРАННОГО ГРАЖДАНИНА</text>
           </g>
 
-          <g transform="translate(150 48) rotate(-4 108 160)" filter="url(#home-document-shadow)">
+          <g transform="translate(172 48) rotate(-4 108 160)" filter="url(#home-document-shadow)">
             <rect width="216" height="320" rx="20" fill="url(#home-passport-cover)" />
             <rect width="216" height="320" rx="20" fill="url(#home-passport-texture)" />
             <rect x="10" y="10" width="196" height="300" rx="14" fill="none" stroke="#160d0f" strokeOpacity=".36" />
