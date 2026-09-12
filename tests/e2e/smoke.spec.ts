@@ -8,7 +8,12 @@ test("renders the main public experience", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Как жить и работать в России законно");
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-  await expect(page.getByRole("img", { name: "Паспорт России, РВП и вид на жительство" })).toBeVisible();
+  const documents = page.getByRole("img", { name: "Паспорт России, РВП и вид на жительство" });
+  await expect(documents).toBeVisible();
+  await expect(documents.locator('text').filter({ hasText: "ВИД НА ЖИТЕЛЬСТВО" })).toBeAttached();
+  await expect(documents.locator('text').filter({ hasText: "ИНОСТРАННОГО ГРАЖДАНИНА" })).toBeAttached();
+  await expect(documents.locator('text').filter({ hasText: "РАЗРЕШЕНО" })).toBeAttached();
+  await expect(documents.locator('path[d="M24 78h152M24 222h152"]')).toHaveCount(0);
   await expect(page.getByText("МС", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Независимый миграционный справочник", { exact: true })).toHaveCount(0);
   await expect(page.locator('[data-motion="hero-copy"] a[href="/editorial-policy"]')).toHaveCount(0);

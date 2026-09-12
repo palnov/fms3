@@ -21,6 +21,11 @@ export default function HomeDocumentsIllustration() {
             <stop offset=".55" stopColor="#493035" />
             <stop offset="1" stopColor="#322125" />
           </linearGradient>
+          <linearGradient id="home-vnzh-cover" x1="0" y1="0" x2="1" y2="1">
+            <stop stopColor="#204d78" />
+            <stop offset=".55" stopColor="#173957" />
+            <stop offset="1" stopColor="#0d263f" />
+          </linearGradient>
           <pattern id="home-passport-texture" width="7" height="7" patternUnits="userSpaceOnUse">
             <path d="M0 1h7M1 0v7" stroke="#fff" strokeOpacity=".025" strokeWidth=".55" />
           </pattern>
@@ -43,23 +48,26 @@ export default function HomeDocumentsIllustration() {
             <text x="100" y="84" fill="#26342e" fontFamily="Arial, sans-serif" fontSize="10" textAnchor="middle">НА ВРЕМЕННОЕ</text>
             <text x="100" y="99" fill="#26342e" fontFamily="Arial, sans-serif" fontSize="10" textAnchor="middle">ПРОЖИВАНИЕ</text>
             <path d="M28 123h144M28 139h104M28 155h144M28 171h86" stroke="#7e9488" strokeWidth="1" opacity=".55" />
+            <g transform="rotate(-7 69 218)" opacity=".92">
+              <rect x="25" y="199" width="88" height="38" rx="2" fill="#2b6597" fillOpacity=".08" stroke="#2b6597" strokeWidth="2.7" />
+              <text x="69" y="222" fill="#2b6597" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing=".45">РАЗРЕШЕНО</text>
+            </g>
             <circle cx="145" cy="216" r="27" fill="none" stroke="#5c7869" strokeWidth="2" opacity=".72" />
             <text x="145" y="213" fill="#5c7869" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="700" textAnchor="middle">РВП</text>
             <text x="145" y="227" fill="#5c7869" fontFamily="Arial, sans-serif" fontSize="6" textAnchor="middle" letterSpacing=".8">ДОКУМЕНТ</text>
           </g>
 
-          <g transform="translate(322 98) rotate(9 100 145)" filter="url(#home-document-shadow)">
-            <rect width="200" height="290" rx="18" fill="#30483e" />
-            <rect x="10" y="10" width="180" height="270" rx="12" fill="none" stroke="#17261f" strokeOpacity=".65" />
-            <path d="M24 78h152M24 222h152" stroke="#c8aa70" strokeOpacity=".4" />
+          <g transform="translate(345 98) rotate(9 100 145)" filter="url(#home-document-shadow)">
+            <rect width="200" height="290" rx="18" fill="url(#home-vnzh-cover)" />
+            <rect x="10" y="10" width="180" height="270" rx="12" fill="none" stroke="#091d31" strokeOpacity=".7" />
             <text x="100" y="39" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">РОССИЙСКАЯ</text>
             <text x="100" y="55" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">ФЕДЕРАЦИЯ</text>
-            <text x="100" y="105" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="700" textAnchor="middle">ВИД НА ЖИТЕЛЬСТВО</text>
-            <image href="/illustrations/russian-coat-of-arms.png" x="52" y="100" width="96" height="96" preserveAspectRatio="xMidYMid meet" filter="url(#home-passport-gold)" />
-            <text x="100" y="253" fill="#d4b978" fontFamily="Georgia, serif" fontSize="16" fontWeight="700" textAnchor="middle" letterSpacing="2.4">ВНЖ</text>
+            <image href="/illustrations/russian-coat-of-arms.png" x="52" y="78" width="96" height="96" preserveAspectRatio="xMidYMid meet" filter="url(#home-passport-gold)" />
+            <text x="100" y="207" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="10.5" fontWeight="700" textAnchor="middle" letterSpacing=".45">ВИД НА ЖИТЕЛЬСТВО</text>
+            <text x="100" y="225" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="9.5" fontWeight="700" textAnchor="middle" letterSpacing=".2">ИНОСТРАННОГО ГРАЖДАНИНА</text>
           </g>
 
-          <g transform="translate(172 48) rotate(-4 108 160)" filter="url(#home-document-shadow)">
+          <g transform="translate(150 48) rotate(-4 108 160)" filter="url(#home-document-shadow)">
             <rect width="216" height="320" rx="20" fill="url(#home-passport-cover)" />
             <rect width="216" height="320" rx="20" fill="url(#home-passport-texture)" />
             <rect x="10" y="10" width="196" height="300" rx="14" fill="none" stroke="#160d0f" strokeOpacity=".36" />
