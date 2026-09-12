@@ -4,7 +4,7 @@ declare module "@payloadcms/next/layouts" {
   export const RootLayout: ComponentType<{
     children: ReactNode;
     config: Promise<unknown>;
-    importMap?: unknown;
+    importMap: unknown;
     serverFunction?: unknown;
   }>;
   export const handleServerFunctions: unknown;
@@ -26,7 +26,12 @@ declare module "@payloadcms/next/routes" {
 declare module "@payloadcms/next/views" {
   import type { ComponentType } from "react";
 
-  export const RootPage: ComponentType<Record<string, unknown>>;
-  export const NotFoundPage: ComponentType<Record<string, unknown>>;
-  export const generatePageMetadata: (args: Record<string, unknown>) => Promise<unknown>;
+  type PayloadViewProps = Record<string, unknown> & {
+    config: Promise<unknown>;
+    importMap: unknown;
+  };
+
+  export const RootPage: ComponentType<PayloadViewProps>;
+  export const NotFoundPage: ComponentType<PayloadViewProps>;
+  export const generatePageMetadata: (args: PayloadViewProps) => Promise<unknown>;
 }

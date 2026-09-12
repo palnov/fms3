@@ -15,7 +15,12 @@ const links = [
   { href: "/pathways", label: "Все инструкции" },
 ];
 
-export default function Header() {
+type HeaderProps = {
+  siteName?: string;
+  partnerPhone?: string;
+};
+
+export default function Header({ siteName = "Миграционный справочник", partnerPhone = PARTNER_PHONE }: HeaderProps) {
   const pathname = usePathname();
   const isPublic = !pathname.startsWith("/admin");
   const router = useRouter();
@@ -95,8 +100,7 @@ export default function Header() {
             МС
           </span>
           <span className="header-wordmark leading-none">
-            <strong className="block text-[15px] font-extrabold tracking-[-0.035em]">Миграционный</strong>
-            <span className="text-[13px] font-bold text-[#ff2e32]">справочник</span>
+            <strong className="block max-w-48 text-[15px] font-extrabold tracking-[-0.035em]">{siteName}</strong>
           </span>
         </Link>
 
@@ -120,12 +124,12 @@ export default function Header() {
         </nav>
 
         <a
-          href={getPhoneHref(PARTNER_PHONE)}
+          href={getPhoneHref(partnerPhone)}
           className="header-hotline hidden min-h-11 items-center gap-2 px-1 text-left text-[#1f2c41] transition-colors hover:text-[#02629f] xl:flex"
-          aria-label={`Горячая линия ${PARTNER_PHONE}`}
+          aria-label={`Горячая линия ${partnerPhone}`}
         >
           <Phone className="h-4 w-4" />
-          <span className="text-sm font-extrabold tabular-nums">{PARTNER_PHONE}</span>
+          <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
         </a>
 
         <div className="hidden items-center sm:flex">
@@ -176,9 +180,9 @@ export default function Header() {
         </div>
 
         <a
-          href={getPhoneHref(PARTNER_PHONE)}
+          href={getPhoneHref(partnerPhone)}
           className="header-icon-button grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
-          aria-label={`Горячая линия ${PARTNER_PHONE}`}
+          aria-label={`Горячая линия ${partnerPhone}`}
         >
           <Phone className="h-5 w-5" />
         </a>
@@ -197,13 +201,13 @@ export default function Header() {
       {open && (
         <nav aria-label="Мобильная навигация" className="header-mobile-panel motion-mobile-menu site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
           <a
-            href={getPhoneHref(PARTNER_PHONE)}
+            href={getPhoneHref(partnerPhone)}
             onClick={() => setOpen(false)}
             className="header-hotline mb-2 flex min-h-11 items-center gap-3 border-b border-[#d8dee7] px-3 py-3 text-[#1f2c41]"
-            aria-label={`Горячая линия ${PARTNER_PHONE}`}
+            aria-label={`Горячая линия ${partnerPhone}`}
           >
             <Phone className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-extrabold tabular-nums">{PARTNER_PHONE}</span>
+            <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
           </a>
           {links.map((link) => (
             <Link

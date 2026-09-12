@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { CollectionConfig } from "payload";
-import { canAccessAdmin, canEditContent, canManageUsers, canPublishContent, publishedOnly } from "./access";
+import { canAccessAdmin, canCreateContent, canDeleteContent, canEditContent, canManageUsers, canUpdateContent, publishedOnly } from "./access";
 import { pageContentBlocks } from "./blocks";
 import { seoFields, toolDefinitionFields } from "./fields";
 import { revalidateDataTable, revalidatePage, revalidateTool } from "./hooks";
@@ -67,9 +67,9 @@ export const Pages: CollectionConfig = {
   access: {
     admin: canAccessAdmin,
     read: publishedOnly,
-    create: canEditContent,
-    update: canEditContent,
-    delete: canPublishContent,
+    create: canCreateContent,
+    update: canUpdateContent,
+    delete: canDeleteContent,
   },
   hooks: { beforeValidate: [validatePage], afterChange: [revalidatePage] },
   fields: [
@@ -121,9 +121,9 @@ export const Tools: CollectionConfig = {
   access: {
     admin: canAccessAdmin,
     read: publishedOnly,
-    create: canEditContent,
-    update: canEditContent,
-    delete: canPublishContent,
+    create: canCreateContent,
+    update: canUpdateContent,
+    delete: canDeleteContent,
   },
   hooks: { beforeValidate: [validateTool], afterChange: [revalidateTool] },
   fields: [
@@ -168,7 +168,7 @@ export const DataTables: CollectionConfig = {
   labels: { singular: "Таблица данных", plural: "Таблицы данных" },
   admin: { useAsTitle: "title", defaultColumns: ["key", "title", "updatedAt"] },
   versions: { drafts: true, maxPerDoc: 20 },
-  access: { admin: canAccessAdmin, read: publishedOnly, create: canEditContent, update: canEditContent, delete: canPublishContent },
+  access: { admin: canAccessAdmin, read: publishedOnly, create: canCreateContent, update: canUpdateContent, delete: canDeleteContent },
   hooks: { beforeValidate: [validateDataTable], afterChange: [revalidateDataTable] },
   fields: [
     { name: "key", type: "text", required: true, unique: true, index: true, label: "Ключ таблицы" },
@@ -205,7 +205,7 @@ export const RuleTestCases: CollectionConfig = {
   slug: "rule-test-cases",
   labels: { singular: "Тест правила", plural: "Тесты правил" },
   admin: { useAsTitle: "name", defaultColumns: ["name", "tool", "enabled", "updatedAt"] },
-  access: { admin: canAccessAdmin, read: canAccessAdmin, create: canEditContent, update: canEditContent, delete: canPublishContent },
+  access: { admin: canAccessAdmin, read: canAccessAdmin, create: canEditContent, update: canEditContent, delete: canDeleteContent },
   fields: [
     { name: "name", type: "text", required: true, label: "Название теста" },
     { name: "sourceKey", type: "text", unique: true, index: true, label: "Ключ источника", admin: { readOnly: true, position: "sidebar" } },

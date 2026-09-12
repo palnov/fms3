@@ -27,14 +27,23 @@ export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteOrigin();
-  const staticEntries = PUBLIC_ROUTES.map(([path, changeFrequency, priority]) => ({
-    url: `${siteUrl}${path || "/"}`,
-    lastModified: LAST_MODIFIED[path],
-    changeFrequency,
-    priority,
-  }));
-  const staticPaths = new Set<string>(PUBLIC_ROUTES.map(([path]) => path || "/"));
   const cmsPaths = await getPublishedContentPaths();
+  const unpublishedPages = new Set(cmsPaths.unpublishedPages);
+  const unpublishedTools = new Set(cmsPaths.unpublishedTools);
+  const staticEntries = PUBLIC_ROUTES
+    .filter(([path]) => {
+      const normalizedPath = path || "/";
+      return normalizedPath.startsWith("/tools/")
+        ? !unpublishedTools.has(normalizedPath)
+        : !unpublishedPages.has(normalizedPath);
+    })
+    .map(([path, changeFrequency, priority]) => ({
+      url: `${siteUrl}${path || "/"}`,
+      lastModified: LAST_MODIFIED[path],
+      changeFrequency,
+      priority,
+    }));
+  const staticPaths = new Set<string>(PUBLIC_ROUTES.map(([path]) => path || "/"));
   const dynamicEntries = [...cmsPaths.pages, ...cmsPaths.tools]
     .filter(({ path }) => !staticPaths.has(path || "/"))
     .map(({ path, updatedAt }) => ({

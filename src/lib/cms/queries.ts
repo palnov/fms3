@@ -266,32 +266,58 @@ const getCachedSiteSettings = unstable_cache(findSiteSettings, ["cms-site-settin
 
 export const getSiteSettings = getCachedSiteSettings;
 
-export async function getPublishedContentPaths(): Promise<{ pages: CmsContentPath[]; tools: CmsContentPath[] }> {
-  if (!isPayloadEnabled()) return { pages: [], tools: [] };
+export async function getPublishedContentPaths(): Promise<{
+  pages: CmsContentPath[];
+  tools: CmsContentPath[];
+  unpublishedPages: string[];
+  unpublishedTools: string[];
+}> {
+  if (!isPayloadEnabled()) return { pages: [], tools: [], unpublishedPages: [], unpublishedTools: [] };
 
   try {
     const payload = await getPayload({ config: configPromise });
-    const [pages, tools] = await Promise.all([
+    const [publishedPages, publishedTools, allPages, allTools] = await Promise.all([
       payload.find({ collection: "pages", depth: 0, limit: 1000, where: { _status: { equals: "published" } }, select: { path: true, updatedAt: true } }),
       payload.find({ collection: "tools", depth: 0, limit: 1000, where: { _status: { equals: "published" } }, select: { slug: true, updatedAt: true } }),
+      payload.find({ collection: "pages", depth: 0, draft: true, overrideAccess: true, limit: 1000, select: { path: true } }),
+      payload.find({ collection: "tools", depth: 0, draft: true, overrideAccess: true, limit: 1000, select: { slug: true } }),
     ]);
 
+    const publishedPagePaths = publishedPages.docs
+      .map((page) => {
+        const record = page as Record<string, unknown>;
+        return {
+          path: typeof record.path === "string" ? record.path : "",
+          updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : undefined,
+        };
+      })
+      .filter((page) => Boolean(page.path));
+    const publishedToolPaths = publishedTools.docs
+      .map((tool) => {
+        const record = tool as Record<string, unknown>;
+        return {
+          path: typeof record.slug === "string" ? record.slug : "",
+          updatedAt: typeof record.updatedAt === "string" ? record.updatedAt : undefined,
+        };
+      })
+      .filter((tool) => Boolean(tool.path));
+    const allPagePaths = allPages.docs
+      .map((page) => (typeof (page as Record<string, unknown>).path === "string" ? (page as Record<string, unknown>).path as string : ""))
+      .filter(Boolean);
+    const allToolPaths = allTools.docs
+      .map((tool) => (typeof (tool as Record<string, unknown>).slug === "string" ? (tool as Record<string, unknown>).slug as string : ""))
+      .filter(Boolean);
+    const publishedPagePathSet = new Set(publishedPagePaths.map((page) => page.path));
+    const publishedToolPathSet = new Set(publishedToolPaths.map((tool) => tool.path));
+
     return {
-      pages: pages.docs
-        .map<CmsContentPath>((page) => ({
-          path: typeof page.path === "string" ? page.path : "",
-          updatedAt: typeof page.updatedAt === "string" ? page.updatedAt : undefined,
-        }))
-        .filter((page) => Boolean(page.path)),
-      tools: tools.docs
-        .map<CmsContentPath>((tool) => ({
-          path: typeof tool.slug === "string" ? tool.slug : "",
-          updatedAt: typeof tool.updatedAt === "string" ? tool.updatedAt : undefined,
-        }))
-        .filter((tool) => Boolean(tool.path)),
+      pages: publishedPagePaths,
+      tools: publishedToolPaths,
+      unpublishedPages: allPagePaths.filter((path) => !publishedPagePathSet.has(path)),
+      unpublishedTools: allToolPaths.filter((path) => !publishedToolPathSet.has(path)),
     };
   } catch {
-    return { pages: [], tools: [] };
+    return { pages: [], tools: [], unpublishedPages: [], unpublishedTools: [] };
   }
 }
 

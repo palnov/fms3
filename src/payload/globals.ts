@@ -1,10 +1,12 @@
 import type { GlobalConfig } from "payload";
-import { canAccessAdmin, canEditContent } from "./access";
+import { canAccessAdmin, canUpdateContent } from "./access";
+import { revalidateSiteSettings } from "./hooks";
 
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
   label: "Настройки сайта",
-  access: { read: () => true, readVersions: canAccessAdmin, update: canEditContent },
+  access: { read: () => true, readVersions: canAccessAdmin, update: canUpdateContent },
+  hooks: { afterChange: [revalidateSiteSettings] },
   versions: { drafts: true, max: 10 },
   fields: [
     { name: "siteName", type: "text", required: true, label: "Название сайта" },

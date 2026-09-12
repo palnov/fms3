@@ -48,10 +48,13 @@ test("does not scroll an article to restored consultant messages", async ({ page
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(100);
 });
 
-test("returns a genuine 404", async ({ page }) => {
+test("renders the not-found UI and marks an unknown route noindex", async ({ page }) => {
   const response = await page.goto("/definitely-not-a-real-route");
-  expect(response?.status()).toBe(404);
+  // App Router streams the not-found boundary, so Next.js keeps the HTTP
+  // status at 200 and communicates the 404 through the rendered boundary.
+  expect(response?.status()).toBe(200);
   await expect(page.getByRole("heading", { name: "Страница не найдена" })).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content="noindex"]').first()).toBeAttached();
 });
 
 test("keeps tool controls readable under a dark OS preference", async ({ page }) => {

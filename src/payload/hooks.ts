@@ -33,6 +33,14 @@ export function revalidateTool({ doc }: { doc: { slug?: string } }) {
 
 export function revalidateDataTable({ doc }: { doc: { key?: string } }) {
   if (!doc.key) return doc;
-  safeRevalidate(() => revalidateTag(`cms-data-table:${doc.key}`, "max"));
+  safeRevalidate(() => {
+    revalidateTag(`cms-data-table:${doc.key}`, "max");
+    revalidateTag("cms-data-tables", "max");
+  });
+  return doc;
+}
+
+export function revalidateSiteSettings({ doc }: { doc: unknown }) {
+  safeRevalidate(() => revalidateTag("cms-site-settings", "max"));
   return doc;
 }

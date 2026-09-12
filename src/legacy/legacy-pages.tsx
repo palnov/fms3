@@ -133,3 +133,7 @@ export function LegacyPage({ path }: { path: string }) {
   }
   return <Page />;
 }
+
+export function hasLegacyPage(path: string) {
+  return Boolean(LEGACY_PAGE_MAP[path]);
+}

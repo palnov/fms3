@@ -3,7 +3,7 @@ import { draftMode } from "next/headers";
 import { notFound } from "next/navigation";
 import CmsPageRenderer, { cmsPageMetadata } from "@/components/cms/CmsPageRenderer";
 import CmsToolPage, { cmsToolMetadata } from "@/components/cms/CmsToolPage";
-import { LegacyPage } from "@/legacy/legacy-pages";
+import { hasLegacyPage, LegacyPage } from "@/legacy/legacy-pages";
 import { getLegacyMetadata } from "@/lib/cms/legacy-metadata";
 import { getPageByPath, getToolBySlug, getToolDataTables, hasCmsPageByPath, hasCmsToolBySlug } from "@/lib/cms/queries";
 
@@ -21,7 +21,13 @@ export async function generateMetadata({ params }: PublicRouteProps): Promise<Me
   const tool = path.startsWith("/tools/") ? await getToolBySlug(path, draft) : null;
   if (tool) return cmsToolMetadata(tool);
   const page = await getPageByPath(path, draft);
-  return page ? cmsPageMetadata(page) : getLegacyMetadata(path) ?? {};
+  if (page) return cmsPageMetadata(page);
+  const cmsRecordExists = path.startsWith("/tools/") ? await hasCmsToolBySlug(path) : await hasCmsPageByPath(path);
+  if (cmsRecordExists) notFound();
+  const legacyMetadata = getLegacyMetadata(path);
+  if (legacyMetadata) return legacyMetadata;
+  if (hasLegacyPage(path)) return {};
+  notFound();
 }
 
 export default async function PublicRoute({ params }: PublicRouteProps) {
@@ -38,7 +44,6 @@ export default async function PublicRoute({ params }: PublicRouteProps) {
   if (page) return <CmsPageRenderer page={page} />;
   if (await hasCmsPageByPath(path)) notFound();
 
-  const legacy = <LegacyPage path={path} />;
-  if (legacy) return legacy;
+  if (hasLegacyPage(path)) return <LegacyPage path={path} />;
   notFound();
 }

@@ -16,14 +16,14 @@ export async function getRedisClient(): Promise<RedisClient> {
     url: getRedisUrl(),
     socket: {
       connectTimeout: 3_000,
-      reconnectStrategy(retries) {
+      reconnectStrategy(retries: number) {
         if (retries >= 3) return new Error("Redis is unavailable after 3 reconnect attempts.");
         return Math.min(100 * 2 ** retries, 3_000);
       },
     },
   });
 
-  nextClient.on("error", (error) => {
+  nextClient.on("error", (error: unknown) => {
     console.error("Redis connection error", error instanceof Error ? error.message : "unknown error");
   });
 

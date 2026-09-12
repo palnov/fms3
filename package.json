@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "start": "next start",
+    "prebuild": "npm run payload:generate-importmap",
+    "start": "node scripts/start-standalone.cjs",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
@@ -14,6 +15,7 @@
     "payload:migrate": "node scripts/payload-runner.cjs scripts/payload-migrate.mts",
     "payload:migrate:dry": "node scripts/payload-runner.cjs scripts/payload-migrate.mts --dry-run",
     "payload:migrate:create": "node scripts/payload-runner.cjs scripts/payload-create-migration.mts",
+    "payload:generate-importmap": "node scripts/payload-runner.cjs scripts/payload-generate-importmap.mts",
     "payload:test-rules": "node scripts/payload-runner.cjs scripts/payload-test-rules.mts",
     "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },

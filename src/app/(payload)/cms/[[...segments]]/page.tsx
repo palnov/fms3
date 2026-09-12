@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { RootPage, generatePageMetadata } from "@payloadcms/next/views";
 import configPromise from "@payload-config";
+import { importMap } from "../importMap";
 
 type AdminParams = Promise<{ segments?: string[] }>;
 type AdminSearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -11,9 +12,9 @@ type AdminPageProps = {
 };
 
 export async function generateMetadata({ params }: AdminPageProps): Promise<Metadata> {
-  return (await generatePageMetadata({ config: configPromise, params })) as Metadata;
+  return (await generatePageMetadata({ config: configPromise, importMap, params })) as Metadata;
 }
 
 export default function AdminPage({ params, searchParams }: AdminPageProps) {
-  return <RootPage config={configPromise} params={params} searchParams={searchParams} />;
+  return <RootPage config={configPromise} importMap={importMap} params={params} searchParams={searchParams} />;
 }
