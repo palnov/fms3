@@ -9,6 +9,11 @@ test("renders the main public experience", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Как жить и работать в России законно");
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(page.getByRole("img", { name: "Паспорт России, РВП и вид на жительство" })).toBeVisible();
+  await expect(page.getByText("МС", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Независимый миграционный справочник", { exact: true })).toHaveCount(0);
+  await expect(page.locator('[data-motion="hero-copy"] a[href="/editorial-policy"]')).toHaveCount(0);
+  await expect(page.locator("#faq a[href=\"/editorial-policy\"]")).toHaveCount(0);
+  await expect(page.locator('footer a[href="/editorial-policy"]')).toHaveCount(1);
   await expect(page.getByText("Подходящий вариант найден")).toHaveCount(0);
   await expect(page.getByText("05 шагов до подачи")).toHaveCount(0);
   await expect(page.getByText("Главный кластер")).toHaveCount(0);

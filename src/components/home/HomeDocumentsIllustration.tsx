@@ -55,8 +55,7 @@ export default function HomeDocumentsIllustration() {
             <text x="100" y="39" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">РОССИЙСКАЯ</text>
             <text x="100" y="55" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">ФЕДЕРАЦИЯ</text>
             <text x="100" y="105" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="11" fontWeight="700" textAnchor="middle">ВИД НА ЖИТЕЛЬСТВО</text>
-            <circle cx="100" cy="156" r="42" fill="none" stroke="#c8aa70" strokeWidth="1.4" opacity=".72" />
-            <path d="M100 130v52M74 156h52" stroke="#c8aa70" strokeWidth="1" opacity=".5" />
+            <image href="/illustrations/russian-coat-of-arms.png" x="52" y="100" width="96" height="96" preserveAspectRatio="xMidYMid meet" filter="url(#home-passport-gold)" />
             <text x="100" y="253" fill="#d4b978" fontFamily="Georgia, serif" fontSize="16" fontWeight="700" textAnchor="middle" letterSpacing="2.4">ВНЖ</text>
           </g>
 

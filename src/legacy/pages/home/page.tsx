@@ -98,14 +98,6 @@ export default function Home({ content }: { content?: unknown } = {}) {
                 {home.heroSecondaryLabel}
               </Link>
             </div>
-            <div className={styles.heroEditorial}>
-              <span>{home.editorialLabel}</span>
-              <span className={styles.editorialDivider} aria-hidden="true" />
-              <Link href={home.editorialHref}>
-                Редакционная политика
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
           </div>
           <HomeDocumentsIllustration />
         </div>
@@ -300,20 +292,15 @@ export default function Home({ content }: { content?: unknown } = {}) {
 
       <section id="faq" data-motion="section" className={`${styles.section} ${styles.faqSection}`}>
         <div className="site-container">
-          <div className={styles.faqHeading}>
-            <div>
+          <div className={styles.faqLayout}>
+            <div className={styles.faqIntro}>
               <p className={styles.eyebrowLight}>{home.faqEyebrow}</p>
               <h2>{home.faqTitle}</h2>
             </div>
-            <div className={styles.editorialNote}>
-              <p>{home.editorialText}</p>
-              <Link href={home.editorialHref}>
-                Редакционная политика
-                <ArrowRight aria-hidden="true" />
-              </Link>
+            <div className={styles.faqQuestions}>
+              <HomeFaqAccordion variant="institutional" items={home.faqs.map((item) => [item.question, item.answer])} />
             </div>
           </div>
-          <HomeFaqAccordion variant="institutional" items={home.faqs.map((item) => [item.question, item.answer])} />
         </div>
       </section>
     </div>

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { Menu, Phone, Search, X } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
 import { getPhoneHref, PARTNER_PHONE } from "@/lib/contact";
 
 const links = [
@@ -96,8 +97,8 @@ export default function Header({ siteName = "Миграционный справ
     <header className={`sticky top-0 z-50 border-b border-[#d8dee7]/90 bg-[#f4f6fa]/92 backdrop-blur-xl ${isPublic ? "home-header" : ""}`}>
       <div className="site-container flex min-h-20 items-center gap-5">
         <Link href="/" className="mr-auto flex items-center gap-3" onClick={() => setOpen(false)}>
-          <span className="header-brand-mark grid h-10 w-10 place-items-center rounded-xl bg-[#1f2c41] text-sm font-black text-white">
-            МС
+          <span className="header-brand-mark grid h-10 w-10 place-items-center rounded-xl bg-[#c8aa70] text-[#17201d]">
+            <BrandMark />
           </span>
           <span className="header-wordmark leading-none">
             <strong className="block max-w-48 text-[15px] font-extrabold tracking-[-0.035em]">{siteName}</strong>
