@@ -109,6 +109,15 @@ REDIS_URL=redis://redis:6379
 DATABASE_URL=postgresql://payload:<password>@postgres:5432/fms3
 PAYLOAD_SECRET=<отдельная случайная строка не короче 32 символов>
 
+# Почта для сброса пароля CMS — реквизиты SMTP-провайдера
+SMTP_HOST=<SMTP-сервер провайдера>
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=<логин почтового ящика>
+SMTP_PASSWORD=<пароль приложения или SMTP-пароль>
+SMTP_FROM_ADDRESS=<подтверждённый адрес отправителя>
+SMTP_FROM_NAME=Миграционный справочник
+
 JWT_SECRET=<случайная строка не короче 32 символов>
 RATE_LIMIT_SECRET=<другая случайная строка не короче 32 символов>
 ADMIN_SECRET=<отдельная случайная строка не короче 32 символов>
