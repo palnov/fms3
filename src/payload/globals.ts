@@ -14,7 +14,7 @@ export const SiteSettings: GlobalConfig = {
     { name: "siteUrl", type: "text", required: true, label: "Основной URL" },
     { name: "defaultTitle", type: "text", required: true, label: "Заголовок по умолчанию" },
     { name: "defaultDescription", type: "textarea", required: true, label: "Описание по умолчанию" },
-    { name: "partnerPhone", type: "text", label: "Телефон партнёра" },
+    { name: "partnerPhone", type: "text", required: true, defaultValue: "8 (800) 700-27-36", label: "Телефон горячей линии" },
     { name: "organizationName", type: "text", label: "Название организации" },
     { name: "organizationDescription", type: "textarea", label: "Описание организации" },
     { name: "defaultOgImage", type: "upload", relationTo: "media", label: "OG-изображение по умолчанию" },

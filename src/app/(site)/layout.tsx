@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import { AIChatProvider } from "@/components/chat/AIChatProvider";
 import AnalyticsManager from "@/components/analytics/AnalyticsManager";
 import { getSiteSettings } from "@/lib/cms/queries";
-import { resolvePartnerPhone } from "@/lib/contact";
 
 const golos = localFont({
   src: [
@@ -66,7 +65,7 @@ export default async function RootLayout({
 }>) {
   const siteSettings = await getSiteSettings();
   const siteName = siteSettings?.siteName || "Миграционный справочник";
-  const partnerPhone = resolvePartnerPhone(siteSettings?.partnerPhone);
+  const partnerPhone = siteSettings?.partnerPhone;
   const footerDescription = siteSettings?.organizationDescription || siteSettings?.siteDescription;
 
   return (

@@ -7,7 +7,7 @@ import { MessageSquare, X, Send, Bot, User, Phone, Sparkles } from "lucide-react
 import LeadForm from "@/components/forms/LeadForm";
 import SafeMessageText from "@/components/chat/SafeMessageText";
 import { useAIChat } from "@/components/chat/AIChatProvider";
-import { getPhoneHref, PARTNER_PHONE } from "@/lib/contact";
+import { getPhoneHref } from "@/lib/contact";
 
 const LANGUAGES = [
   { code: "ru", name: "Русский" },
@@ -83,7 +83,7 @@ const TRANSLATIONS: Record<string, {
   }
 };
 
-export default function FloatingLawyerWidget({ initiallyOpen = false }: { initiallyOpen?: boolean }) {
+export default function FloatingLawyerWidget({ initiallyOpen = false, partnerPhone }: { initiallyOpen?: boolean; partnerPhone?: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(initiallyOpen);
   const [inputVal, setInputVal] = useState("");
@@ -229,13 +229,15 @@ export default function FloatingLawyerWidget({ initiallyOpen = false }: { initia
               </div>
               
               {/* Partner Hotline Number */}
-              <div className="floating-assistant-hotline flex items-center gap-1.5 px-2.5 py-2 text-[10px] font-semibold sm:text-xs">
-                <Phone className="floating-assistant-hotline-icon w-3.5 h-3.5 shrink-0" />
-                <span>{t.hotline}</span>
-                <a href={getPhoneHref(PARTNER_PHONE)} className="floating-assistant-hotline-link ml-auto font-bold underline">
-                  {PARTNER_PHONE}
-                </a>
-              </div>
+              {partnerPhone && (
+                <div className="floating-assistant-hotline flex items-center gap-1.5 px-2.5 py-2 text-[10px] font-semibold sm:text-xs">
+                  <Phone className="floating-assistant-hotline-icon w-3.5 h-3.5 shrink-0" />
+                  <span>{t.hotline}</span>
+                  <a href={getPhoneHref(partnerPhone)} className="floating-assistant-hotline-link ml-auto font-bold underline">
+                    {partnerPhone}
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Chat Messages */}

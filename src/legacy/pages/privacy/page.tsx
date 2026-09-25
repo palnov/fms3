@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AnalyticsControls } from "@/components/analytics/AnalyticsManager";
-import { PARTNER_PHONE } from "@/lib/contact";
+import { getSiteSettings } from "@/lib/cms/queries";
 
 export const metadata: Metadata = {
   title: "Конфиденциальность и обработка данных",
@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const siteSettings = await getSiteSettings();
+  const partnerPhone = siteSettings?.partnerPhone;
+
   return (
     <div className="article-shell">
       <div className="mb-4 text-sm font-semibold text-[#667287]"><Link href="/">Главная</Link> / Конфиденциальность</div>
@@ -37,7 +40,9 @@ export default function PrivacyPage() {
         <AnalyticsControls />
 
         <h2>Обращения по данным</h2>
-        <p>Чтобы уточнить обработку или попросить удалить доступные нам данные, используйте опубликованный на сайте номер: <strong>{PARTNER_PHONE}</strong>. Не отправляйте в открытом сообщении пароли, платёжные данные и сканы документов.</p>
+        {partnerPhone && (
+          <p>Чтобы уточнить обработку или попросить удалить доступные нам данные, используйте опубликованный на сайте номер: <strong>{partnerPhone}</strong>. Не отправляйте в открытом сообщении пароли, платёжные данные и сканы документов.</p>
+        )}
       </article>
     </div>
   );

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import { Compass, Menu, Phone, Search, X } from "lucide-react";
-import { getPhoneHref, PARTNER_PHONE } from "@/lib/contact";
+import { getPhoneHref } from "@/lib/contact";
 
 const links = [
   { href: "/pathways/vnzh", label: "ВНЖ" },
@@ -20,7 +20,7 @@ type HeaderProps = {
   partnerPhone?: string;
 };
 
-export default function Header({ siteName = "Миграционный справочник", partnerPhone = PARTNER_PHONE }: HeaderProps) {
+export default function Header({ siteName = "Миграционный справочник", partnerPhone }: HeaderProps) {
   const pathname = usePathname();
   const isPublic = !pathname.startsWith("/admin");
   const router = useRouter();
@@ -123,14 +123,16 @@ export default function Header({ siteName = "Миграционный справ
           })}
         </nav>
 
-        <a
-          href={getPhoneHref(partnerPhone)}
-          className="header-hotline hidden min-h-11 items-center gap-2 px-1 text-left text-[#1f2c41] transition-colors hover:text-[#02629f] xl:flex"
-          aria-label={`Горячая линия ${partnerPhone}`}
-        >
-          <Phone className="h-4 w-4" />
-          <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
-        </a>
+        {partnerPhone && (
+          <a
+            href={getPhoneHref(partnerPhone)}
+            className="header-hotline hidden min-h-11 items-center gap-2 px-1 text-left text-[#1f2c41] transition-colors hover:text-[#02629f] xl:flex"
+            aria-label={`Горячая линия ${partnerPhone}`}
+          >
+            <Phone className="h-4 w-4" />
+            <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
+          </a>
+        )}
 
         <div className="hidden items-center sm:flex">
           <div className="relative h-11 w-11">
@@ -179,13 +181,15 @@ export default function Header({ siteName = "Миграционный справ
           </div>
         </div>
 
-        <a
-          href={getPhoneHref(partnerPhone)}
-          className="header-icon-button grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
-          aria-label={`Горячая линия ${partnerPhone}`}
-        >
-          <Phone className="h-5 w-5" />
-        </a>
+        {partnerPhone && (
+          <a
+            href={getPhoneHref(partnerPhone)}
+            className="header-icon-button grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-[#d8dee7] bg-white text-[#ff2e32] transition-colors hover:border-[#02629f]/40 hover:text-[#02629f] xl:hidden"
+            aria-label={`Горячая линия ${partnerPhone}`}
+          >
+            <Phone className="h-5 w-5" />
+          </a>
+        )}
 
         <button
           type="button"
@@ -200,15 +204,17 @@ export default function Header({ siteName = "Миграционный справ
 
       {open && (
         <nav aria-label="Мобильная навигация" className="header-mobile-panel motion-mobile-menu site-container grid gap-1 border-t border-[#d8dee7] py-3 lg:hidden">
-          <a
-            href={getPhoneHref(partnerPhone)}
-            onClick={() => setOpen(false)}
-            className="header-hotline mb-2 flex min-h-11 items-center gap-3 border-b border-[#d8dee7] px-3 py-3 text-[#1f2c41]"
-            aria-label={`Горячая линия ${partnerPhone}`}
-          >
-            <Phone className="h-4 w-4 shrink-0" />
-            <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
-          </a>
+          {partnerPhone && (
+            <a
+              href={getPhoneHref(partnerPhone)}
+              onClick={() => setOpen(false)}
+              className="header-hotline mb-2 flex min-h-11 items-center gap-3 border-b border-[#d8dee7] px-3 py-3 text-[#1f2c41]"
+              aria-label={`Горячая линия ${partnerPhone}`}
+            >
+              <Phone className="h-4 w-4 shrink-0" />
+              <span className="text-sm font-extrabold tabular-nums">{partnerPhone}</span>
+            </a>
+          )}
           {links.map((link) => (
             <Link
               key={link.href}

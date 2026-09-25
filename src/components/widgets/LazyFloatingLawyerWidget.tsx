@@ -9,11 +9,11 @@ const FloatingLawyerWidget = dynamic(() => import("@/components/widgets/Floating
   ssr: false,
 });
 
-export default function LazyFloatingLawyerWidget() {
+export default function LazyFloatingLawyerWidget({ partnerPhone }: { partnerPhone?: string }) {
   const [loaded, setLoaded] = useState(false);
   const pathname = usePathname();
 
-  if (loaded) return <FloatingLawyerWidget initiallyOpen />;
+  if (loaded) return <FloatingLawyerWidget initiallyOpen partnerPhone={partnerPhone} />;
 
   return (
     <button
