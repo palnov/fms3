@@ -272,18 +272,16 @@ export default function Home({ content }: { content?: unknown } = {}) {
             {home.updates.map((item) => {
               const dateTime = validDateTime(item.dateTime);
               return (
-                <article key={item.title} data-motion-card className={styles.updateItem}>
+                <Link key={item.title} href={item.href} className={styles.updateItem}>
                   <div className={styles.updateMeta}>
                     {dateTime ? <time dateTime={dateTime}>{item.date}</time> : <span>{item.date}</span>}
                   </div>
                   <div>
-                    <h3>
-                      <Link href={item.href}>{item.title}</Link>
-                    </h3>
+                    <h3>{item.title}</h3>
                     <p>{item.text}</p>
                   </div>
                   <ArrowRight className={styles.updateArrow} aria-hidden="true" />
-                </article>
+                </Link>
               );
             })}
           </div>

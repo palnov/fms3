@@ -37,12 +37,12 @@ export default function HomeDocumentsIllustration() {
           </filter>
         </defs>
 
-        <ellipse className={styles.documentGroundShadow} cx="282" cy="397" rx="174" ry="17" />
+        <ellipse className={styles.documentGroundShadow} cx="280" cy="397" rx="174" ry="17" />
 
         <g className={styles.documentStack}>
-          <g transform="translate(38 113) rotate(-12 100 137)" filter="url(#home-document-shadow)">
-            <rect width="200" height="274" rx="16" fill="#dfe4dc" />
-            <rect x="10" y="10" width="180" height="254" rx="10" fill="none" stroke="#5c7869" strokeOpacity=".55" />
+          <g transform="translate(38 98) rotate(-10 100 145)" filter="url(#home-document-shadow)">
+            <rect width="200" height="290" rx="18" fill="#dfe4dc" />
+            <rect x="10" y="10" width="180" height="270" rx="12" fill="none" stroke="#5c7869" strokeOpacity=".55" />
             <text x="100" y="38" fill="#26342e" fontFamily="Arial, sans-serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.1">РОССИЯ</text>
             <text x="100" y="67" fill="#26342e" fontFamily="Arial, sans-serif" fontSize="13" fontWeight="700" textAnchor="middle">РАЗРЕШЕНИЕ</text>
             <text x="100" y="84" fill="#26342e" fontFamily="Arial, sans-serif" fontSize="10" textAnchor="middle">НА ВРЕМЕННОЕ</text>
@@ -57,7 +57,7 @@ export default function HomeDocumentsIllustration() {
             <text x="145" y="227" fill="#5c7869" fontFamily="Arial, sans-serif" fontSize="6" textAnchor="middle" letterSpacing=".8">ДОКУМЕНТ</text>
           </g>
 
-          <g transform="translate(322 98) rotate(9 100 145)" filter="url(#home-document-shadow)">
+          <g transform="translate(322 98) rotate(10 100 145)" filter="url(#home-document-shadow)">
             <rect width="200" height="290" rx="18" fill="url(#home-vnzh-cover)" />
             <rect x="10" y="10" width="180" height="270" rx="12" fill="none" stroke="#091d31" strokeOpacity=".7" />
             <text x="100" y="39" fill="#d4b978" fontFamily="Georgia, serif" fontSize="10" fontWeight="700" textAnchor="middle" letterSpacing="1.2">РОССИЙСКАЯ</text>
@@ -67,7 +67,7 @@ export default function HomeDocumentsIllustration() {
             <text x="100" y="225" fill="#e1c88e" fontFamily="Arial, sans-serif" fontSize="9.5" fontWeight="700" textAnchor="middle" letterSpacing=".2">ИНОСТРАННОГО ГРАЖДАНИНА</text>
           </g>
 
-          <g transform="translate(172 48) rotate(-4 108 160)" filter="url(#home-document-shadow)">
+          <g transform="translate(172 48)" filter="url(#home-document-shadow)">
             <rect width="216" height="320" rx="20" fill="url(#home-passport-cover)" />
             <rect width="216" height="320" rx="20" fill="url(#home-passport-texture)" />
             <rect x="10" y="10" width="196" height="300" rx="14" fill="none" stroke="#160d0f" strokeOpacity=".36" />
