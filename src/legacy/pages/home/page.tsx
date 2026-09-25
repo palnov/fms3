@@ -96,6 +96,7 @@ export default function Home({ content }: { content?: unknown } = {}) {
               </Link>
               <Link href={home.heroSecondaryHref} className={styles.darkButton}>
                 {home.heroSecondaryLabel}
+                <ArrowRight aria-hidden="true" />
               </Link>
             </div>
           </div>
@@ -182,16 +183,16 @@ export default function Home({ content }: { content?: unknown } = {}) {
             ))}
           </div>
 
-          <div className={styles.assistantNote}>
+          <Link href={home.helpHref} className={styles.assistantNote}>
             <div>
               <span>{home.helpEyebrow}</span>
               <strong>{home.helpTitle}</strong>
             </div>
-            <Link href={home.helpHref}>
+            <span className={styles.assistantAction}>
               {home.helpLabel}
               <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -224,12 +225,18 @@ export default function Home({ content }: { content?: unknown } = {}) {
                 <ArrowRight aria-hidden="true" />
               </Link>
             ))}
+            <Link
+              href={home.statusLegalHref}
+              data-motion-card
+              className={`${styles.statusCard} ${styles.statusLegalCard}`}
+            >
+              <div>
+                <span className={styles.statusCardLabel}>{home.statusLegalLabel}</span>
+                <h3>{home.statusLegalTitle}</h3>
+              </div>
+              <ArrowRight aria-hidden="true" />
+            </Link>
           </div>
-          <Link href={home.statusLegalHref} className={styles.legalLine}>
-            <span>{home.statusLegalLabel}</span>
-            <strong>{home.statusLegalTitle}</strong>
-            <ArrowRight aria-hidden="true" />
-          </Link>
         </div>
       </section>
 

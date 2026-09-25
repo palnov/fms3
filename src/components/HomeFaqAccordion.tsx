@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import gsap from "gsap";
 
 interface HomeFaqAccordionProps {
@@ -39,8 +39,7 @@ export default function HomeFaqAccordion({ items, variant = "default" }: HomeFaq
         return (
           <section
             key={question}
-            data-motion-card
-            className={`home-faq-card rounded-2xl border bg-white p-5 shadow-[0_14px_36px_rgba(31,44,65,0.06)] transition-colors duration-200 ${
+            className={`home-faq-card rounded-2xl border bg-white p-5 shadow-[0_14px_36px_rgba(31,44,65,0.06)] transition-[border-color,box-shadow,background-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[#c8aa70]/65 hover:bg-[#faf9f4] hover:shadow-[0_18px_44px_rgba(28,41,37,0.10)] ${
               isOpen ? "border-[#c8aa70]/55 shadow-[0_18px_44px_rgba(28,41,37,0.10)]" : "border-[#d9ddd5]"
             }`}
           >
@@ -52,9 +51,10 @@ export default function HomeFaqAccordion({ items, variant = "default" }: HomeFaq
               className="flex min-h-11 w-full items-center justify-between gap-3 text-left font-extrabold"
             >
               <span>{question}</span>
-              <CheckCircle2
+              <ChevronDown
+                aria-hidden="true"
                 className={`h-5 w-5 shrink-0 text-[#a98a4f] transition-transform duration-200 ${
-                  isOpen ? "rotate-45" : ""
+                  isOpen ? "rotate-180" : ""
                 }`}
               />
             </button>

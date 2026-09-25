@@ -226,7 +226,7 @@ const SITE_SETTINGS_SEED = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://ufms-help.ru",
   defaultTitle: "Миграционный справочник — РВП, ВНЖ, гражданство и работа",
   defaultDescription: "Понятные инструкции для иностранных граждан: переезд в Россию, РВП, ВНЖ, гражданство, работа, документы, сроки и онлайн-проверки.",
-  partnerPhone: process.env.NEXT_PUBLIC_PARTNER_PHONE || "8 (800) 350-84-13",
+  partnerPhone: "8 (800) 700-27-36",
   organizationName: "Миграционный справочник",
   organizationDescription: "Независимый информационный справочник по миграционным процедурам в России.",
 };

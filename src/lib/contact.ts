@@ -1,4 +1,4 @@
-export const PARTNER_PHONE = process.env.NEXT_PUBLIC_PARTNER_PHONE || "8 (800) 350-84-13";
+export const PARTNER_PHONE = "8 (800) 700-27-36";
 
 export function getPhoneHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
