@@ -5,6 +5,7 @@ import { revalidateSiteSettings } from "./hooks";
 export const SiteSettings: GlobalConfig = {
   slug: "site-settings",
   label: "Настройки сайта",
+  admin: { group: "Служебное" },
   access: { read: () => true, readVersions: canAccessAdmin, update: canUpdateContent },
   hooks: { afterChange: [revalidateSiteSettings] },
   versions: { drafts: true, max: 10 },

@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { CollectionConfig } from "payload";
 import { BlocksFeature, EXPERIMENTAL_TableFeature, lexicalEditor } from "@payloadcms/richtext-lexical";
-import { canAccessAdmin, canCreateContent, canDeleteContent, canEditContent, canManageUsers, canUpdateContent, publishedOnly } from "./access";
+import { canAccessAdmin, canCreateContent, canDeleteContent, canEditContent, canManageUsers, canUpdateContent, hasRole, publishedOnly } from "./access";
 import { pageContentBlocks } from "./blocks";
 import { seoFields, toolDefinitionFields } from "./fields";
 import { revalidateDataTable, revalidatePage, revalidateTool } from "./hooks";
@@ -28,7 +28,12 @@ export const Users: CollectionConfig = {
   slug: "users",
   labels: { singular: "Пользователь CMS", plural: "Пользователи CMS" },
   auth: true,
-  admin: { useAsTitle: "email", defaultColumns: ["email", "role", "updatedAt"] },
+  admin: {
+    useAsTitle: "email",
+    defaultColumns: ["email", "role", "updatedAt"],
+    group: "Служебное",
+    hidden: ({ user }) => !hasRole(user, ["admin"]),
+  },
   access: {
     admin: canAccessAdmin,
     read: canManageUsers,
@@ -54,6 +59,7 @@ export const Users: CollectionConfig = {
 export const Media: CollectionConfig = {
   slug: "media",
   labels: { singular: "Медиафайл", plural: "Медиафайлы" },
+  admin: { group: "Материалы" },
   access: {
     admin: canAccessAdmin,
     read: () => true,
@@ -74,6 +80,7 @@ export const Pages: CollectionConfig = {
   slug: "pages",
   labels: { singular: "Страница", plural: "Страницы" },
   admin: {
+    group: "Материалы",
     useAsTitle: "title",
     defaultColumns: ["path", "title", "kind", "_status", "updatedAt"],
     components: {
@@ -104,65 +111,133 @@ export const Pages: CollectionConfig = {
   },
   hooks: { beforeValidate: [validatePage], afterChange: [revalidatePage] },
   fields: [
-    { name: "path", type: "text", required: true, unique: true, index: true, label: "Публичный URL" },
     {
-      name: "parent",
-      type: "relationship",
-      relationTo: "pages",
-      label: "Родительская страница",
-      admin: { position: "sidebar", description: "Редакционная иерархия. Публичный URL дочерней страницы не меняется." },
-      filterOptions: ({ id }) => id ? { id: { not_equals: id } } : true,
-    },
-    { name: "treeOrder", type: "number", label: "Порядок среди соседних", defaultValue: 0, min: 0, admin: { position: "sidebar", description: "Меньшее число показывается выше страниц с тем же родителем." } },
-    { name: "sourceKey", type: "text", unique: true, index: true, admin: { readOnly: true, position: "sidebar" } },
-    { name: "homeContent", type: "json", label: "Контент главной страницы", admin: { description: "Структурированные тексты, ссылки и карточки главной страницы. Заполняется только для URL /. Не меняет визуальный шаблон." } },
-    {
-      name: "kind",
-      type: "select",
-      required: true,
-      defaultValue: "article",
-      options: [
-        { label: "Статья", value: "article" },
-        { label: "Лендинг", value: "landing" },
-        { label: "Правовая страница", value: "legal" },
-        { label: "Политика", value: "policy" },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Основное",
+          description: "Заголовок, публичный адрес и тип страницы.",
+          fields: [
+            { name: "path", type: "text", required: true, unique: true, index: true, label: "Публичный URL" },
+            {
+              name: "kind",
+              type: "select",
+              required: true,
+              defaultValue: "article",
+              label: "Тип страницы",
+              admin: {
+                description: "Статья использует шаблон материала; лендинг и политика — простой шаблон. Правовая страница пока использует шаблон статьи, публичный вывод этим изменением не меняется.",
+              },
+              options: [
+                { label: "Статья", value: "article" },
+                { label: "Лендинг", value: "landing" },
+                { label: "Правовая страница", value: "legal" },
+                { label: "Политика", value: "policy" },
+              ],
+            },
+            { name: "title", type: "text", required: true, label: "Заголовок" },
+            { name: "description", type: "textarea", required: true, label: "Описание" },
+            {
+              name: "eyebrow",
+              type: "text",
+              label: "Надзаголовок",
+              admin: { condition: (data) => data.kind === "landing" || data.kind === "policy" },
+            },
+            {
+              name: "tags",
+              type: "text",
+              hasMany: true,
+              label: "Теги",
+              admin: { condition: (data) => data.kind === "article" },
+            },
+            {
+              name: "reviewedAt",
+              type: "date",
+              label: "Дата проверки",
+              admin: { condition: (data) => data.kind === "article" || data.kind === "legal" },
+            },
+            {
+              name: "readingTime",
+              type: "text",
+              label: "Время чтения",
+              admin: { condition: (data) => data.kind === "article" || data.kind === "legal" },
+            },
+          ],
+        },
+        {
+          label: "Контент",
+          description: "Основной текст страницы и его предпросмотр.",
+          fields: [
+            {
+              name: "content",
+              type: "richText",
+              label: "Контент",
+              editor: pageContentEditor,
+              admin: { description: "Таблицу можно вставить через меню редактора; разметка Markdown не нужна." },
+            },
+            {
+              name: "homeContent",
+              type: "json",
+              label: "Главная страница",
+              admin: {
+                description: "Поля и списки главной страницы. Показывается только для URL /.",
+                condition: (data) => data.path === "/",
+                components: { Field: "@/components/admin/HomeContentField#HomeContentField" },
+              },
+            },
+          ],
+        },
+        {
+          label: "SEO",
+          description: "Поисковый заголовок, описание и параметры индексации.",
+          fields: [seoFields()],
+        },
+        {
+          label: "Связи",
+          description: "Редакционная иерархия и подборка связанных материалов. URL при этом не меняется.",
+          fields: [
+            {
+              name: "parent",
+              type: "relationship",
+              relationTo: "pages",
+              label: "Родительская страница",
+              admin: { description: "Редакционная иерархия. Публичный URL дочерней страницы не меняется." },
+              filterOptions: ({ id }) => id ? { id: { not_equals: id } } : true,
+            },
+            { name: "treeOrder", type: "number", label: "Порядок среди соседних", defaultValue: 0, min: 0, admin: { description: "Меньшее число показывается выше страниц с тем же родителем." } },
+            {
+              name: "relatedPages",
+              type: "relationship",
+              relationTo: "pages",
+              hasMany: true,
+              label: "Связанные страницы",
+            },
+          ],
+        },
+        {
+          label: "Импорт",
+          description: "Служебные данные исходной миграции. Доступны только администраторам и доступны только для чтения.",
+          admin: { condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]) },
+          fields: [
+            { name: "sourceKey", type: "text", unique: true, index: true, label: "Ключ источника", admin: { readOnly: true } },
+            {
+              name: "legacyMarkdown",
+              type: "textarea",
+              label: "Исходный контент миграции",
+              admin: { description: "Архив исходного текста для контроля и повторной миграции.", readOnly: true },
+            },
+          ],
+        },
       ],
     },
-    { name: "title", type: "text", required: true, label: "Заголовок" },
-    { name: "description", type: "textarea", required: true, label: "Описание" },
-    { name: "eyebrow", type: "text", label: "Надзаголовок" },
-    { name: "tags", type: "text", hasMany: true, label: "Теги" },
-    { name: "reviewedAt", type: "date", label: "Дата проверки" },
-    { name: "readingTime", type: "text", label: "Время чтения" },
-    {
-      name: "content",
-      type: "richText",
-      label: "Контент",
-      editor: pageContentEditor,
-      admin: { description: "Таблицу можно вставить через меню редактора; разметка Markdown не нужна." },
-    },
-    {
-      name: "legacyMarkdown",
-      type: "textarea",
-      label: "Исходный контент миграции",
-      admin: { description: "Сохраняется для контроля паритета и повторной миграции.", readOnly: true },
-    },
     { name: "contentBlocks", type: "blocks", label: "Служебные блоки", blocks: pageContentBlocks, admin: { hidden: true } },
-    seoFields(),
-    {
-      name: "relatedPages",
-      type: "relationship",
-      relationTo: "pages",
-      hasMany: true,
-      label: "Связанные страницы",
-    },
   ],
 };
 
 export const Tools: CollectionConfig = {
   slug: "tools",
   labels: { singular: "Инструмент", plural: "Инструменты" },
-  admin: { useAsTitle: "title", defaultColumns: ["slug", "toolType", "executionMode", "_status", "updatedAt"] },
+  admin: { useAsTitle: "title", defaultColumns: ["slug", "toolType", "executionMode", "_status", "updatedAt"], group: "Инструменты" },
   versions: versionConfig,
   access: {
     admin: canAccessAdmin,
@@ -212,7 +287,7 @@ export const Tools: CollectionConfig = {
 export const DataTables: CollectionConfig = {
   slug: "data-tables",
   labels: { singular: "Таблица инструмента", plural: "Таблицы инструментов" },
-  admin: { useAsTitle: "title", defaultColumns: ["key", "title", "updatedAt"] },
+  admin: { useAsTitle: "title", defaultColumns: ["key", "title", "updatedAt"], group: "Инструменты" },
   versions: { drafts: true, maxPerDoc: 20 },
   access: { admin: canAccessAdmin, read: publishedOnly, create: canCreateContent, update: canUpdateContent, delete: canDeleteContent },
   hooks: { beforeValidate: [validateDataTable], afterChange: [revalidateDataTable] },
@@ -250,7 +325,12 @@ export const DataTables: CollectionConfig = {
 export const RuleTestCases: CollectionConfig = {
   slug: "rule-test-cases",
   labels: { singular: "Тест правила", plural: "Тесты правил" },
-  admin: { useAsTitle: "name", defaultColumns: ["name", "tool", "enabled", "updatedAt"] },
+  admin: {
+    useAsTitle: "name",
+    defaultColumns: ["name", "tool", "enabled", "updatedAt"],
+    group: "Служебное",
+    hidden: ({ user }) => !hasRole(user, ["admin", "editor"]),
+  },
   access: { admin: canAccessAdmin, read: canAccessAdmin, create: canEditContent, update: canEditContent, delete: canDeleteContent },
   fields: [
     { name: "name", type: "text", required: true, label: "Название теста" },
