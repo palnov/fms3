@@ -10,6 +10,7 @@ import {
   Info,
   ChevronDown,
 } from "lucide-react";
+import "./content-blocks.css";
 
 export function QuickAnswer({ children }: { children: React.ReactNode }) {
   return (

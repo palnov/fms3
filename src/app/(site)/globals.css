@@ -633,50 +633,10 @@ summary:focus-visible {
 }
 
 .article-meta svg,
-.content-callout svg,
 .related-guide svg {
   width: 1rem;
   height: 1rem;
   flex: none;
-}
-
-.content-callout {
-  max-width: 100%;
-  margin: 1.5rem 0;
-  border: 1px solid var(--border);
-  border-radius: 1rem;
-  padding: 1.15rem 1.25rem;
-}
-
-.content-callout > strong {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.55rem;
-}
-
-.content-callout p:last-child {
-  margin-bottom: 0;
-}
-
-.content-callout-answer {
-  border-color: #b9d7ea;
-  background: #edf7fc;
-}
-
-.content-callout-source {
-  border-left: 4px solid var(--brand);
-  background: #f7fafc;
-}
-
-.content-callout-notice {
-  border-color: #c9d9e7;
-  background: #f4f8fb;
-}
-
-.content-callout-warning {
-  border-color: #f3b9bb;
-  background: var(--danger-soft);
 }
 
 .faq-list {
@@ -1475,11 +1435,6 @@ summary:focus-visible {
 .related-guide p { color: #b7c6bc; }
 .related-guide .related-guide-link { grid-area: action; align-self: center; width: fit-content; margin-top: 0; border: 1px solid rgba(255, 255, 255, .12); border-radius: .5rem; padding: .65rem .85rem; color: #fff7ef !important; background: var(--terracotta); }
 .related-guide .related-guide-link:hover { background: var(--terracotta-dark); }
-
-.content-callout-answer { border-color: #c2d0c2; background: var(--paper-soft); }
-.content-callout-source { border-left-color: var(--brass); background: #f7f8f2; }
-.content-callout-notice { border-color: #d9cdaF; background: #fbf8ef; }
-.content-callout-warning { border-color: #d8a49d; background: #f5e7e2; }
 
 /* Legacy utility classes on older public tools inherit the same institutional palette. */
 .tool-page [class*="text-[#02629f]"],

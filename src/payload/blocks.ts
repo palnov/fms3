@@ -29,17 +29,53 @@ export const pageContentBlocks: Block[] = [
   {
     slug: "quickAnswer",
     labels: { singular: "Короткий ответ", plural: "Короткие ответы" },
-    fields: [blockText("content", "Текст ответа")],
+    fields: [
+      blockText("content", "Текст ответа"),
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#QuickAnswerBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
+    ],
   },
   {
     slug: "notice",
     labels: { singular: "Обратите внимание", plural: "Обратите внимание" },
-    fields: [blockText("content", "Текст заметки")],
+    fields: [
+      blockText("content", "Текст заметки"),
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#NoticeBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
+    ],
   },
   {
     slug: "warning",
     labels: { singular: "Важно", plural: "Важные предупреждения" },
-    fields: [blockText("content", "Текст предупреждения")],
+    fields: [
+      blockText("content", "Текст предупреждения"),
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#WarningBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
+    ],
   },
   {
     slug: "legalSource",
@@ -47,6 +83,16 @@ export const pageContentBlocks: Block[] = [
     fields: [
       { name: "title", type: "text", label: "Заголовок", defaultValue: "Правовое основание" },
       blockText("content", "Текст источника"),
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#LegalSourceBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
     ],
   },
   {

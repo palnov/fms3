@@ -11,6 +11,7 @@ import {
 } from "@/components/mdx/ContentBlocks";
 import ConsultationBanner from "@/components/mdx/ConsultationBanner";
 import { containsLegacyBlockTokens, restoreLegacyBlocks } from "@/lib/cms/legacy-blocks";
+import { renderBlockText } from "@/lib/cms/render-block-text";
 import type { CmsPage } from "@/lib/cms/queries";
 
 type LexicalNode = {
@@ -58,15 +59,6 @@ function renderInline(node: LexicalNode, key: string): React.ReactNode {
   return (node.children ?? []).map((child, index) => renderInline(child, `${key}-${index}`));
 }
 
-function renderText(value: unknown) {
-  if (typeof value !== "string") return null;
-  return value.split(/\n{2,}/).map((paragraph, index) => (
-    <p key={index}>{paragraph.split("\n").map((line, lineIndex) => (
-      <span key={lineIndex}>{line}{lineIndex < paragraph.split("\n").length - 1 ? <br /> : null}</span>
-    ))}</p>
-  ));
-}
-
 function relatedPageHref(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const pagePath = (value as Record<string, unknown>).path;
@@ -88,13 +80,13 @@ function renderBlock(node: LexicalNode, key: string, path: string, isPreview: bo
 
   switch (blockType) {
     case "quickAnswer":
-      return <QuickAnswer key={key}>{renderText(fields.content)}</QuickAnswer>;
+      return <QuickAnswer key={key}>{renderBlockText(fields.content)}</QuickAnswer>;
     case "notice":
-      return <Notice key={key}>{renderText(fields.content)}</Notice>;
+      return <Notice key={key}>{renderBlockText(fields.content)}</Notice>;
     case "warning":
-      return <Warning key={key}>{renderText(fields.content)}</Warning>;
+      return <Warning key={key}>{renderBlockText(fields.content)}</Warning>;
     case "legalSource":
-      return <LegalSource key={key} title={typeof fields.title === "string" ? fields.title : undefined}>{renderText(fields.content)}</LegalSource>;
+      return <LegalSource key={key} title={typeof fields.title === "string" ? fields.title : undefined}>{renderBlockText(fields.content)}</LegalSource>;
     case "faqAccordion":
       return <FaqAccordion key={key} items={Array.isArray(fields.items) ? fields.items.filter(isFaqItem) : []} />;
     case "relatedGuide":
@@ -195,5 +187,5 @@ export default function LexicalRenderer({ page, isPreview = false }: { page: Cms
   const content = restoreLegacyBlocks(page.content, page.legacyMarkdown);
   const nodes = getRootChildren(content);
   if (nodes.length > 0) return <>{nodes.map((node, index) => renderNode(node, String(index), page.path, isPreview))}</>;
-  return <>{renderText(page.legacyMarkdown)}</>;
+  return <>{renderBlockText(page.legacyMarkdown)}</>;
 }

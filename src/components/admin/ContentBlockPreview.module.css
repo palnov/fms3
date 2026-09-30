@@ -1,0 +1,27 @@
+.field {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.label {
+  margin: 0;
+  color: var(--theme-elevation-700);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.canvas {
+  overflow: hidden;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 4px;
+  background: #fbfaf6;
+  padding: 0.2rem 1rem;
+}
+
+.canvas p {
+  color: #4f5c70;
+  font-family: var(--font-golos), Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+}
