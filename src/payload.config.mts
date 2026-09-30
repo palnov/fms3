@@ -11,6 +11,7 @@ import { SiteSettings } from "@/payload/globals";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
+const projectRoot = path.resolve(process.env.PAYLOAD_PROJECT_ROOT || path.join(dirname, ".."));
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 const payloadSecret = process.env.PAYLOAD_SECRET?.trim();
 const pushSchema = process.env.NODE_ENV !== "production" && process.env.PAYLOAD_DB_PUSH !== "false";
@@ -89,7 +90,7 @@ export default buildConfig({
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URL || "postgresql://localhost:5432/fms3" },
     push: pushSchema,
-    migrationDir: path.resolve(dirname, "../migrations"),
+    migrationDir: path.resolve(projectRoot, "migrations"),
   }),
   globals: [SiteSettings],
   graphQL: { disable: true },
@@ -103,6 +104,6 @@ export default buildConfig({
   serverURL: siteUrl,
   csrf: [siteUrl],
   telemetry: false,
-  typescript: { outputFile: path.resolve(dirname, "payload-types.ts") },
+  typescript: { outputFile: path.resolve(projectRoot, "src/payload-types.ts") },
   sharp,
 });
