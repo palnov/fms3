@@ -190,7 +190,15 @@ export const Pages: CollectionConfig = {
         {
           label: "SEO",
           description: "Поисковый заголовок, описание и параметры индексации.",
-          fields: [seoFields()],
+          fields: [
+            {
+              name: "editorialSeoChecklist",
+              type: "ui",
+              label: "Проверка перед публикацией",
+              admin: { components: { Field: "@/components/admin/SeoChecklist#SeoChecklist" } },
+            },
+            seoFields(),
+          ],
         },
         {
           label: "Связи",

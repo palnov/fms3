@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import ArticleLayout from "@/components/mdx/ArticleLayout";
+import type { LegacyPagePath } from "@/lib/cms/legacy-page-paths";
 
 import HomePage from "@/legacy/pages/home/page";
 import EditorialPolicyPage from "@/legacy/pages/editorial-policy/page";
@@ -118,7 +119,7 @@ export const LEGACY_PAGE_MAP: Record<string, LegacyPageEntry> = {
   "/tools/checklist-generator": { component: ChecklistGeneratorPage, shell: "tool" },
   "/tools/document-check": { component: DocumentCheckPage, shell: "tool" },
   "/tools/path-finder": { component: PathFinderPage, shell: "tool" },
-};
+} satisfies Record<LegacyPagePath, LegacyPageEntry>;
 
 export function LegacyPage({ path }: { path: string }) {
   const entry = LEGACY_PAGE_MAP[path];
