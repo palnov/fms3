@@ -6,6 +6,7 @@ import { Send, Bot, User, AlertCircle, ArrowRight, Sparkles } from "lucide-react
 import SafeMessageText from "@/components/chat/SafeMessageText";
 import LeadForm from "@/components/forms/LeadForm";
 import { useAIChat } from "@/components/chat/AIChatProvider";
+import { ConsultationBannerPreview } from "./ConsultationBannerPreview";
 
 interface ConsultationBannerProps {
   title?: string;
@@ -111,13 +112,7 @@ export default function ConsultationBanner({
   const lastUserQuestion = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
 
   if (isPreview) {
-    return (
-      <section className={`${isBottomBanner ? "article-chat-banner" : "article-next-step-banner"} my-8 p-5 sm:p-7`}>
-        <h3 className="!m-0 !text-xl !font-bold">{title}</h3>
-        <p className="!mb-0 !mt-3 !text-sm !leading-6">{description}</p>
-        <p className="!mb-0 !mt-4 text-xs font-semibold opacity-75">Отправка сообщений и заявок отключена в предпросмотре.</p>
-      </section>
-    );
+    return <ConsultationBannerPreview title={title} description={description} isBottom={isBottomBanner} />;
   }
 
   // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat

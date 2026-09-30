@@ -54,13 +54,17 @@ export function Warning({ children }: { children: React.ReactNode }) {
   );
 }
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
-  const [isOpen, setIsOpen] = useState(false);
+function FaqItem({ question, answer, isPreview = false }: { question: string; answer: string; isPreview?: boolean }) {
+  const [isOpen, setIsOpen] = useState(isPreview);
   return (
     <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/40 overflow-hidden transition-all duration-200">
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        disabled={isPreview}
+        aria-expanded={isOpen}
+        onClick={() => {
+          if (!isPreview) setIsOpen(!isOpen);
+        }}
         className="w-full flex items-center justify-between gap-4 p-4 text-left font-bold text-slate-800 dark:text-slate-200 cursor-pointer"
       >
         <span>{question}</span>
@@ -81,14 +85,14 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 
 export function FaqAccordion({
   items,
+  isPreview = false,
 }: {
   items: Array<{ question: string; answer: string }>;
+  isPreview?: boolean;
 }) {
   return (
     <div className="faq-list gap-3 grid mt-4 mb-6">
-      {items.map((item) => (
-        <FaqItem key={item.question} question={item.question} answer={item.answer} />
-      ))}
+      {items.map((item) => <FaqItem key={item.question} question={item.question} answer={item.answer} isPreview={isPreview} />)}
     </div>
   );
 }

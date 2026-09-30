@@ -18,9 +18,9 @@ export const conditionField = (name = "condition"): Field => ({
   type: "json",
   label: "Условие",
   admin: {
+    components: { Field: "@/components/admin/tools/ToolEditors#ConditionEditor" },
     description:
-      'AST без кода: operator equals/notEquals/in/notIn/contains/exists/greaterThan/lessThan/and/or/not. Пример: {"operator":"equals","field":"country","value":"KZ"}.',
-    maxHeight: 280,
+      "Соберите условие из полей формы и формул. Вложенные правила можно добавлять для сложных сценариев.",
   },
 });
 
@@ -247,8 +247,24 @@ export const toolDefinitionFields = (): Field[] => [
     label: "Интеграция",
     fields: [
       { name: "providerKey", type: "text", label: "Ключ адаптера" },
-      { name: "requestMapping", type: "json", label: "Маппинг запроса", admin: { description: "JSON вида { \"apiField\": \"fieldKey\" }; добавляет адаптеру поля из ответов формы.", maxHeight: 180 } },
-      { name: "responseMapping", type: "json", label: "Маппинг ответа", admin: { description: "JSON вида { \"result.body\": \"result.title\", \"externalStatus\": \"result.status\" }; переносит нормализованный ответ в результат или values.", maxHeight: 180 } },
+      {
+        name: "requestMapping",
+        type: "json",
+        label: "Маппинг запроса",
+        admin: {
+          components: { Field: "@/components/admin/tools/ToolEditors#RequestMappingEditor" },
+          description: "Сопоставьте поля формы с параметрами адаптера.",
+        },
+      },
+      {
+        name: "responseMapping",
+        type: "json",
+        label: "Маппинг ответа",
+        admin: {
+          components: { Field: "@/components/admin/tools/ToolEditors#ResponseMappingEditor" },
+          description: "Сопоставьте ответ адаптера с результатом инструмента.",
+        },
+      },
       { name: "timeoutMs", type: "number", label: "Таймаут (мс)", min: 100, max: 30000, defaultValue: 10000 },
       { name: "enabled", type: "checkbox", label: "Включить" },
     ],

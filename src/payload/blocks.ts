@@ -109,6 +109,16 @@ export const pageContentBlocks: Block[] = [
           { name: "answer", type: "textarea", label: "Ответ", required: true },
         ],
       },
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#FaqAccordionBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
     ],
   },
   {
@@ -120,6 +130,16 @@ export const pageContentBlocks: Block[] = [
       { name: "href", type: "text", label: "Старая ссылка", admin: { hidden: true } },
       { name: "title", type: "text", label: "Заголовок", required: true },
       { name: "description", type: "textarea", label: "Описание", required: true },
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#RelatedGuideBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
     ],
   },
   {
@@ -139,6 +159,16 @@ export const pageContentBlocks: Block[] = [
           { name: "label", type: "text", label: "Метка" },
         ],
       },
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#LinkCardGridBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
     ],
   },
   {
@@ -150,6 +180,16 @@ export const pageContentBlocks: Block[] = [
       { name: "context", type: "text", label: "Контекст" },
       { name: "secondaryHref", type: "text", label: "Вторая ссылка" },
       { name: "secondaryLabel", type: "text", label: "Текст второй ссылки" },
+      {
+        name: "editorPreview",
+        type: "ui",
+        label: "",
+        admin: {
+          components: { Field: "@/components/admin/ContentBlockPreview#ConsultationBannerBlockPreview" },
+          disableBulkEdit: true,
+          disableListColumn: true,
+        },
+      },
     ],
   },
 ];

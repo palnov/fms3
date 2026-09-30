@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, Field } from "payload";
 import { BlocksFeature, EXPERIMENTAL_TableFeature, lexicalEditor } from "@payloadcms/richtext-lexical";
 import { canAccessAdmin, canCreateContent, canDeleteContent, canEditContent, canManageUsers, canUpdateContent, hasRole, publishedOnly } from "./access";
 import { pageContentBlocks } from "./blocks";
@@ -242,6 +242,14 @@ export const Pages: CollectionConfig = {
   ],
 };
 
+const toolDefinitionFieldConfigs = toolDefinitionFields();
+
+function toolDefinitionField(name: string): Field {
+  const field = toolDefinitionFieldConfigs.find((candidate) => "name" in candidate && candidate.name === name);
+  if (!field) throw new Error("Не найдено поле инструмента: " + name);
+  return field;
+}
+
 export const Tools: CollectionConfig = {
   slug: "tools",
   labels: { singular: "Инструмент", plural: "Инструменты" },
@@ -256,39 +264,111 @@ export const Tools: CollectionConfig = {
   },
   hooks: { beforeValidate: [validateTool], afterChange: [revalidateTool] },
   fields: [
-    { name: "slug", type: "text", required: true, unique: true, index: true, label: "Полный URL инструмента" },
-    { name: "sourceKey", type: "text", unique: true, index: true, admin: { readOnly: true, position: "sidebar" } },
     {
-      name: "toolType",
-      type: "select",
-      required: true,
-      options: [
-        { label: "Калькулятор", value: "calculator" },
-        { label: "Сценарий", value: "scenario" },
-        { label: "Чек-лист", value: "checklist" },
-        { label: "Проверка", value: "checker" },
-        { label: "AI-инструмент", value: "ai" },
+      type: "tabs",
+      tabs: [
+        {
+          label: "Содержание",
+          fields: [
+            { name: "slug", type: "text", required: true, unique: true, index: true, label: "Полный URL инструмента" },
+            {
+              name: "toolType",
+              type: "select",
+              required: true,
+              label: "Тип инструмента",
+              options: [
+                { label: "Калькулятор", value: "calculator" },
+                { label: "Сценарий", value: "scenario" },
+                { label: "Чек-лист", value: "checklist" },
+                { label: "Проверка", value: "checker" },
+                { label: "AI-инструмент", value: "ai" },
+              ],
+            },
+            {
+              name: "executionMode",
+              type: "select",
+              required: true,
+              defaultValue: "runtime",
+              label: "Режим выполнения",
+              options: [
+                { label: "No-code runtime", value: "runtime" },
+                { label: "Кодовый адаптер", value: "provider" },
+              ],
+              admin: { condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]) },
+            },
+            { name: "title", type: "text", required: true, label: "Заголовок" },
+            { name: "description", type: "textarea", required: true, label: "Описание" },
+            { name: "eyebrow", type: "text", label: "Надзаголовок" },
+            {
+              name: "content",
+              type: "richText",
+              label: "Справочный контент",
+              admin: { description: "Текст вокруг инструмента: пояснения, ограничения, источники и следующие шаги." },
+            },
+            {
+              name: "legacyMarkdown",
+              type: "textarea",
+              label: "Исходное описание миграции",
+              admin: {
+                readOnly: true,
+                condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]),
+              },
+            },
+          ],
+        },
+        {
+          label: "Поля",
+          fields: [toolDefinitionField("fields")],
+        },
+        {
+          label: "Логика",
+          fields: [
+            toolDefinitionField("formulas"),
+            toolDefinitionField("steps"),
+            {
+              name: "dataTableKeys",
+              type: "text",
+              hasMany: true,
+              label: "Таблицы данных",
+              admin: {
+                description: "Системные ключи подключённых таблиц. Настраиваются администратором.",
+                condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]),
+              },
+            },
+          ],
+        },
+        {
+          label: "Результаты",
+          fields: [toolDefinitionField("results"), toolDefinitionField("uiCopy")],
+        },
+        {
+          label: "Интеграция",
+          admin: { condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]) },
+          fields: [
+            {
+              name: "providerKey",
+              type: "text",
+              label: "Разрешённый ключ адаптера",
+              admin: { description: "Ключ из реестра адаптеров приложения. URL и секреты здесь не хранятся." },
+            },
+            toolDefinitionField("integration"),
+            toolDefinitionField("ai"),
+            {
+              name: "sourceKey",
+              type: "text",
+              unique: true,
+              index: true,
+              label: "Ключ источника",
+              admin: { readOnly: true, position: "sidebar" },
+            },
+          ],
+        },
+        {
+          label: "SEO",
+          fields: [seoFields()],
+        },
       ],
     },
-    {
-      name: "executionMode",
-      type: "select",
-      required: true,
-      defaultValue: "runtime",
-      options: [
-        { label: "No-code runtime", value: "runtime" },
-        { label: "Кодовый адаптер", value: "provider" },
-      ],
-    },
-    { name: "title", type: "text", required: true, label: "Заголовок" },
-    { name: "description", type: "textarea", required: true, label: "Описание" },
-    { name: "eyebrow", type: "text", label: "Надзаголовок" },
-    { name: "providerKey", type: "text", label: "Разрешённый ключ адаптера", admin: { description: "Только ключ из реестра адаптеров приложения; URL и секреты здесь не хранятся." } },
-    { name: "content", type: "richText", label: "Справочный контент", admin: { description: "Текст вокруг инструмента: пояснения, ограничения, источники и следующие шаги." } },
-    { name: "legacyMarkdown", type: "textarea", label: "Исходное описание миграции", admin: { readOnly: true } },
-    ...toolDefinitionFields(),
-    seoFields(),
-    { name: "dataTableKeys", type: "text", hasMany: true, label: "Таблицы данных" },
   ],
 };
 
@@ -321,7 +401,12 @@ export const DataTables: CollectionConfig = {
         { name: "key", type: "text", required: true, label: "Ключ строки" },
         { name: "effectiveFrom", type: "date", label: "Действует с" },
         { name: "effectiveTo", type: "date", label: "Действует до" },
-        { name: "values", type: "json", label: "Значения по колонкам", admin: { maxHeight: 220 } },
+        {
+          name: "values",
+          type: "json",
+          label: "Значения по колонкам",
+          admin: { components: { Field: "@/components/admin/tools/ToolEditors#DataTableValuesEditor" } },
+        },
       ],
     },
     { name: "sourceTitle", type: "text", label: "Источник" },
@@ -342,11 +427,33 @@ export const RuleTestCases: CollectionConfig = {
   access: { admin: canAccessAdmin, read: canAccessAdmin, create: canEditContent, update: canEditContent, delete: canDeleteContent },
   fields: [
     { name: "name", type: "text", required: true, label: "Название теста" },
-    { name: "sourceKey", type: "text", unique: true, index: true, label: "Ключ источника", admin: { readOnly: true, position: "sidebar" } },
+    {
+      name: "sourceKey",
+      type: "text",
+      unique: true,
+      index: true,
+      label: "Ключ источника",
+      admin: {
+        readOnly: true,
+        position: "sidebar",
+        condition: (_data, _siblingData, { user }) => hasRole(user, ["admin"]),
+      },
+    },
     { name: "tool", type: "relationship", relationTo: "tools", required: true, label: "Инструмент" },
-    { name: "answers", type: "json", required: true, label: "Входные данные", admin: { maxHeight: 240 } },
+    {
+      name: "answers",
+      type: "json",
+      required: true,
+      label: "Входные данные",
+      admin: { components: { Field: "@/components/admin/tools/ToolEditors#RuleAnswersEditor" } },
+    },
     { name: "expectedStatus", type: "text", required: true, label: "Ожидаемый статус" },
-    { name: "expectedValues", type: "json", label: "Ожидаемые вычисления", admin: { maxHeight: 240 } },
+    {
+      name: "expectedValues",
+      type: "json",
+      label: "Ожидаемые вычисления",
+      admin: { components: { Field: "@/components/admin/tools/ToolEditors#RuleExpectedValuesEditor" } },
+    },
     { name: "enabled", type: "checkbox", defaultValue: true, label: "Включён" },
   ],
 };
