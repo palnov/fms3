@@ -6,6 +6,7 @@ import LexicalRenderer from "@/components/cms/LexicalRenderer";
 import HomePage from "@/legacy/pages/home/page";
 import type { CmsPage } from "@/lib/cms/queries";
 import { getSiteOrigin } from "@/lib/runtime-config";
+import RefreshRouteOnSave from "@/components/cms/RefreshRouteOnSave";
 
 function absoluteUrl(value: string | undefined) {
   if (!value) return undefined;
@@ -19,7 +20,7 @@ function imageUrl(value: CmsPage["seo"]) {
   return typeof image === "string" ? image : image?.url;
 }
 
-export function cmsPageMetadata(page: CmsPage): Metadata {
+export function cmsPageMetadata(page: CmsPage, isPreview = false): Metadata {
   const seo = page.seo;
   const title = seo?.title || page.title;
   const description = seo?.description || page.description;
@@ -30,7 +31,7 @@ export function cmsPageMetadata(page: CmsPage): Metadata {
     title,
     description,
     alternates: canonical ? { canonical } : undefined,
-    robots: seo?.noIndex ? { index: false, follow: false } : undefined,
+    robots: isPreview || seo?.noIndex ? { index: false, follow: false } : undefined,
     openGraph: {
       type: page.path === "/" ? "website" : "article",
       url: canonical,
@@ -53,30 +54,45 @@ function CmsArticleMeta({ page }: { page: CmsPage }) {
   );
 }
 
-function CmsArticle({ page }: { page: CmsPage }) {
+function CmsArticle({ page, isPreview }: { page: CmsPage; isPreview: boolean }) {
   return (
     <ArticleLayout>
       <CmsArticleMeta page={page} />
       <h1>{page.title}</h1>
-      <LexicalRenderer page={page} />
+      <LexicalRenderer page={page} isPreview={isPreview} />
     </ArticleLayout>
   );
 }
 
-function CmsPlainPage({ page }: { page: CmsPage }) {
+function CmsPlainPage({ page, isPreview }: { page: CmsPage; isPreview: boolean }) {
   return (
     <div className="site-container cms-page py-12 sm:py-20">
       {page.eyebrow ? <p className="section-kicker">{page.eyebrow}</p> : null}
       <h1 className="display-title mt-4">{page.title}</h1>
       <div className="mdx-prose mt-10">
-        <LexicalRenderer page={page} />
+        <LexicalRenderer page={page} isPreview={isPreview} />
       </div>
     </div>
   );
 }
 
-export default function CmsPageRenderer({ page }: { page: CmsPage }) {
-  if (page.path === "/" && page.homeContent) return <HomePage content={page.homeContent} />;
-  if (page.kind === "landing" || page.kind === "policy") return <CmsPlainPage page={page} />;
-  return <CmsArticle page={page} />;
+export default function CmsPageRenderer({ page, isPreview = false }: { page: CmsPage; isPreview?: boolean }) {
+  const content = page.path === "/" && page.homeContent
+    ? <HomePage content={page.homeContent} />
+    : page.kind === "landing" || page.kind === "policy"
+      ? <CmsPlainPage page={page} isPreview={isPreview} />
+      : <CmsArticle page={page} isPreview={isPreview} />;
+
+  return (
+    <>
+      {isPreview ? (
+        <aside className="sticky top-0 z-[70] flex flex-wrap items-center justify-between gap-2 border-b border-amber-300 bg-amber-100 px-4 py-2 text-sm text-amber-950" role="status">
+          <span>Черновой предпросмотр · изменения появятся после автосохранения</span>
+          <Link className="font-bold underline underline-offset-2" href={`/api/cms/preview/exit?path=${encodeURIComponent(page.path)}`} prefetch={false}>Закрыть предпросмотр</Link>
+        </aside>
+      ) : null}
+      {isPreview ? <RefreshRouteOnSave serverURL={getSiteOrigin()} /> : null}
+      {content}
+    </>
+  );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
 import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -63,6 +64,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isPreview = (await draftMode()).isEnabled;
   const siteSettings = await getSiteSettings();
   const siteName = siteSettings?.siteName || "Миграционный справочник";
   const partnerPhone = siteSettings?.partnerPhone;
@@ -72,13 +74,13 @@ export default async function RootLayout({
     <html lang="ru" className={`${golos.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <a className="skip-link" href="#main-content">Перейти к содержанию</a>
-        <AIChatProvider>
+        <AIChatProvider disabled={isPreview}>
           <Header siteName={siteName} partnerPhone={partnerPhone} />
           <main id="main-content" className="flex-grow flex flex-col">{children}</main>
           <Footer siteName={siteName} description={footerDescription} />
-          <AnalyticsManager />
+          {isPreview ? null : <AnalyticsManager />}
         </AIChatProvider>
-        <Script id="feedot-widgets-loader" strategy="afterInteractive">
+        {isPreview ? null : <Script id="feedot-widgets-loader" strategy="afterInteractive">
           {`
             (function(f, ee, d, o, t) {
                 if (ee._feedot) return;
@@ -107,7 +109,7 @@ export default async function RootLayout({
                 });
             })('2e32560face91b58d22a63208af38c92', window, document);
           `}
-        </Script>
+        </Script>}
       </body>
     </html>
   );

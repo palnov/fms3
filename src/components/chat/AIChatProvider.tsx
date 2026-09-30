@@ -89,7 +89,7 @@ function restoreStoredMessages(value: unknown): ChatMessage[] {
     .filter((message): message is ChatMessage => Boolean(message));
 }
 
-export function AIChatProvider({ children }: { children: React.ReactNode }) {
+export function AIChatProvider({ children, disabled = false }: { children: React.ReactNode; disabled?: boolean }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [language, setLanguage] = useState("ru");
   const [isTyping, setIsTyping] = useState(false);
@@ -105,6 +105,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const syncLimitStatus = useCallback(async () => {
+    if (disabled) return;
     try {
       const response = await fetch("/api/consultant", {
         method: "GET",
@@ -119,7 +120,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.warn("Failed to sync consultant limit status", error);
     }
-  }, []);
+  }, [disabled]);
 
   const addAssistantMessage = useCallback((text: string, options?: { id?: string; once?: boolean }) => {
     if (options?.once) {
@@ -140,6 +141,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
   }, [createMessageId]);
 
   useEffect(() => {
+    if (disabled) return;
     const restoreTimer = window.setTimeout(() => {
       try {
         LEGACY_CHAT_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
@@ -174,10 +176,10 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     }, 0);
 
     return () => window.clearTimeout(restoreTimer);
-  }, []);
+  }, [disabled]);
 
   useEffect(() => {
-    if (!hasRestoredStorageRef.current) return;
+    if (disabled || !hasRestoredStorageRef.current) return;
 
     window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify({
       version: CHAT_STORAGE_VERSION,
@@ -185,9 +187,10 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
       language,
       remainingRequests,
     }));
-  }, [language, messages, remainingRequests]);
+  }, [disabled, language, messages, remainingRequests]);
 
   const sendQuestion = useCallback(async (question: string, options?: SendQuestionOptions) => {
+    if (disabled) return;
     const text = question.trim();
     if (!text || isTyping) return;
 
@@ -286,7 +289,7 @@ export function AIChatProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsTyping(false);
     }
-  }, [createMessageId, isTyping, language, messages]);
+  }, [createMessageId, disabled, isTyping, language, messages]);
 
   const value = useMemo<AIChatContextValue>(() => ({
     messages,

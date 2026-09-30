@@ -6,8 +6,10 @@ import { pageContentBlocks } from "./blocks";
 import { seoFields, toolDefinitionFields } from "./fields";
 import { revalidateDataTable, revalidatePage, revalidateTool } from "./hooks";
 import { validateDataTable, validatePage, validateTool } from "./validation";
+import { createCmsPagePreviewUrl } from "@/lib/cms/preview-token";
 
 const dataDir = process.env.DATA_DIR || path.resolve(process.cwd(), ".data");
+const previewSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
 
 const versionConfig = {
   drafts: { autosave: { interval: 250 } },
@@ -71,7 +73,17 @@ export const Media: CollectionConfig = {
 export const Pages: CollectionConfig = {
   slug: "pages",
   labels: { singular: "Страница", plural: "Страницы" },
-  admin: { useAsTitle: "title", defaultColumns: ["path", "title", "kind", "_status", "updatedAt"] },
+  admin: {
+    useAsTitle: "title",
+    defaultColumns: ["path", "title", "kind", "_status", "updatedAt"],
+    livePreview: {
+      url: ({ data }) => createCmsPagePreviewUrl(data.path, previewSiteUrl),
+      breakpoints: [
+        { label: "Desktop", name: "desktop", width: 1440, height: 900 },
+        { label: "Мобильный", name: "mobile", width: 390, height: 844 },
+      ],
+    },
+  },
   versions: versionConfig,
   access: {
     admin: canAccessAdmin,

@@ -6,6 +6,7 @@ import CmsToolPage, { cmsToolMetadata } from "@/components/cms/CmsToolPage";
 import { hasLegacyPage, LegacyPage } from "@/legacy/legacy-pages";
 import { getLegacyMetadata } from "@/lib/cms/legacy-metadata";
 import { getPageByPath, getToolBySlug, getToolDataTables, hasCmsPageByPath, hasCmsToolBySlug } from "@/lib/cms/queries";
+import CmsPreviewUnavailable from "@/components/cms/CmsPreviewUnavailable";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,8 @@ export async function generateMetadata({ params }: PublicRouteProps): Promise<Me
   const tool = path.startsWith("/tools/") ? await getToolBySlug(path, draft) : null;
   if (tool) return cmsToolMetadata(tool);
   const page = await getPageByPath(path, draft);
-  if (page) return cmsPageMetadata(page);
+  if (page) return cmsPageMetadata(page, draft);
+  if (draft) return { title: "Предпросмотр недоступен", robots: { index: false, follow: false } };
   const cmsRecordExists = path.startsWith("/tools/") ? await hasCmsToolBySlug(path) : await hasCmsPageByPath(path);
   if (cmsRecordExists) notFound();
   const legacyMetadata = getLegacyMetadata(path);
@@ -41,7 +43,8 @@ export default async function PublicRoute({ params }: PublicRouteProps) {
   }
 
   const page = await getPageByPath(path, draft);
-  if (page) return <CmsPageRenderer page={page} />;
+  if (page) return <CmsPageRenderer page={page} isPreview={draft} />;
+  if (draft) return <CmsPreviewUnavailable />;
   if (await hasCmsPageByPath(path)) notFound();
 
   if (hasLegacyPage(path)) return <LegacyPage path={path} />;

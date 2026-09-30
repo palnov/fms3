@@ -67,7 +67,7 @@ function renderText(value: unknown) {
   ));
 }
 
-function renderBlock(node: LexicalNode, key: string, path: string) {
+function renderBlock(node: LexicalNode, key: string, path: string, isPreview: boolean) {
   const fields = node.fields ?? node;
   const blockType = typeof fields.blockType === "string" ? fields.blockType : node.blockType;
 
@@ -99,6 +99,7 @@ function renderBlock(node: LexicalNode, key: string, path: string) {
         context={typeof fields.context === "string" ? fields.context : `CMS: ${path}`}
         secondaryHref={typeof fields.secondaryHref === "string" ? safeHref(fields.secondaryHref) : undefined}
         secondaryLabel={typeof fields.secondaryLabel === "string" ? fields.secondaryLabel : undefined}
+        isPreview={isPreview}
       />;
     case "articleMeta":
       return null;
@@ -115,12 +116,12 @@ function isLinkCard(item: unknown): item is { href: string; title: string; descr
   return Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).href === "string" && typeof (item as Record<string, unknown>).title === "string" && typeof (item as Record<string, unknown>).description === "string");
 }
 
-function renderNode(node: LexicalNode, key: string, path: string): React.ReactNode {
-  if (node.type === "block" || node.blockType) return renderBlock(node, key, path);
+function renderNode(node: LexicalNode, key: string, path: string, isPreview: boolean): React.ReactNode {
+  if (node.type === "block" || node.blockType) return renderBlock(node, key, path, isPreview);
   if (node.type === "text" || node.type === "link" || node.type === "autolink" || node.type === "linebreak") return renderInline(node, key);
   if (node.type === "paragraph" && containsLegacyBlockTokens(node)) return null;
 
-  const children = (node.children ?? []).map((child, index) => renderNode(child, `${key}-${index}`, path));
+  const children = (node.children ?? []).map((child, index) => renderNode(child, `${key}-${index}`, path, isPreview));
   switch (node.type) {
     case "heading": {
       const tag = /^h[1-6]$/.test(node.tag ?? "") ? node.tag as "h1" | "h2" | "h3" | "h4" | "h5" | "h6" : "h2";
@@ -166,9 +167,9 @@ function getRootChildren(content: unknown): LexicalNode[] {
   return Array.isArray(root.root?.children) ? root.root.children as LexicalNode[] : [];
 }
 
-export default function LexicalRenderer({ page }: { page: CmsPage }) {
+export default function LexicalRenderer({ page, isPreview = false }: { page: CmsPage; isPreview?: boolean }) {
   const content = restoreLegacyBlocks(page.content, page.legacyMarkdown);
   const nodes = getRootChildren(content);
-  if (nodes.length > 0) return <>{nodes.map((node, index) => renderNode(node, String(index), page.path))}</>;
+  if (nodes.length > 0) return <>{nodes.map((node, index) => renderNode(node, String(index), page.path, isPreview))}</>;
   return <>{renderText(page.legacyMarkdown)}</>;
 }

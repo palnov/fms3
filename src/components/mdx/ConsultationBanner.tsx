@@ -14,6 +14,7 @@ interface ConsultationBannerProps {
   secondaryHref?: string;
   secondaryLabel?: string;
   isBottom?: boolean;
+  isPreview?: boolean;
 }
 
 export default function ConsultationBanner({
@@ -21,6 +22,7 @@ export default function ConsultationBanner({
   description = "Сначала задайте вопрос ИИ-помощнику. Он найдёт связанные инструкции и источники. Если потребуется индивидуальный анализ, можно оставить заявку специалисту.",
   context = "Баннер в статье",
   isBottom,
+  isPreview = false,
 }: ConsultationBannerProps) {
   // Auto-detect if it's the bottom banner by checking isBottom prop or if context has "Финальный"
   const isBottomBanner = isBottom || context.includes("Финальный");
@@ -56,7 +58,7 @@ export default function ConsultationBanner({
   }, [context, sendQuestion]);
 
   useEffect(() => {
-    if (!isBottomBanner || hasTriggeredWelcome) return;
+    if (isPreview || !isBottomBanner || hasTriggeredWelcome) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -93,7 +95,7 @@ export default function ConsultationBanner({
         observer.unobserve(currentBanner);
       }
     };
-  }, [isBottomBanner, hasTriggeredWelcome, title]);
+  }, [isBottomBanner, hasTriggeredWelcome, isPreview, title]);
 
   const scrollToBottomChat = () => {
     const bottomChat = document.querySelector(".bottom-banner-chat");
@@ -107,6 +109,16 @@ export default function ConsultationBanner({
   };
 
   const lastUserQuestion = [...messages].reverse().find((message) => message.sender === "user")?.text || "";
+
+  if (isPreview) {
+    return (
+      <section className={`${isBottomBanner ? "article-chat-banner" : "article-next-step-banner"} my-8 p-5 sm:p-7`}>
+        <h3 className="!m-0 !text-xl !font-bold">{title}</h3>
+        <p className="!mb-0 !mt-3 !text-sm !leading-6">{description}</p>
+        <p className="!mb-0 !mt-4 text-xs font-semibold opacity-75">Отправка сообщений и заявок отключена в предпросмотре.</p>
+      </section>
+    );
+  }
 
   // 1. TOP BANNER: Dark theme with a button that scrolls to the bottom chat
   if (!isBottomBanner) {
