@@ -12,11 +12,7 @@ function relationId(value: unknown): string | null {
   return null;
 }
 
-export function PageHierarchyView({ payload, user }: AdminViewServerProps) {
-  if (!user) {
-    return <Gutter><p>Войдите в CMS, чтобы открыть дерево страниц.</p></Gutter>;
-  }
-
+export function PageHierarchyView({ payload }: AdminViewServerProps) {
   return loadPageHierarchy(payload);
 }
 
