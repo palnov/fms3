@@ -30,7 +30,11 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   if (origin) {
     try {
-      if (new URL(origin).origin !== new URL(request.url).origin) return json({ error: "Forbidden" }, 403);
+      const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+      const requestURL = new URL(request.url);
+      const requestHost = forwardedHost || request.headers.get("host") || requestURL.host;
+      const originURL = new URL(origin);
+      if (originURL.host.toLowerCase() !== requestHost.toLowerCase()) return json({ error: "Forbidden" }, 403);
     } catch {
       return json({ error: "Forbidden" }, 403);
     }
