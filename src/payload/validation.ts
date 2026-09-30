@@ -173,8 +173,36 @@ function validateResults(results: unknown) {
   }
 }
 
-export const validatePage: CollectionBeforeValidateHook = ({ data }) => {
+function relationId(value: unknown): string | null {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  const record = asRecord(value);
+  if (!record) return null;
+  if (typeof record.id === "string" || typeof record.id === "number") return String(record.id);
+  if (typeof record.value === "string" || typeof record.value === "number") return String(record.value);
+  return null;
+}
+
+export const validatePage: CollectionBeforeValidateHook = async ({ data, originalDoc, req }) => {
   if (data?.path !== undefined) assertPublicPath(data.path, "Публичный URL");
+  const hasParentUpdate = Boolean(data && Object.prototype.hasOwnProperty.call(data, "parent"));
+  let parentId = relationId(hasParentUpdate ? data?.parent : originalDoc?.parent);
+  const currentId = relationId(originalDoc?.id ?? data?.id);
+  const visited = new Set(currentId ? [currentId] : []);
+
+  for (let depth = 0; parentId && depth < 100; depth += 1) {
+    if (visited.has(parentId)) throw new Error("Иерархия страниц не может содержать цикл.");
+    visited.add(parentId);
+    const parent = await req.payload.findByID({
+      collection: "pages",
+      id: parentId,
+      depth: 0,
+      draft: true,
+      overrideAccess: true,
+    });
+    parentId = relationId(parent.parent);
+  }
+
+  if (parentId) throw new Error("Иерархия страниц не может быть глубже 100 уровней.");
   return data;
 };
 

@@ -14,6 +14,13 @@ export type CmsSeo = {
   ogImage?: string | { url?: string };
 };
 
+export type CmsPageReference = {
+  id: string | number;
+  title?: string;
+  path?: string;
+  parent?: CmsPageReference | string | number | null;
+};
+
 export type CmsPage = {
   id: string;
   path: string;
@@ -23,6 +30,9 @@ export type CmsPage = {
   description: string;
   eyebrow?: string;
   tags?: string[];
+  parent?: CmsPageReference | string | number | null;
+  treeOrder?: number;
+  relatedPages?: Array<CmsPageReference | string | number | null>;
   reviewedAt?: string;
   readingTime?: string;
   content?: unknown;
@@ -95,7 +105,7 @@ async function findPageByPath(path: string): Promise<CmsPage | null> {
     const payload = await getPayload({ config: configPromise });
     const result = await payload.find({
       collection: "pages",
-      depth: 2,
+      depth: 3,
       limit: 1,
       where: { path: { equals: path }, _status: { equals: "published" } },
     });
@@ -112,7 +122,7 @@ async function findPageDraftByPath(path: string): Promise<CmsPage | null> {
     const payload = await getPayload({ config: configPromise });
     const result = await payload.find({
       collection: "pages",
-      depth: 2,
+      depth: 3,
       draft: true,
       limit: 1,
       overrideAccess: true,

@@ -76,6 +76,16 @@ export const Pages: CollectionConfig = {
   admin: {
     useAsTitle: "title",
     defaultColumns: ["path", "title", "kind", "_status", "updatedAt"],
+    components: {
+      beforeList: ["@/components/admin/PageHierarchyShortcut#PageHierarchyShortcut"],
+      views: {
+        hierarchy: {
+          Component: "@/components/admin/PageHierarchyView#PageHierarchyView",
+          path: "/hierarchy",
+          exact: true,
+        },
+      },
+    },
     livePreview: {
       url: ({ data }) => createCmsPagePreviewUrl(data.path, previewSiteUrl),
       breakpoints: [
@@ -95,6 +105,15 @@ export const Pages: CollectionConfig = {
   hooks: { beforeValidate: [validatePage], afterChange: [revalidatePage] },
   fields: [
     { name: "path", type: "text", required: true, unique: true, index: true, label: "Публичный URL" },
+    {
+      name: "parent",
+      type: "relationship",
+      relationTo: "pages",
+      label: "Родительская страница",
+      admin: { position: "sidebar", description: "Редакционная иерархия. Публичный URL дочерней страницы не меняется." },
+      filterOptions: ({ id }) => id ? { id: { not_equals: id } } : true,
+    },
+    { name: "treeOrder", type: "number", label: "Порядок среди соседних", defaultValue: 0, min: 0, admin: { position: "sidebar", description: "Меньшее число показывается выше страниц с тем же родителем." } },
     { name: "sourceKey", type: "text", unique: true, index: true, admin: { readOnly: true, position: "sidebar" } },
     { name: "homeContent", type: "json", label: "Контент главной страницы", admin: { description: "Структурированные тексты, ссылки и карточки главной страницы. Заполняется только для URL /. Не меняет визуальный шаблон." } },
     {

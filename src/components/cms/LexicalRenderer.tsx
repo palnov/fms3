@@ -67,6 +67,21 @@ function renderText(value: unknown) {
   ));
 }
 
+function relatedPageHref(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const pagePath = (value as Record<string, unknown>).path;
+  return typeof pagePath === "string" ? safeHref(pagePath) : null;
+}
+
+type LinkCardItem = {
+  page?: unknown;
+  externalHref?: string;
+  href?: string;
+  title: string;
+  description: string;
+  label?: string;
+};
+
 function renderBlock(node: LexicalNode, key: string, path: string, isPreview: boolean) {
   const fields = node.fields ?? node;
   const blockType = typeof fields.blockType === "string" ? fields.blockType : node.blockType;
@@ -85,12 +100,17 @@ function renderBlock(node: LexicalNode, key: string, path: string, isPreview: bo
     case "relatedGuide":
       return <RelatedGuide
         key={key}
-        href={safeHref(fields.href, "/pathways")}
+        href={relatedPageHref(fields.page) ?? safeHref(fields.externalHref, safeHref(fields.href, "/pathways"))}
         title={typeof fields.title === "string" ? fields.title : "Связанная инструкция"}
         description={typeof fields.description === "string" ? fields.description : "Открыть связанную инструкцию."}
       />;
     case "linkCardGrid":
-      return <LinkCardGrid key={key} items={Array.isArray(fields.items) ? fields.items.filter(isLinkCard).map((item) => ({ ...item, href: safeHref(item.href) })) : []} />;
+      return <LinkCardGrid key={key} items={Array.isArray(fields.items) ? fields.items.filter(isLinkCard).map((item) => ({
+        title: item.title,
+        description: item.description,
+        label: item.label,
+        href: relatedPageHref(item.page) ?? safeHref(item.externalHref, safeHref(item.href)),
+      })) : []} />;
     case "consultationBanner":
       return <ConsultationBanner
         key={key}
@@ -112,8 +132,12 @@ function isFaqItem(item: unknown): item is { question: string; answer: string } 
   return Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).question === "string" && typeof (item as Record<string, unknown>).answer === "string");
 }
 
-function isLinkCard(item: unknown): item is { href: string; title: string; description: string; label?: string } {
-  return Boolean(item && typeof item === "object" && typeof (item as Record<string, unknown>).href === "string" && typeof (item as Record<string, unknown>).title === "string" && typeof (item as Record<string, unknown>).description === "string");
+function isLinkCard(item: unknown): item is LinkCardItem {
+  if (!item || typeof item !== "object") return false;
+  const card = item as Record<string, unknown>;
+  return typeof card.title === "string"
+    && typeof card.description === "string"
+    && (typeof card.href === "string" || typeof card.externalHref === "string" || relatedPageHref(card.page) !== null);
 }
 
 function renderNode(node: LexicalNode, key: string, path: string, isPreview: boolean): React.ReactNode {

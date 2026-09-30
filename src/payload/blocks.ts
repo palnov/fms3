@@ -7,6 +7,16 @@ const blockText = (name: string, label: string, description?: string) => ({
   admin: { description },
 });
 
+function validateLinkTarget(value: unknown, { siblingData }: { siblingData?: unknown }) {
+  const siblings = siblingData && typeof siblingData === "object" && !Array.isArray(siblingData)
+    ? siblingData as Record<string, unknown>
+    : {};
+  const hasExternalHref = typeof value === "string" && value.trim().length > 0;
+  const hasLegacyHref = typeof siblings.href === "string" && siblings.href.trim().length > 0;
+  const hasPage = Boolean(siblings.page);
+  return hasExternalHref || hasLegacyHref || hasPage || "Выберите страницу или укажите ссылку.";
+}
+
 export const pageContentBlocks: Block[] = [
   {
     slug: "articleMeta",
@@ -59,7 +69,9 @@ export const pageContentBlocks: Block[] = [
     slug: "relatedGuide",
     labels: { singular: "Следующий шаг", plural: "Следующие шаги" },
     fields: [
-      { name: "href", type: "text", label: "Ссылка", required: true },
+      { name: "page", type: "relationship", relationTo: "pages", label: "Внутренняя страница", admin: { description: "Выберите страницу сайта, чтобы ссылка обновлялась вместе с ней." } },
+      { name: "externalHref", type: "text", label: "Внешняя ссылка", validate: validateLinkTarget, admin: { description: "Используйте для внешнего адреса или старой ссылки, которую пока нельзя связать со страницей CMS." } },
+      { name: "href", type: "text", label: "Старая ссылка", admin: { hidden: true } },
       { name: "title", type: "text", label: "Заголовок", required: true },
       { name: "description", type: "textarea", label: "Описание", required: true },
     ],
@@ -73,7 +85,9 @@ export const pageContentBlocks: Block[] = [
         type: "array",
         label: "Карточки",
         fields: [
-          { name: "href", type: "text", label: "Ссылка", required: true },
+          { name: "page", type: "relationship", relationTo: "pages", label: "Внутренняя страница", admin: { description: "Выберите страницу сайта, чтобы ссылка обновлялась вместе с ней." } },
+          { name: "externalHref", type: "text", label: "Внешняя ссылка", validate: validateLinkTarget, admin: { description: "Используйте для внешнего адреса или старой ссылки, которую пока нельзя связать со страницей CMS." } },
+          { name: "href", type: "text", label: "Старая ссылка", admin: { hidden: true } },
           { name: "title", type: "text", label: "Заголовок", required: true },
           { name: "description", type: "textarea", label: "Описание", required: true },
           { name: "label", type: "text", label: "Метка" },

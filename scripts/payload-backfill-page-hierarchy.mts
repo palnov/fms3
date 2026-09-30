@@ -110,7 +110,10 @@ function internalHrefPath(href: string, siteOrigin: string) {
   try {
     const target = new URL(trimmed);
     const base = new URL(siteOrigin);
-    if (target.hostname.replace(/^www\./i, "").toLowerCase() !== base.hostname.replace(/^www\./i, "").toLowerCase()) return null;
+    if (
+      target.hostname.replace(/^www\./i, "").toLowerCase() !== base.hostname.replace(/^www\./i, "").toLowerCase()
+      || target.port !== base.port
+    ) return null;
     return { path: target.pathname, suffix: `${target.search}${target.hash}` };
   } catch {
     return null;
@@ -172,6 +175,7 @@ function migrateBlockLinks(content: unknown, pageIdsByPath: Map<string, PageId[]
       }
     }
 
+    if (isRecord(value.root)) walk(value.root);
     if (Array.isArray(value.children)) value.children.forEach(walk);
   };
 
