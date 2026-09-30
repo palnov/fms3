@@ -9,6 +9,10 @@ RUN apt-get update \
 COPY package.json package-lock.json ./
 RUN npm ci
 
+FROM deps AS production-deps
+
+RUN npm prune --omit=dev
+
 FROM deps AS builder
 
 ARG NEXT_PUBLIC_SITE_URL
@@ -36,8 +40,10 @@ RUN apt-get update \
   && chown node:node /data
 
 COPY --from=builder /app/.next/standalone ./
+COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/.payload-tools ./scripts/payload-tools
 
 RUN mkdir -p .next/cache \
