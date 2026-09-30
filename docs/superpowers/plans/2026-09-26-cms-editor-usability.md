@@ -9,10 +9,12 @@
 - Этап 0 завершён: конфигурация, MDX-источники и live Pages production-БД `fms3` проинвентаризированы read-only запросами; защищённый серверный backup успешно восстановлен в изолированный PostgreSQL 16, счётчики копии совпали с baseline.
 - Production-схема и документы Pages не менялись. Дамп не передавался на рабочую машину; локального PostgreSQL и работающего Docker daemon нет. Подробный отчёт, контрольные маршруты, путь и проверочная сумма backup: [этап 0](2026-09-26-cms-editor-usability-stage-0-inventory.md).
 - Перед подключением Payload к тестовой копии обязательно выставить `PAYLOAD_DB_PUSH=false`; перед этапом 1 восстановить отдельную тестовую БД из сохранённого backup. Не подключать разработческую конфигурацию к production.
-- Реализация и повторный запуск этапа 1 ранее проверены на восстановленной копии: `--dry-run` нашёл 40 вариантов с 327 маркерами (313 опубликованных и 14 черновых блоков), `--apply` обновил их, а повторный dry-run не нашёл работу. По прямому решению пользователя дальнейшая работа ведётся в production без новых копий БД; backfill production будет выполнен после свежего backup и проверки production dry-run.
-- Перед этим переходом в production этап 1 ещё не был применён к live Pages. Свежий production backup хранится на сервере отдельно от приложения; путь и checksum записываются в отчёт после проверки backfill.
-- Для CLI добавлен ESM runner и production-бандл для Docker runtime: установленный `tsx` загружал MDX parser как CommonJS и падал на ESM-only `estree-walker`; скрипт собирает TypeScript-модули через `esbuild`, а `next/cache` подменяется безопасным no-op только для CLI. Schema push отключается; production требует точные `--target-db=fms3`, `--allow-production` и `NODE_ENV=production`.
-- SSH-ключ остаётся разрешённым на весь план по просьбе пользователя; production-доступы не менялись.
+- Этап 1 выполнен в production. Свежая копия backup создана на сервере непосредственно из `fms3`: `/var/backups/fms3-cms-plan/fms3-prod-20260930-before-cms-block-backfill.dump`, 844 094 байта, mode `0600`, SHA-256 `0b946ef1c19eac441c95bdca1fb73eea2145ca9e7778fdf1ca8e73551cc4a6d2`; `pg_restore --list` прошёл.
+- Production `--dry-run` нашёл 40 вариантов с 327 блоками (313 опубликованных и 14 в черновой версии), 0 пропусков и 5 уже чистых вариантов. `--apply` обновил 40 вариантов, ошибок 0. Повторный production dry-run: 45 из 45 вариантов без маркеров и повторных записей; опубликованы все 44 страницы и сохранена 1 latest draft version.
+- Шесть контрольных маршрутов после backfill вернули HTTP 200: `/legal/registration-expired`, `/pathways/rvp/after-receiving`, `/mmc-saharovo`, `/legal/check-ban`, `/pathways/citizenship/oath`, `/pathways`.
+- Для CLI добавлен ESM runner и production-бандл: установленный `tsx` загружал MDX parser как CommonJS и падал на ESM-only `estree-walker`; скрипт собирает TypeScript и MDX/parser-зависимости через `esbuild`, а `next/cache` подменяется безопасным no-op только для CLI. Docker-образ содержит production-зависимости Payload; schema push отключается. Production требует точные `--target-db=fms3`, `--allow-production` и `NODE_ENV=production`.
+- Временный контейнер и volume тестовых БД `fms3_stage0_verify` / `fms3_stage1_baseline` удалены после production-проверки; production backup оставлен на сервере. Новые копии БД не создаются.
+- SSH-ключ остаётся разрешённым на весь план по просьбе пользователя.
 
 ## Принятые ограничения
 
@@ -43,10 +45,10 @@
 2. Для каждой записи с `CMS_BLOCK_n` разобрать соответствующий `legacyMarkdown` и построить настоящий Lexical block node с исходными полями и содержимым.
 3. Сохранить порядок блоков относительно заголовков и абзацев. Не трогать уже настоящие блоки и записи, в которых соответствующий исходный блок определить нельзя.
 4. Сначала выполнить `--dry-run`: вывести страницу, число распознанных блоков, неизвестные токены и ошибки разбора. Не выводить в лог секреты или полные тексты статей.
-5. После сверки production dry-run и свежего серверного backup выполнить backfill в live БД (по прямому решению пользователя), затем открыть статьи в админке и убедиться, что поля блоков редактируются отдельно.
+5. Сверить production dry-run, сохранить свежий серверный backup, выполнить backfill в live БД и повторить dry-run.
 6. Сохранить `legacyMarkdown` как архив на переходный период. Оставить публичный fallback `restoreLegacyBlocks` до подтверждения, что во всех страницах с блоками сохранены настоящие узлы.
 
-CLI локально для разрешённой loopback restore-копии: `npm run payload:backfill:legacy-blocks -- --dry-run`; production-бандл запускается внутри production-контейнера. Для live dry-run и apply обязательны `--target-db=fms3 --allow-production`; apply дополнительно требует `--apply`. Скрипт отключает schema push, сверяет имя БД с `DATABASE_URL`, запрещает production при `NODE_ENV` отличном от `production` и разрешает записи только в точную базу `fms3`.
+Production CLI находится в `/app/scripts/payload-tools/payload-backfill-legacy-blocks.mjs`. Для live dry-run и apply обязательны `--target-db=fms3 --allow-production`; apply дополнительно требует `--apply`. Скрипт отключает schema push, сверяет имя БД с `DATABASE_URL`, запрещает production при `NODE_ENV` отличном от `production` и разрешает записи только в точную базу `fms3`.
 
 **Критерии приёмки:** в форме статьи нет видимых `CMS_BLOCK_n`; порядок, тексты и поля блоков совпадают с опубликованной страницей; повторный запуск backfill не меняет уже обработанные записи.
 

@@ -1,5 +1,6 @@
 import path from "node:path";
 import type { CollectionConfig } from "payload";
+import { BlocksFeature, EXPERIMENTAL_TableFeature, lexicalEditor } from "@payloadcms/richtext-lexical";
 import { canAccessAdmin, canCreateContent, canDeleteContent, canEditContent, canManageUsers, canUpdateContent, publishedOnly } from "./access";
 import { pageContentBlocks } from "./blocks";
 import { seoFields, toolDefinitionFields } from "./fields";
@@ -12,6 +13,14 @@ const versionConfig = {
   drafts: { autosave: { interval: 250 } },
   maxPerDoc: 20,
 };
+
+const pageContentEditor = lexicalEditor({
+  features: ({ defaultFeatures }) => [
+    ...defaultFeatures,
+    BlocksFeature({ blocks: pageContentBlocks }),
+    EXPERIMENTAL_TableFeature(),
+  ],
+});
 
 export const Users: CollectionConfig = {
   slug: "users",
@@ -94,7 +103,13 @@ export const Pages: CollectionConfig = {
     { name: "tags", type: "text", hasMany: true, label: "Теги" },
     { name: "reviewedAt", type: "date", label: "Дата проверки" },
     { name: "readingTime", type: "text", label: "Время чтения" },
-    { name: "content", type: "richText", label: "Контент", admin: { description: "Основной контент на Lexical Rich Text с блоками из справочника." } },
+    {
+      name: "content",
+      type: "richText",
+      label: "Контент",
+      editor: pageContentEditor,
+      admin: { description: "Таблицу можно вставить через меню редактора; разметка Markdown не нужна." },
+    },
     {
       name: "legacyMarkdown",
       type: "textarea",
@@ -165,7 +180,7 @@ export const Tools: CollectionConfig = {
 
 export const DataTables: CollectionConfig = {
   slug: "data-tables",
-  labels: { singular: "Таблица данных", plural: "Таблицы данных" },
+  labels: { singular: "Таблица инструмента", plural: "Таблицы инструментов" },
   admin: { useAsTitle: "title", defaultColumns: ["key", "title", "updatedAt"] },
   versions: { drafts: true, maxPerDoc: 20 },
   access: { admin: canAccessAdmin, read: publishedOnly, create: canCreateContent, update: canUpdateContent, delete: canDeleteContent },

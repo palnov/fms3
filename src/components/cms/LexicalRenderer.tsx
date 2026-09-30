@@ -138,11 +138,21 @@ function renderNode(node: LexicalNode, key: string, path: string): React.ReactNo
     case "horizontalrule":
       return <hr key={key} />;
     case "table":
-      return <table key={key}><tbody>{children}</tbody></table>;
+      return (
+        <div className="mdx-table-scroll" key={key} role="region" aria-label="Прокручиваемая таблица" tabIndex={0}>
+          <table><tbody>{children}</tbody></table>
+        </div>
+      );
     case "tablerow":
       return <tr key={key}>{children}</tr>;
-    case "tablecell":
-      return <td key={key}>{children}</td>;
+    case "tablecell": {
+      const headerState = typeof node.headerState === "number" ? node.headerState : 0;
+      const Cell = headerState > 0 ? "th" : "td";
+      const scope = headerState === 1 ? "row" : "col";
+      const colSpan = typeof node.colSpan === "number" && node.colSpan > 1 ? node.colSpan : undefined;
+      const rowSpan = typeof node.rowSpan === "number" && node.rowSpan > 1 ? node.rowSpan : undefined;
+      return <Cell key={key} scope={headerState > 0 ? scope : undefined} colSpan={colSpan} rowSpan={rowSpan}>{children}</Cell>;
+    }
     case "root":
       return <>{children}</>;
     default:

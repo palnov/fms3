@@ -573,6 +573,31 @@ summary:focus-visible {
   -webkit-overflow-scrolling: touch;
 }
 
+.mdx-prose .mdx-table-scroll {
+  max-width: 100%;
+  margin: 1.5rem 0 2rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+}
+
+.mdx-prose .mdx-table-scroll:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.mdx-prose .mdx-table-scroll table {
+  display: table;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+}
+
 .mdx-prose th,
 .mdx-prose td {
   border-bottom: 1px solid var(--border);
@@ -586,7 +611,8 @@ summary:focus-visible {
   color: var(--foreground);
 }
 
-.mdx-prose tr:last-child td {
+.mdx-prose tr:last-child td,
+.mdx-prose tr:last-child th {
   border-bottom: 0;
 }
 
